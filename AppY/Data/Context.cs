@@ -1,0 +1,13 @@
+﻿using AppY.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
+namespace AppY.Data
+{
+    public class Context : IdentityDbContext<User, IdentityRole<int>, int>
+    {
+        public Context(DbContextOptions<Context> Options) : base(Options) { }
+        public DbSet<User> Users { get; set; }
+    }
+}
