@@ -10,40 +10,69 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">AppY</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+        <nav class="navbar navbar-expand-sm fixed-bottom bot-navbar shadow-sm pe-0 ps-0" id="MainBotOffNavbar">
+            <div class="mx-auto">
+                <div class="row" id="MainBotOffNavbar_Box">
+                    @if (User.Identity!.IsAuthenticated)
+                    {
+                        <div class="col" id="ForthBtns_Box" style="display: none;">
+                            <a href="#" class="btn btn-navbar w-100" style="display: none;" id="ForthMain_Btn"></a>
+                            <button type="button" class="btn btn-navbar w-100" style="display: none;" id="ForthReserve_Btn"></button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col" id="ForthBtns_Box">
+                            <a asp-controller="Account" asp-action="Create" class="btn btn-navbar w-100" id="ForthMain_Btn"> <i class="fa-solid fa-arrow-right-to-bracket text-muted"></i> <br />Sign</a>
+                            <button type="button" class="btn btn-navbar w-100" style="display: none;" id="ForthReserve_Btn"></button>
+                        </div>
+                    }
+                    <div class="col">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-navbar w-100" id="FirstMain_Btn"> <i class="fa-solid fa-house text-muted"></i> <br />Home</a>
+                        <button type="button" class="btn btn-navbar w-100" style="display: none;" id="FirstReserve_Btn"></button>
+                    </div>
+                    <div class="col">
+                        <a asp-controller="Home" asp-action="Search" class="btn btn-navbar w-100" id="SecondMain_Btn"> <i class="fa-solid fa-magnifying-glass text-muted"></i> <br />Search</a>
+                        <button type="button" class="btn btn-navbar w-100" style="display: none;" id="SecondReserve_Btn"></button>
+                    </div>
+                    <div class="col">
+                        <a asp-controller="User" asp-action="Profile" class="btn btn-navbar w-100" id="ThirdMain_Btn"> <i class="fa-regular fa-bell text-muted"></i> <br />Account</a>
+                        <button type="button" class="btn btn-navbar w-100" style="display: none;" id="ThirdReserve_Btn"></button>
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2024 - AppY - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <div class="alert-container mx-auto p-2 shadow-sm" id="Alert_Container">
+        <div class="p-1 ms-1">
+            <div class="row">
+                <div class="col col-2">
+                    <h1 class="h1" id="Alert_Container-Icon"> <i class="fa-regular fa-bell text-neon-purple"></i> </h1>
+                </div>
+                <div class="col col-10">
+                    <p class="card-text white-space-on w-100" id="Alert_Container-Text">Alert Text</p>
+                </div>
+            </div>
         </div>
-    </footer>
+        <div class="box-container mt-2">
+            <button type="button" class="btn btn-standard btn-sm me-2" id="Alert_Container-Btn1">Button 1</button>
+            <button type="button" class="btn btn-standard btn-sm" id="Alert_Container-Btn2">Button 2</button>
+        </div>
+    </div>
+
+@*     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script> *@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/e46748ce25.js" crossorigin="anonymous"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

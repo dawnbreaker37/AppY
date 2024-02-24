@@ -1,9 +1,9 @@
 using AppY.Data;
+using AppY.Interfaces;
 using AppY.Models;
 using AppY.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,19 +15,25 @@ builder.Services.AddResponseCompression(Opt =>
     Opt.ExcludedMimeTypes = new[] { "/plain/text" };
     Opt.MimeTypes = new[] { "/application/json" };
 });
+builder.Services.AddMemoryCache();
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddTransient(typeof(IBase<>), typeof(Base<>));
+builder.Services.AddTransient<IAccount, Account>();
+builder.Services.AddTransient<IUser, UserRepository>();
+builder.Services.AddTransient<IMailMessages, MailMessages>();
+
 builder.Services.AddIdentity<User, IdentityRole<int>>(Opt =>
 {
     Opt.Password.RequiredUniqueChars = 0;
     Opt.Password.RequiredLength = 8;
+    Opt.Password.RequireNonAlphanumeric = false;
     Opt.Password.RequireUppercase = false;
     Opt.Password.RequireLowercase = false;
 }).AddEntityFrameworkStores<Context>().AddRoles<IdentityRole<int>>().AddTokenProvider<DataProtectorTokenProvider<User>>(TokenOptions.DefaultProvider);
 builder.Services.AddDbContext<Context>(Opt => Opt.UseSqlServer(builder.Configuration.GetConnectionString("Database")));
 
 var app = builder.Build();
-
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

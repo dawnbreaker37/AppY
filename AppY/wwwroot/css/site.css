@@ -1,15 +1,15 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 17px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 html {
@@ -19,4 +19,188 @@ html {
 
 body {
   margin-bottom: 60px;
+}
+
+.form-control {
+    border: 1px solid rgb(240, 240, 240);
+    border-radius: 6px;
+    transition: all ease 0.45s;
+}
+.form-floating {
+    padding: 0 0 1px 0;
+    transition: all ease 0.45s;
+}
+
+.btn-standard-asset {
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all ease 0.3s;
+}
+
+.btn-standard {
+    font-weight: 500;
+    outline-color: transparent;
+    background-color: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all ease 0.3s;
+}
+.btn-standard:hover,
+.btn-standard:active {
+    background-color: rgb(240, 240, 240); 
+}
+
+.btn-close {
+    cursor: pointer;
+    font-weight: 500;
+    padding: 7px;
+    background-color: rgb(240, 240, 240);
+    border: 1px solid rgb(240, 240, 240);
+    transition: all ease 0.3s;
+}
+.btn-close:hover,
+.btn-close:active {
+    background-color: #f8f9fa;
+}
+
+.main-sidebar {
+    z-index: 100;
+    left: 0;
+    position: absolute;
+    width: 35%;
+    height: 100%;
+    max-height: 100%;
+    background-color: #fdfdfd;
+    border-radius: 0 1px 1px 0;
+    border-right: 1px solid rgb(240, 240, 240);
+    box-shadow: rgba(0, 0, 0, 0.1) 1px -2px 2px;
+    display: block;
+    transition: all ease 0.3s;
+}
+
+.alert-container {
+    width: 40%;
+    z-index: 1000;
+    top: -1200px;
+    background-color: transparent;
+    border-radius: 6px;
+    backdrop-filter: blur(9px);
+    display: none;
+    position: relative;
+    transition: all ease 0.35s;
+}
+
+.main-container {
+    z-index: 0;
+    position: fixed;
+    overflow-y: auto;
+    border-radius: 12px 12px 1px 1px;
+    background-color: #fdfdfd;
+    bottom: -1200px;
+    overflow-x: hidden;
+    display: none;
+    transition: all ease 0.55s;
+}
+
+.header-container {
+    border-radius: 12px 12px 0 0;
+    border: 0;
+    background-color: transparent;
+    backdrop-filter: blur(9px);
+    border-bottom: 1px solid rgb(240, 240, 240);
+    transition: all ease 0.3s;
+}
+
+.box-container {
+    border-radius: 8px;
+    transition: all ease 0.3s;
+}
+
+.bordered-container {
+    border-radius: 6px;
+    border: 1px solid rgb(240, 240, 240);
+    transition: all ease 0.35s;
+}
+
+.slider-container {
+    border: 0;
+    border-radius: 8px;
+    transition: linear 0.3s;
+}
+
+.smallside-box-container {
+    z-index: 1;
+    overflow-y: auto;
+    bottom: -1200px;
+    display: none;
+    background-color: white;
+    position: fixed;
+    border-radius: 8px 8px 1px 1px;
+    transition: all ease 0.55s;
+}
+
+.alert-badge {
+    font-weight: normal;
+    background-color: #865be9;
+    color: #f8f9fa;
+    transition: linear 0.3s;
+}
+.alert-badge:hover,
+.alert-badge:active {
+    background-color: #f8f9fa;
+    color: #865be9;
+}
+
+.btn-navbar {
+    cursor: pointer;
+    background-color: transparent;
+    color: black;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    background-color: transparent;
+    border-radius: 1px;
+    transition: all ease 0.3s;
+}
+.btn-navbar:hover,
+.btn-navbar:active {
+    background-color: rgb(240, 240, 240);
+    color: #0d6efd;
+    border-radius: 6px 6px 1px 1px;
+    border-bottom: 2px solid #A9A9A9;
+}
+
+.bot-navbar {
+    z-index: 10;
+    width: 100%;
+    border-radius: 0;
+    background-color: #f8f9fa;
+    text-align: center;
+    border: 0;
+    border-top: 1px solid rgb(240, 240, 240);
+    transition: all ease 0.3s;
+}
+
+.fw-500 {
+    font-weight: 500;
+}
+
+.white-space-on {
+    white-space: pre-wrap;
+}
+
+.bg-neon-purple {
+    background-color: #865be9;
+}
+.text-neon-purple {
+    color: #865be9;
+}
+.shadow-standard {
+    box-shadow: rgba(0, 0, 0, 0.1) 1px -2px 2px;
+}
+
+@media screen and (max-width: 768px) {
+    .alert-container {
+        width: 90%;
+    }
 }
