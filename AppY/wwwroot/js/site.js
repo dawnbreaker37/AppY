@@ -63,6 +63,100 @@ $("#LogIn_Form").on("submit", function (event) {
     });
 });
 
+$("#SendCodeAgain_Btn").on("click", function () {
+    $("#SendSingleUseCode_Form").submit();
+    $(this).attr("disabled", true);
+    $(this).text("Resend Code");
+});
+$("#SendSingleUseCode_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let timerDuration = 100;
+            let resendInterval = setInterval(function () {
+                timerDuration--;
+                $("#SendCodeAgain_Btn").text("Resend from " + timerDuration + " sec");
+            }, 1000);
+            setTimeout(function () {
+                $("#SendCodeAgain_Btn").text("Resend Code Now");
+                $("#SendCodeAgain_Btn").attr("disabled", false);
+                clearInterval(resendInterval);
+            }, timerDuration * 1000);
+
+            animatedClose(false, "ForgotPassword_Container", true, true);
+            animatedOpen(false, "SubmitCode_Container", true, false);
+            $("#SubmitSingleUsingCode_Email_Val").val(response.email);
+            alert('<i class="fa-regular fa-paper-plane text-neon-purple"></i>', response.alert, "Done", null, 0, null, null, null, 5);
+        }
+        else {
+            $("#SingleUseCode_Email_Val").val(null);
+            alert('<i class="fa-regular fa-rectangle-xmark text-danger"></i>', response.alert, "Okay", null, 0, null, null, null, 5);
+        }
+    });
+});
+$("#SubmitSingleUsingCode_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-regular fa-circle-check text-neon-purple"></i>', response.alert, "Done", null, 0, null, null, null, 4.75);
+            $("#UpdatePassword_Token_Val").val(response.token);
+            $("#UpdatePassword_Email_Val").val(response.email);
+            animatedClose(false, "SubmitCode_Container", true, true);
+            animatedOpen(false, "CreateNewPassword_Container", true, false);
+        }
+        else {
+            $("#SubmitSingleUsingCode_Code_Val").val(null);
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4.25);
+        }
+    });
+});
+$("#SubmitAccountViaReserveCode_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-regular fa-circle-check text-neon-purple"></i>', response.alert, "Close", null, 0, null, null, null, 4.25);
+            $("#UpdatePassword_Token_Val").val(response.token);
+            $("#UpdatePassword_Email_Val").val(response.email);
+            animatedClose(false, "SubmitCode_Container", true, true);
+            animatedOpen(false, "CreateNewPassword_Container", true, false);
+        }
+        else {
+            $("#SendReserveCodeViaEmail_ReserveCode_Val").val(null);
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
+        }
+    });
+});
+
+$("#UpdatePassword_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-regular fa-circle-check text-neon-purple"></i>', response.alert, "Done", null, 0, null, null, null, 3.75);
+            $("#UpdatePassword_Password_Val").attr("disabled", true);
+            $("#UpdatePassword_ConfirmPassword_Val").attr("disabled", true);
+            $("#UpdatePassword_SbmtBtn").attr("disabled", true);
+            $("#UpdatePassword_SbmtBtn").html(' <i class="fa-regular fa-circle-check"></i> Password Updated');
+        }
+        else {
+            $("#UpdatePassword_Password_Val").val(null);
+            $("#UpdatePassword_ConfirmPassword_Val").val(null);
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Try Again", null, 0, null, null, null, 4.5);
+        }
+    });
+});
+
 $("#IsEmailUnique_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -132,6 +226,30 @@ $("#LogIn_Email_Val").on("change", function () {
     }
 });
 
+$("#SubmitSingleUsingCode_Code_Val").on("keyup", function () {
+    let value = $(this).val();
+    if (value.length >= 8) {
+        $("#SubmitSingleUsingCode_Form").submit();
+    }
+});
+
+$("#ChangeToReserveCodeType_Btn").on("click", function () {
+    animatedClose(false, "ForgotPassword_Container", false, true);
+    setTimeout(function () {
+        $("#RecoverViaEmail_Box").fadeOut(0);
+        $("#RecoverViaReserveCode_Box").fadeIn(0);
+        animatedOpen(false, "ForgotPassword_Container", true, false);
+    }, 450);
+});
+$("#ChangeToSingleUseType_Btn").on("click", function () {
+    animatedClose(false, "ForgotPassword_Container", false, true);
+    setTimeout(function () {
+        $("#RecoverViaEmail_Box").fadeIn(0);
+        $("#RecoverViaReserveCode_Box").fadeOut(0);
+        animatedOpen(false, "ForgotPassword_Container", true, false);
+    }, 450);
+});
+
 $(document).on("click", ".btn-open-container", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
@@ -140,8 +258,6 @@ $(document).on("click", ".btn-open-container", function (event) {
 });
 $(document).on("click", ".btn-smallside-open-container", function (event) {
     let trueId = getTrueId(event.target.id);
-    let botOffNavbarAdditionalValue = botOffNavbarH;
-    botOffNavbarH = 0;
     if (trueId != null) {
         animatedClose(true, "smallside-box-container", true, true);
         if (fullWidth < 768) {
@@ -157,10 +273,6 @@ $(document).on("click", ".btn-smallside-open-container", function (event) {
             }, 190);
         }
     }
-
-    setTimeout(function () {
-        botOffNavbarH = botOffNavbarAdditionalValue;
-    }, 900);
 });
 
 $(document).on("click", ".btn-slide-to-next", function (event) {
@@ -270,16 +382,23 @@ function slide(forAll, element) {
 
 function animatedOpen(forAll, element, sticky, closeAllOtherContainers) {
     if (forAll) {
+        let botOffNavbarAdditionalValue = botOffNavbarH;
+        if ($("#" + element).hasClass("smallside-box-container")) {
+            botOffNavbarH = 0;
+        }
+
         if (!closeAllOtherContainers) {
             $("." + element).fadeIn(300);
             if (sticky) {
                 $("." + element).css("bottom", botOffNavbarH + 18 + "px");
                 setTimeout(function () {
                     $("." + element).css("bottom", botOffNavbarH + 2 + "px");
+                    botOffNavbarH = botOffNavbarAdditionalValue;
                 }, 650);
             }
             else {
                 $("." + element).css("bottom", botOffNavbarH + 2 + "px");
+                botOffNavbarH = botOffNavbarAdditionalValue;
             }
         }
         else {
@@ -299,16 +418,23 @@ function animatedOpen(forAll, element, sticky, closeAllOtherContainers) {
         }
     }
     else {
+        let botOffNavbarAdditionalValue = botOffNavbarH;
+        if ($("#" + element).hasClass("smallside-box-container")) {
+            botOffNavbarH = 0;
+        }
+
         if (!closeAllOtherContainers) {
             $("#" + element).fadeIn(300);
             if (sticky) {
                 $("#" + element).css("bottom", botOffNavbarH + 18 + "px");
                 setTimeout(function () {
                     $("#" + element).css("bottom", botOffNavbarH + 2 + "px");
+                    botOffNavbarH = botOffNavbarAdditionalValue;
                 }, 650);
             }
             else {
                 $("#" + element).css("bottom", botOffNavbarH + 2 + "px");
+                botOffNavbarH = botOffNavbarAdditionalValue;
             }
         }
         else {

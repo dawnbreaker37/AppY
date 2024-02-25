@@ -25,5 +25,7 @@ namespace AppY.ViewModels
         [DataType(DataType.Password)]
         [Compare("Password", ErrorMessage = "Passwords are not same")]
         public string? ConfirmPassword { get; set; }
+        [MaxLength(6)]
+        public string? ReserveCode { get; set; }
     }
 }

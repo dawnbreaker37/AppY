@@ -1,6 +1,6 @@
 ﻿@model SignUp
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Sign Up or Sign In";
 }
 
 <div class="main-sidebar" id="Main_SideBar">
@@ -48,6 +48,89 @@
             <h5 class="h5 text-truncate p-1">Password Recovery</h5>
         </div>
         <div class="box-container p-2 pt-1 mt-1" id="ForgotPassword_Container-Box">
+            <div class="box-container p-2 bg-light">
+                <h6 class="h6">How can you recover your password</h6>
+                <small class="card-text">There are 2 different ways to recover your lost password:<br /><br/><span class="text-neon-purple fw-500">First scenario</span> - via <span class="fw-500">single-use code</span> if you do not remember your <span class="fw-500">reserve code</span> (this single-use code will be active withing <span class="fw-500">12</span> mins from the moment of sending. That code will be included in a email message<br /><br/><span class="text-neon-purple fw-500">Second scenario</span> - this case is actual if you've somewhere written your <span class="fw-500">reserve code</span>. Enter that code in form below and then create your new password. This way is much more efficient and fast (no email message need)</small>
+            </div>
+            <div class="mt-2" id="RecoverViaEmail_Box">
+                <form method="post" asp-controller="Account" asp-action="SendSingleUseCode" id="SendSingleUseCode_Form">
+                    <div class="form-floating">
+                        <span asp-validation-for="Email" class="badge alert-badge"></span>
+                        <input asp-for="Email" id="SingleUseCode_Email_Val" autocomplete="off" class="form-control shadow-none" placeholder="examplemail@@gmail.com" />
+                        <label asp-for="Email" for="SingleUseCode_Email_Val" class="fw-500">Email Address</label>
+                    </div>
+                    <div class="mt-2">
+                        <button type="submit" class="btn btn-light text-neon-purple btn-standard-asset w-100" id="SendSingleUseCode_SbmtBtn">Send Code</button>
+                        <button type="button" class="btn bg-neon-purple text-light btn-standard-asset w-100 mt-2" id="ChangeToReserveCodeType_Btn">via Reserve Code</button>
+                    </div>
+                </form>
+            </div>
+            <div class="mt-2" style="display: none;" id="RecoverViaReserveCode_Box">
+                <form method="get" asp-controller="Account" asp-action="SubmitAccountViaReserveCode" id="SubmitAccountViaReserveCode_Form">
+                    <div class="form-floating">
+                        <span asp-validation-for="Email" class="badge alert-badge"></span>
+                        <input type="text" asp-for="Email" id="SendReserveCodeViaEmail_Email_Val" autocomplete="off" class="form-control shadow-none" placeholder="examplemail@@gmail.com" />
+                        <label asp-for="Email" for="SendReserveCodeViaEmail_Email_Val" class="fw-500">Email Address</label>
+                    </div>
+                    <div class="form-floating mt-2">
+                        <span asp-validation-for="ReserveCode" class="badge alert-badge"></span>
+                        <input type="text" asp-for="ReserveCode" id="SendReserveCodeViaEmail_ReserveCode_Val" autocomplete="off" class="form-control shadow-none" placeholder="6-digit code" />
+                        <label asp-for="Email" for="SendReserveCodeViaEmail_ReserveCode_Val" class="fw-500">Reserve Code</label>
+                    </div>
+                    <div class="mt-2">
+                        <button type="submit" class="btn btn-light text-neon-purple btn-standard-asset w-100" id="SendReserveCodeViaEmail_SbmtBtn">Check & Continue</button>
+                        <button type="button" class="btn bg-neon-purple text-light btn-standard-asset w-100 mt-2" id="ChangeToSingleUseType_Btn">via Single-use Code</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="SubmitCode_Container">
+        <div class="header-container p-2 pb-0 text-center" id="SubmitCode_Container-Header">
+            <button type="button" class="btn btn-standard-asset btn-light btn-sm float-start" id="SendCodeAgain_Btn" disabled>Resend Code</button>
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="SubmitCode_Container-Close"></button>
+            <h5 class="h5 text-truncate p-1">Submit Code</h5>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="SubmitCode_Container-Box">
+            <div>
+                <form asp-controller="Account" asp-action="SubmitSingleUsingCode" id="SubmitSingleUsingCode_Form">
+                    <div>
+                        <input type="hidden" asp-for="Email" id="SubmitSingleUsingCode_Email_Val" />
+                    </div>
+                    <div>
+                        <input type="text" name="Code" autocomplete="off" maxlength="8" id="SubmitSingleUsingCode_Code_Val" class="special-form-control" placeholder="8-digit code" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="CreateNewPassword_Container">
+        <div class="header-container p-2 pb-0 text-center" id="CreateNewPassword_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="CreateNewPassword_Container-Close"></button>
+            <h5 class="h5 text-truncate p-1">Create New Password</h5>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="CreateNewPassword_Container-Box">
+            <div>
+                <form method="post" asp-controller="Account" asp-action="UpdatePassword" id="UpdatePassword_Form">
+                    <div class="d-none">
+                        <input type="hidden" asp-for="Email" id="UpdatePassword_Email_Val" />
+                        <input type="hidden" name="Token" id="UpdatePassword_Token_Val" />
+                    </div>
+                    <div class="form-floating">
+                        <input asp-for="Password" id="UpdatePassword_Password_Val" class="form-control shadow-none" placeholder="Enter your new password" />
+                        <label asp-for="Password" for="UpdatePassword_Password_Val" class="fw-500"></label>
+                    </div>
+                    <div class="form-floating mt-2">
+                        <input asp-for="ConfirmPassword" id="UpdatePassword_ConfirmPassword_Val" class="form-control shadow-none" placeholder="Enter your new password" />
+                        <label asp-for="ConfirmPassword" for="UpdatePassword_ConfirmPassword_Val" class="fw-500"></label>
+                    </div>
+                    <div class="mt-2">
+                        <button type="submit" class="btn btn-standard-asset bg-neon-purple text-light w-100" id="UpdatePassword_SbmtBtn">Submit Changes</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>

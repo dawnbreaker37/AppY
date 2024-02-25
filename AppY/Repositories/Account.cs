@@ -50,8 +50,8 @@ namespace AppY.Repositories
         {
             if(SignUpModel != null && !String.IsNullOrEmpty(SignUpModel.Password) && !String.IsNullOrEmpty(SignUpModel.Username))
             {
-                bool IsEmailUnique = await _userRepository.IsEmailUnique(SignUpModel.Email);
-                bool IsUsernameUnique = await _userRepository.IsUsernameUnique(SignUpModel.Username);
+                bool IsEmailUnique = await _userRepository.IsEmailUniqueAsync(SignUpModel.Email);
+                bool IsUsernameUnique = await _userRepository.IsUsernameUniqueAsync(SignUpModel.Username);
 
                 if (!IsEmailUnique && !IsUsernameUnique)
                 {
@@ -75,6 +75,23 @@ namespace AppY.Repositories
                 }
             }
             return (0, null);
-        }      
+        }
+
+        public async Task<bool> UpdatePasswordAsync(UpdatePassword Model)
+        {
+            if(!String.IsNullOrEmpty(Model.Email) && !String.IsNullOrEmpty(Model.Token) && !String.IsNullOrEmpty(Model.ConfirmPassword) && Model.Password == Model.ConfirmPassword)
+            {
+                User? UserInfo = await _userManager.FindByEmailAsync(Model.Email);
+                if(UserInfo != null)
+                {
+                    IdentityResult? Result = await _userManager.ResetPasswordAsync(UserInfo, Model.Token, Model.Password);
+                    if(Result != null && Result.Succeeded)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
     }
 }

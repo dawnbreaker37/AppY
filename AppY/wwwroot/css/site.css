@@ -31,6 +31,26 @@ body {
     transition: all ease 0.45s;
 }
 
+.special-form-control {
+    cursor: pointer;
+    font-family: 'Trebuchet MS';
+    padding: 16px;
+    width: 100%;
+    font-size: 40px;
+    outline: none;
+    border-radius: 9px;
+    border: 2px solid #865be9;
+    background-color: transparent;
+    transition: all ease 0.3s;
+}
+.special-form-control:focus {
+    background-color: #f8f9fa;
+}
+
+.style-font {
+    font-family: 'Trebuchet MS';
+}
+
 .btn-standard-asset {
     cursor: pointer;
     border-radius: 6px;
