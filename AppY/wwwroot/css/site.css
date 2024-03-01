@@ -21,14 +21,96 @@ body {
   margin-bottom: 60px;
 }
 
+.list-group {
+    border-radius: 8px;
+    transition: all ease 0.3s;
+}
+
+.image-picture-none-container {
+    width: 95px;
+    height: 95px;
+    border-radius: 95px;
+    background-color: rgb(240, 240, 240);
+    transition: all ease 0.3s;
+}
+.unpictured-container-label {
+    width: 100%;
+    font-weight: 500;
+    text-align: center;
+    font-size: 50px;
+    line-height: 95px;
+    transition: all ease 0.3s;
+}
+
+.image-picture-none-container-sm {
+    width: 35px;
+    height: 35px;
+    border-radius: 35px;
+    background-color: rgb(240, 240, 240);
+    transition: all ease 0.3s;
+}
+.unpictured-container-label-sm {
+    width: 100%;
+    font-weight: 500;
+    text-align: center;
+    font-size: 23px;
+    line-height: 35px;
+    transition: all ease 0.37s;
+}
+
+.image-container {
+    height: 70px;
+    width: 80px;
+    object-fit: contain;
+    border-radius: 17px;
+    transition: all ease 0.3s;
+}
+
+.btn-group-member {
+    cursor: pointer;
+    border-radius: 8px;
+/*    font-weight: 500;*/
+    text-align: left;
+    border: 1px solid transparent;
+    background-color: #f8f9fa;
+    transition: all ease 0.3s;
+}
+.btn-group-member:hover,
+.btn-group-member:active {
+    border: 1px solid #f8f9fa;
+    background-color: rgb(240, 240, 240);
+}
+
 .form-control {
     border: 1px solid rgb(240, 240, 240);
     border-radius: 6px;
+    resize: none;
     transition: all ease 0.45s;
 }
 .form-floating {
     padding: 0 0 1px 0;
     transition: all ease 0.45s;
+}
+
+.user-via-shortname {
+    border-radius: 34px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0 2px 0 2px;
+    background-color: transparent;
+    color: #0d6efd;
+    transition: all ease 0.37s;
+}
+.user-via-shortname:hover,
+.user-via-shortname:active {
+    background-color: #f0f0f0;
+}
+
+.btn-bottom-rounded {
+    border-radius: 0 0 8px 8px;
+}
+.btn-top-rounded {
+    border-radius: 8px 8px 0 0;
 }
 
 .special-form-control {
@@ -49,6 +131,26 @@ body {
 
 .style-font {
     font-family: 'Trebuchet MS';
+}
+
+.tooltip-asset-one {
+    border: 1px solid rgb(240, 240, 240);
+    background-color: transparent;
+    backdrop-filter: blur(9px);
+    transition: linear: 0.2s;
+}
+
+.h6 {
+    transition: linear 0.3s;
+}
+.h5 {
+    transition: linear 0.3s;
+}
+.h4 {
+    transition: linear 0.3s;
+}
+.h3 {
+    transition: linear 0.3s;
 }
 
 .btn-standard-asset {

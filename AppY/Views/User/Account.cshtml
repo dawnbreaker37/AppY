@@ -1,0 +1,531 @@
+﻿@model User
+@{
+    ViewData["Title"] = "Your Account";
+
+    User? UserInfo = ViewBag.UserInfo;
+    TimeSpan? DaysFromLastChange = ViewBag.DaysPassed;
+    string? UnpicturedAvatarInfo = ViewBag.UnpicturedAvatarInfo;
+}
+
+<div class="main-sidebar" id="Main_SideBar">
+    <div class="d-none">
+        <div class="d-none">
+            <input type="hidden" id="InitialShortname_Val" value="@UserInfo.ShortName" />
+        </div>
+        <form method="get" asp-controller="User" asp-action="IsShortnameUnique" id="IsShortnameUnique_Form">
+            <input type="hidden" name="Id" value="@UserInfo.Id" />
+            <input type="hidden" name="Shortname" id="IsShortnameUnique_Shortname_Val" value="@UserInfo.ShortName" />
+        </form>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="SecuritySettings_Container">
+        <div class="header-container p-2 pb-0 text-center" id="SecuritySettings_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="SecuritySettings_Container-Close"></button>
+            <h5 class="h5 text-truncate p-1">Security Settings</h5>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="SecuritySettings_Container-Box">
+            @if (ViewBag.IsPasswordChangeAllowed)
+            {
+                <div id="SubmitPassword_Box">
+                    <div class="box-container bg-light p-2">
+                        <small class="card-text text-muted fw-500">Submit your account</small>
+                        <div></div>
+                        <small class="card-text">Submit that this is your account by entering your <span class="fw-500">old password</span>. If youd do not remember your old password, you may receive a <span class="fw-500">single-use code</span> to your email or you may use your <span class="fw-500">reserve-code</span> to update your password</small>
+                    </div>
+                    <div class="form-floating mt-2">
+                        <input type="email" readonly disabled class="form-control strong-input shadow-none" value="@UserInfo.Email" placeholder="Enter your email here" />
+                        <label class="fw-500">Email</label>
+                    </div>
+                </div>
+                <div class="mt-1" id="ChangePassword_Box">
+                    <form method="post" asp-controller="Account" asp-action="ChangePassword" id="ChangePassword_Form">
+                        <div class="d-none">
+                            <input type="hidden" name="Id" value="@UserInfo.Id" />
+                        </div>
+                        <div class="form-floating">
+                            <input type="password" name="OldPassword" id="OldPassword" class="form-control shadow-none form-control-check-input" data-bs-min-length="6" data-bs-html="ChangePassword_SbmtBtn" placeholder="Enter your current password here" />
+                            <label for="OldPassword" class="fw-500">Current Password</label>
+                        </div>
+                        <div class="ms-1">
+                            <small class="card-text text-muted">Your current password</small>
+                        </div>
+                        <div class="form-floating mt-3">
+                            <input type="password" name="NewPassword" id="ChangePassword_NewPassword" class="form-control shadow-none form-control-check-input" data-bs-min-length="6" data-bs-html="ChangePassword_SbmtBtn" placeholder="Enter your current password here" />
+                            <label for="ChangePassword_NewPassword" class="fw-500">New Password</label>
+                        </div>
+                        <div class="ms-1">
+                            <small class="card-text text-muted">New password must container [8-24] characters</small>
+                        </div>
+                        <div class="form-floating mt-3">
+                            <input type="password" name="ConfirmPassword" id="ChangePassword_ConfirmPassword" class="form-control shadow-none form-control-check-input" data-bs-min-length="6" data-bs-html="ChangePassword_SbmtBtn" placeholder="Enter your current password here" />
+                            <label for="ChangePassword_ConfirmPassword" class="fw-500">Confirm Password</label>
+                        </div>
+                        <div class="ms-1">
+                            <small class="card-text text-muted">Confirm (enter your new one again) password</small>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-standard-asset btn-primary w-100">Change Password</button>
+                            <button type="button" class="btn btn-standard-asset btn-light text-primary w-100 mt-2 btn-smallside-open-container" id="ForgotPassword_Container-Open">Forgot Password</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="box-container mt-2" style="display: none;" id="PasswordChangeData_Box">
+                    <div class="box-container bg-light p-2">
+                        <small class="card-text text-muted fw-500">Password already changed</small>
+                        <div></div>
+                        <small class="card-text">Since you've recently changed your password (less than 28 days ago) you cannot change it again</small>
+                    </div>
+                    <ul class="list-group mt-2">
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="me-auto">
+                                <div>
+                                    <small class="card-text text-muted fw-500">Changed at</small>
+                                </div>
+                                <small class="card-text" id="DayOfChange_Lbl">No data</small>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="me-auto">
+                                <div>
+                                    <small class="card-text text-muted fw-500">Time Passed</small>
+                                </div>
+                                <small class="card-text" id="DaysPassed_Lbl">No data</small>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="me-auto">
+                                <div>
+                                    <small class="card-text text-muted fw-500">Min. Days to Change</small>
+                                </div>
+                                <small class="card-text">28 days</small>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <div class="box-container" id="PasswordChangeData_Box">
+                    <div class="box-container bg-light p-2">
+                        <small class="card-text text-muted fw-500">Password already changed</small>
+                        <div></div>
+                        <small class="card-text">Since you've recently changed your password (less than 28 days ago) you cannot change it again</small>
+                    </div>
+                    <ul class="list-group mt-2">
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="me-auto">
+                                <div>
+                                    <small class="card-text text-muted fw-500">Changed at</small>
+                                </div>
+                                @if (UserInfo.PasswordChanged.HasValue)
+                                {
+                                    <small class="card-text" id="DayOfChange_Lbl">@UserInfo.PasswordChanged.Value.ToShortDateString(), at @UserInfo.PasswordChanged.Value.ToShortTimeString()</small>
+                                }
+                                else
+                                {
+                                    <small class="card-text" id="DayOfChange_Lbl">No data</small>
+                                }
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="me-auto">
+                                <div>
+                                    <small class="card-text text-muted fw-500">Time Passed</small>
+                                </div>
+                                <small class="card-text" id="DaysPassed_Lbl">@ViewBag.DaysPassedStr ago</small>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="me-auto">
+                                <div>
+                                    <small class="card-text text-muted fw-500">Min. Days to Change</small>
+                                </div>
+                                <small class="card-text">28 days</small>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="ForgotPassword_Container">
+        <div class="header-container p-2 pb-0 text-center" id="ForgotPassword_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="ForgotPassword_Container-Close"></button>
+            <h5 class="h5 text-truncate p-1">Password Recovery</h5>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="ForgotPassword_Container-Box">
+            <div class="box-container p-2 bg-light">
+                <h6 class="h6">How can you recover your password</h6>
+                <small class="card-text">There are 2 different ways to recover your lost password:<br /><br /><span class="text-neon-purple fw-500">First scenario</span> - via <span class="fw-500">single-use code</span> if you do not remember your <span class="fw-500">reserve code</span> (this single-use code will be active withing <span class="fw-500">12</span> mins from the moment of sending. That code will be included in a email message<br /><br /><span class="text-neon-purple fw-500">Second scenario</span> - this case is actual if you've somewhere written your <span class="fw-500">reserve code</span>. Enter that code in form below and then create your new password. This way is much more efficient and fast (no email message need)</small>
+            </div>
+            <div class="mt-2" id="RecoverViaEmail_Box">
+                <div class="form-floating">
+                    <input type="email" readonly disabled class="form-control shadow-none" placeholder="Enter your email here" value="@UserInfo.Email" />
+                    <label class="fw-500">Email</label>
+                </div>
+                <form method="post" asp-controller="Account" asp-action="SendSingleUseCode" id="SendSingleUseCode_Form">
+                    <div class="d-none">
+                        <input name="Email" value="@UserInfo.Email" />
+                    </div>
+                    <div class="mt-2">
+                        <button type="submit" class="btn btn-light text-neon-purple btn-standard-asset w-100" id="SendSingleUseCode_SbmtBtn">Send Code</button>
+                        <button type="button" class="btn bg-neon-purple text-light btn-standard-asset w-100 mt-2" id="ChangeToReserveCodeType_Btn">via Reserve Code</button>
+                    </div>
+                </form>
+            </div>
+            <div class="mt-2" style="display: none;" id="RecoverViaReserveCode_Box">
+                <div class="form-floating">
+                    <input type="email" readonly disabled class="form-control shadow-none" placeholder="Enter your email here" value="@UserInfo.Email" />
+                    <label class="fw-500">Email</label>
+                </div>
+                <form method="get" asp-controller="Account" asp-action="SubmitAccountViaReserveCode" id="SubmitAccountViaReserveCode_Form">
+                    <div class="d-none">
+                        <input name="Email" value="@UserInfo.Email" />
+                    </div>
+                    <div class="form-floating mt-2">
+                        <span asp-validation-for="ReserveCode" class="badge alert-badge"></span>
+                        <input type="text" asp-for="ReserveCode" id="SendReserveCodeViaEmail_ReserveCode_Val" autocomplete="off" class="form-control shadow-none" placeholder="6-digit code" />
+                        <label asp-for="Email" for="SendReserveCodeViaEmail_ReserveCode_Val" class="fw-500">Reserve Code</label>
+                    </div>
+                    <div class="mt-2">
+                        <button type="submit" class="btn btn-light text-neon-purple btn-standard-asset w-100" id="SendReserveCodeViaEmail_SbmtBtn">Check & Continue</button>
+                        <button type="button" class="btn bg-neon-purple text-light btn-standard-asset w-100 mt-2" id="ChangeToSingleUseType_Btn">via Single-use Code</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="SubmitCode_Container">
+        <div class="header-container p-2 pb-0 text-center" id="SubmitCode_Container-Header">
+            <button type="button" class="btn btn-light btn-sm float-start me-1 btn-standard-asset" id="SendCodeAgain_Btn" disabled>Resend Code</button>
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="SubmitCode_Container-Close"></button>
+            <h5 class="h5 text-truncate p-1">Submit Code</h5>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="SubmitCode_Container-Box">
+            <div>
+                <form method="get" asp-controller="Account" asp-action="SubmitSingleUsingCode" id="SubmitSingleUsingCode_Form">
+                    <div class="d-none">
+                        <input type="hidden" name="Email" id="SubmitSingleUsingCode_Email_Val" value="@UserInfo.Email" />
+                    </div>
+                    <div>
+                        <input name="Code" id="SubmitSingleUsingCode_Code_Val" class="special-form-control w-100" placeholder="8-digit code" maxlength="8" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="CreateNewPassword_Container">
+        <div class="header-container p-2 pb-0 text-center" id="CreateNewPassword_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="CreateNewPassword_Container-Close"></button>
+            <h5 class="h5 text-truncate p-1">Reset Password</h5>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="CreateNewPassword_Container-Box">
+            <div>
+                <form method="post" asp-controller="Account" asp-action="UpdatePassword" id="UpdatePassword_Form">
+                    <div class="d-none">
+                        <input type="hidden" name="Token" id="UpdatePassword_Token_Val" />
+                        <input type="hidden" name="Email" id="UpdatePassword_Email_Val" value="@UserInfo.Email" />
+                    </div>
+                    <div class="form-floating">
+                        <input type="password" name="Password" id="Password" class="form-control shadow-none form-control-check-input" data-bs-min-length="8" data-bs-html="ResetPassword_SbmtBtn" placeholder="Enter your new password here" />
+                        <label for="Password" class="fw-500">Password</label>
+                    </div>
+                    <div class="ms-1">
+                        <small class="card-text text-muted">Password must container [8-24] characters</small>
+                    </div>
+                    <div class="form-floating mt-3">
+                        <input type="password" name="ConfirmPassword" id="ConfirmPassword" class="form-control shadow-none form-control-check-input" data-bs-min-length="8" data-bs-html="ResetPassword_SbmtBtn" placeholder="Confirm password" />
+                        <label for="ConfirmPassword" class="fw-500">Confirm Password</label>
+                    </div>
+                    <div class="ms-1">
+                        <small class="card-text text-muted">Submit your new password</small>
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn bg-neon-purple text-light btn-standard-asset w-100" id="UpdatePassword_SbmtBtn">Reset Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="Edit_Container">
+        <div class="header-container p-2 pb-0 text-center" id="Edit_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Edit_Container-Close"></button>
+            <h5 class="h5 text-truncate p-1">Edit</h5>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="Edit_Container-Box">
+            <div>
+                <form method="post" asp-controller="User" asp-action="Edit" id="EditAccount_Form">
+                    <div class="form-floating">
+                        <input asp-for="PseudoName" class="form-control shadow-none" value="@UserInfo.PseudoName" placeholder="Enter your pseudoname here" />
+                        <label asp-for="PseudoName" class="fw-500">Pseudoname</label>
+                    </div>
+                    <div class="ms-1">
+                        <small class="card-text text-muted">May contain up to 40 chars</small>
+                    </div>
+                    <div class="form-floating mt-3">
+                        <input asp-for="ShortName" class="form-control strong-input shadow-none" value="@UserInfo.ShortName" placeholder="Enter your shortname here" />
+                        <label asp-for="ShortName" class="fw-500">Shortname</label>
+                    </div>
+                    <div class="ms-1">
+                        <small class="card-text text-muted">This is your account's shortlink key value (/User/Info/@@<span class="text-primary" id="ShortnameVal_Span">@UserInfo.ShortName</span>). This link opens your own page. You may use: <span class="fw-500">[A-Z, a-z], [0-9] and underscores</span>. Min length: <span class="fw-500">4</span> chars, max length: <span class="fw-500">20</span>. <span class="text-primary" id="ShortnameStatus_Span">This shortname is free</span></small>
+                    </div>
+                    <div class="form-floating mt-3">
+                        <textarea id="Description" name="Description" class="form-control shadow-none h-120" value="@UserInfo.Description" placeholder="Enter your account's description here" rows="4" style="height: 140px;">@UserInfo.Description</textarea>
+                        <label asp-for="Description" class="fw-500">Description</label>
+                    </div>
+                    <div class="ms-1">
+                        <small class="card-text text-muted">Any details about you are welcome</small>
+                    </div>
+                    <div class="mt-2">
+                        <button type="submit" class="btn btn-light text-primary w-100 btn-standard-asset" id="EditAccount_SbmtBtn">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="AvatarDesign_Container">
+        <div class="header-container p-2 text-center" id="AvatarDesign_Container-Header">
+            <button type="button" class="btn btn-light btn-standard-asset btn-sm float-start me-1" id="SetDefaultColors_Btn">Default</button>
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="AvatarDesign_Container-Close"></button>
+            <div class="image-picture-none-container-sm mx-auto text-center" style="background-color: #@UserInfo.AvatarBgColor;" id="AvatarNoneSm_Box">
+                <div class="unpictured-container-label-sm" style="color: #@UserInfo.AvatarFgColor" id="UnpicturedAvatarSm_Lbl">@UnpicturedAvatarInfo</div>
+            </div>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="AvatarDesign_Container-Box">
+            <div class="box-container p-2 text-center" style="background-color: #@UserInfo.AvatarBgColor;" id="AvatarDesignExample-Box">
+                <h6 class="h6" id="AvatarDesign_Container_Lbl" style="color: #@UserInfo.AvatarFgColor;">Current Pattern</h6>
+                <span class="h3 mt-2" id="AvatarDesign_Container_MainLbl" style="color: #@UserInfo.AvatarFgColor;">@UserInfo.PseudoName</span>
+                <div></div>
+                <small class="card-text text-muted" id="AvatarDesignShortname_Lbl">@@@UserInfo.ShortName</small>
+            </div>
+            <div class="box-container mt-2">
+                <div>
+                    <div class="bordered-container p-1">
+                        <div class="row">
+                            <div class="col">
+                                <button type="button" class="btn btn-primary btn-sm w-100 btn-standard-asset" id="ColorPickerVia_Hex">#HEX</button>
+                            </div>
+                            <div class="col">
+                                <button type="button" class="btn btn-light btn-sm w-100 btn-standard-asset" id="ColorPickerVia_RGB">RGB Sliders</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-2 p-2" style="display: none;" id="RGBColorChange_Box">
+                    <div class="d-none">
+                        <input type="hidden" id="CompiledRgbColor_Val" />
+                    </div>
+                    <div>
+                        <label for="RedRange_Val" class="form-label fw-500">Red ∙ <span class="text-muted" id="RedRange_Val-Span">0</span></label>
+                        <input type="range" class="form-range color-picker-range" min="0" max="255" step="1" value="0" id="RedRange_Val" />
+                    </div>
+                    <div class="mt-2">
+                        <label for="GreenRange_Val" class="form-label fw-500">Green ∙ <span class="text-muted" id="GreenRange_Val-Span">0</span></label>
+                        <input type="range" class="form-range color-picker-range" min="0" max="255" step="1" value="0" id="GreenRange_Val" />
+                    </div>
+                    <div class="mt-2">
+                        <label for="BlueRange_Val" class="form-label fw-500">Blue ∙ <span class="text-muted" id="BlueRange_Val-Span">0</span></label>
+                        <input type="range" class="form-range color-picker-range" min="0" max="255" step="1" value="0" id="BlueRange_Val" />
+                    </div>
+                    <div class="mt-2">
+                        <div class="row">
+                            <div class="col">
+                                <button type="button" class="btn btn-light btn-standard-asset text-primary btn-sm w-100 set-from-into" id="AvatarBgColor_Val-SetFromInto" data-bs-set-from="RGB_SelectedColor_InHEX_Lbl">Set as Background</button>
+                            </div>
+                            <div class="col">
+                                <button type="button" class="btn btn-light btn-standard-asset text-primary btn-sm w-100 set-from-into" id="AvatarFgColor_Val-SetFromInto" data-bs-set-from="RGB_SelectedColor_InHEX_Lbl">Set as Foreground</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 box-container" style="height: 120px; background-color: #f8f9fa;" id="RGBSelectedColor_Box"></div>
+                    <div class="bordered-container text-center p-2 pt-3 pb-3 mt-2">
+                        <span class="h2 text-primary">#<span id="RGB_SelectedColor_InHEX_Lbl">f8f9fa</span></span>
+                        <div></div>
+                        <small class="card-text text-muted" id="RGB_SelectedColor_InRGB_Lbl">rgb(248,249,250)</small>
+                    </div>
+                </div>
+                <div class="mt-2" id="MainColorChangeForm_Box">
+                    <form method="post" asp-controller="User" asp-action="EditAvatarDesign" id="EditAvatarDesign_Form">
+                        <div class="d-none">
+                            <input type="hidden" name="Id" value="@UserInfo.Id" />
+                            <input type="hidden" name="AvatarStickerUrl" id="EditAvatarDesign_AvatarStickerUrl_Val" value="@UserInfo.AvatarStickerUrl" />
+                        </div>
+                        <div class="form-floating">
+                            <input type="text" id="AvatarBgColor_Val" name="BgColor" value="@UserInfo.AvatarBgColor" autocomplete="off" class="form-control shadow-none strong-input" placeholder="HEX Code: (#0d6efd)" maxlength="6" />
+                            <label for="AvatarBgColor_Val" class="fw-500">Background Color</label>
+                        </div>
+                        <div class="ms-1">
+                            <small class="card-text text-muted">Enter code in HEX format, but without '#' (example: <span class="text-primary">0d6efd</span>)</small>
+                        </div>
+                        <div class="form-floating mt-2">
+                            <input type="text" id="AvatarFgColor_Val" value="@UserInfo.AvatarFgColor" name="FgColor" autocomplete="off" class="form-control shadow-none strong-input" placeholder="HEX Code: (#f8f9fa)" maxlength="6" />
+                            <label for="AvatarFgColor_Val" class="fw-500">Foreground Color</label>
+                        </div>
+                        <div class="ms-1">
+                            <small class="card-text text-muted">Enter code in HEX format, but without '#' (example: <span class="text-dark">000000</span>)</small>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-standard-asset btn-primary w-100">Save Changes</button>
+                            <div class="box-container ps-1 pe-1">
+                                <div class="row">
+                                    <div class="col">
+                                        <button type="button" class="btn btn-standard-asset btn-light text-primary w-100 mt-2" id="SetRandomColors_Btn">Random Colors</button>
+                                    </div>
+                                    <div class="col">
+                                        <button type="button" class="btn btn-standard-asset btn-light text-primary w-100 mt-2 btn-smallside-open-container" id="AvatarStyle_Container-Open">Avatar Style</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="AvatarStyle_Container">
+        <div class="header-container p-2 text-center" id="AvatarStyle_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="AvatarStyle_Container-Close"></button>
+            <div class="image-picture-none-container mx-auto text-center" style="background-color: #@UserInfo.AvatarBgColor;" id="AvatarStyleChange_Box">
+                <div class="unpictured-container-label" style="color: #@UserInfo.AvatarFgColor" id="AvatarStyleChange_MainLbl">@UnpicturedAvatarInfo</div>
+            </div>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="AvatarStyle_Container-Box">
+            <div class="box-container p-1">
+                <div class="row">
+                    <div class="col">
+                        <div class="box-container bg-light p-2 text-center">
+                            <h3 class="h3 text-neon-purple"> <i class="fas fa-solid fa-icons"></i> </h3>
+                            <h5 class="h5">Icons</h5>
+                            <small class="card-text text-muted">Select and set a fancy icon as your avatar from our lovely list</small>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-standard text-neon-purple">Set the Icon</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="box-container bg-light p-2 text-center">
+                            <h3 class="h3 text-neon-purple"> <i class="fa-solid fa-text-height"></i> </h3>
+                            <h5 class="h5">Word</h5>
+                            <small class="card-text text-muted">Set a custom word as your avatar (may contain up to <span class="fw-500">6</span> chars)</small>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-standard text-neon-purple">Set the Word</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col">
+                        <div class="box-container bg-light p-2 text-center">
+                            <h3 class="h3 text-neon-purple"> <i class="fa-solid fa-y"></i> </h3>
+                            <h5 class="h5">Character</h5>
+                            <small class="card-text text-muted">Set a customizable character as your new avatar</small>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-standard text-neon-purple">Set the Character</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="box-container bg-light p-2 text-center">
+                            <h3 class="h3 text-neon-purple"> <i class="fa-regular fa-face-grin-hearts"></i> </h3>
+                            <h5 class="h5">Emojis</h5>
+                            <small class="card-text text-muted">Select an emoji from our prepared list as your avatar</small>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-standard text-neon-purple">Set the Emoji</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-container shadow-standard" id="Preloaded_Container">
+    <div class="header-container p-2 text-center" id="Preloaded_Container-Header">
+        <button type="button" class="btn btn-light btn-standard-asset float-end btn-sm ms-1 btn-smallside-open-container" id="Edit_Container-Open">Edit</button>
+        <h5 class="h5 text-truncate p-1" id="HeaderText_Lbl">Your Account</h5>
+    </div>
+    <div class="box-container p-2 pt-1 mt-1" id="Prealoded_Container-Box">
+        <div class="bordered-container p-2">
+            <div class="text-center">
+                @if(UserInfo.AvatarUrl == null)
+                {
+                    <div class="image-picture-none-container text-center mx-auto" style="background-color: #@UserInfo.AvatarBgColor;" id="AvatarNone_Box">
+                        <div class="unpictured-container-label" style="color: #@UserInfo.AvatarFgColor" id="UnpicturedAvatar_Lbl"> @UnpicturedAvatarInfo</div>
+                    </div>
+                    <div class="image-container text-center" style="display: none;" id="Avatar_Box">
+                        <img src="#" id="AvatarUrl_Id" />
+                    </div>
+                    <span class="h1" id="UserInfo_Pseudoname_Lbl">@UserInfo.PseudoName</span>
+                    <div></div>
+                    <small class="card-text text-muted" id="UserInfo_Shortname_Lbl">@@@UserInfo.ShortName</small>
+                }
+                else
+                {
+                    <div class="image-picture-none-container text-center mx-auto" style="display: none;" id="AvatarNone_Box">
+                        <div class="unpictured-container-label text-primary" id="UnpicturedAvatar_Lbl">@UnpicturedAvatarInfo</div>
+                    </div>
+                    <div class="image-container text-center" id="Avatar_Box">
+                        <img src="#" id="AvatarUrl_Id" />
+                    </div>
+                    <div class="mt-2"></div>
+                    <span class="h1" id="UserInfo_Pseudoname_Lbl">@UserInfo.PseudoName</span>
+                    <div></div>
+                    <small class="card-text text-muted" id="UserInfo_Shortname_Lbl">@@@UserInfo.ShortName</small>
+                }
+            </div>
+        </div>
+        <div class="box-container bg-light p-2 mt-2">
+            <small class="card-text text-muted fw-500">Description</small>
+            @if(UserInfo.Description is null)
+            {
+                <p class="card-text white-space-on" id="UserInfo_Description_Lbl">No description</p>
+            }
+            else
+            {
+                <p class="card-text white-space-on" id="UserInfo_Description_Lbl">@UserInfo.Description</p>
+            }
+        </div>
+        @if (UserInfo.AvatarUrl == null)
+        {
+            <div class="mt-2">
+                <div class="btn-group-vertical w-100" role="group" aria-label="vertical btn-group">
+                    <button type="button" class="btn btn-group-member w-100 btn-smallside-open-container" id="ProfilePhoto_Container-Open"> <i class="fa-solid fa-camera"></i> Change Profile Photo</button>
+                    <button type="button" class="btn btn-group-member w-100 btn-smallside-open-container" id="AvatarDesign_Container-Open"> <i class="fa-solid fa-brush"></i> Change Avatar Design</button>
+                </div>
+            </div>
+        }
+        <div class="mt-3">
+            <div class="btn-group-vertical w-100" role="group" aria-label="vertical btn-group">
+                <button type="button" class="btn btn-group-member btn-smallside-open-container" id="Edit_Container-OpenX"> <i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                <button type="button" class="btn btn-group-member btn-smallside-open-container" id="SecuritySettings_Container-Open"> <i class="fa-solid fa-key"></i> Security</button>
+                <button type="button" class="btn btn-group-member btn-smallside-open-container" id="Privacy_Container-Open"> <i class="fa-solid fa-lock"></i> Privacy</button>
+            </div>
+        </div>
+        <div class="mt-3">
+            <div class="btn-group-vertical w-100" role="group" aria-label="vertical btn-group">
+                <div class="w-100">
+                    <form method="get" asp-controller="Post" asp-action="GetSavedPosts" id="GetSavesPosts_Form">
+                        <input type="hidden" name="Id" value="@UserInfo.Id" />
+                        <button type="submit" class="btn btn-group-member btn-top-rounded w-100"> <i class="fa-solid fa-quote-right"></i> Saved Posts</button>
+                    </form>
+                </div>
+                <button type="button" class="btn btn-group-member btn-bottom-rounded btn-smallside-open-container" id="Appearance_Container-Open"> <i class="fa-solid fa-fill-drip"></i> Appearance</button>
+            </div>
+        </div>
+        <div class="mt-3">
+            <div class="btn-group-vertical w-100" role="group" aria-label="vertical btn-group">
+                <a asp-controller="Home" asp-action="AskAQuestion" class="btn btn-group-member"> <i class="fa-solid fa-circle-question"></i> Ask a Question</a>
+                <a asp-controller="Home" asp-action="About" class="btn btn-group-member"> <i class="fa-solid fa-circle-info"></i> About App</a>
+                <a asp-controller="Home" asp-action="Toolbox" class="btn btn-group-member"> <i class="fa-solid fa-code"></i> Text Editor and API</a>
+            </div>
+        </div>
+    </div>
+</div>
+

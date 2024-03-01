@@ -3,6 +3,7 @@ using AppY.Interfaces;
 using AppY.Models;
 using AppY.ViewModels;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace AppY.Repositories
 {
@@ -21,9 +22,22 @@ namespace AppY.Repositories
             _userRepository = userRepository;
         }
 
-        public Task<bool> LogOutAsync()
+        public async Task<bool> ResetPasswordAsync(ChangePassword Model)
         {
-            throw new NotImplementedException();
+            if(!String.IsNullOrEmpty(Model.OldPassword) && !String.IsNullOrEmpty(Model.NewPassword) && !String.IsNullOrEmpty(Model.ConfirmPassword) && Model.Id != 0)
+            {
+                User? UserInfo = await _userManager.FindByIdAsync(Model.Id.ToString());
+                if(UserInfo != null)
+                {
+                    IdentityResult? Result = await _userManager.ChangePasswordAsync(UserInfo, Model.OldPassword, Model.NewPassword);
+                    if(Result != null && Result.Succeeded)
+                    {
+                        await _context.Users.AsNoTracking().Where(u=>u.Id == Model.Id && !u.IsDisabled).ExecuteUpdateAsync(u=>u.SetProperty(u=>u.PasswordChanged, DateTime.Now));
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public async Task<bool> SignInAsync(SignIn SignInModel)
@@ -62,6 +76,8 @@ namespace AppY.Repositories
                         Email = SignUpModel.Email,
                         PseudoName = SignUpModel.Username,
                         UserName = SignUpModel.Username,
+                        AvatarBgColor = "F0F0F0",
+                        AvatarFgColor = "000000",
                         ShortName = "id" + Guid.NewGuid().ToString("D").Substring(0, 7),
                         ReserveCode = Guid.NewGuid().ToString("D").Substring(0, 6)
                     };
@@ -87,6 +103,7 @@ namespace AppY.Repositories
                     IdentityResult? Result = await _userManager.ResetPasswordAsync(UserInfo, Model.Token, Model.Password);
                     if(Result != null && Result.Succeeded)
                     {
+                        await _context.Users.AsNoTracking().Where(u => u.Email == Model.Email && !u.IsDisabled).ExecuteUpdateAsync(u => u.SetProperty(u => u.PasswordChanged, DateTime.Now));
                         return true;
                     }
                 }

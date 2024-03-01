@@ -9,6 +9,6 @@ namespace AppY.Interfaces
         public Task<(int, string?)?> SignUpAsync(SignUp SignUpModel);
         public Task<bool> SignInAsync(SignIn SignInModel);
         public Task<bool> UpdatePasswordAsync(UpdatePassword Model);
-        public Task<bool> LogOutAsync();
+        public Task<bool> ResetPasswordAsync(ChangePassword Model);
     }
 }

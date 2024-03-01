@@ -18,6 +18,11 @@ namespace AppY.Controllers
             return View();
         }
 
+        public IActionResult Toolbox()
+        {
+            return View();
+        }
+
         public IActionResult Privacy()
         {
             return View();

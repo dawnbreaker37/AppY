@@ -1,0 +1,136 @@
+﻿@model User
+@{
+    ViewData["Title"] = "Toolbox";
+}
+
+<div class="main-container shadow-standard" id="Preloaded_Container">
+    <div class="header-container p-2 text-center" id="Preloaded_Container-Header">
+        <h5 class="h5 text-truncate p-1" id="HeaderText_Lbl">Toolbox</h5>
+    </div>
+    <div class="box-container p-2 pt-1 mt-1" id="Preloaded_Container-Box">
+        <div class="text-center mt-2">
+            <h1 class="h1 display-4"> <i class="fa-solid fa-screwdriver-wrench text-neon-purple"></i> </h1>
+            <p class="h2 display-5 style-font">Welcome to Toolbox!</p>
+            <small class="card-text text-muted">Get ready to explore something about our <span class="fw-500">text editor</span> and other cool features</small>
+        </div>
+        <div class="p-2 pt-3 mt-3">
+            <div class="text-center">
+                <span class="h4">Let's Start With Text Editor</span>
+                <div></div>
+                <small class="card-text text-muted">You may test every feature of text editor here, in test part</small>
+            </div>
+            <div class="box-container mt-4" id="Guide_Box">
+                <div class="slider-container box-container bg-light shadow-sm p-3 text-center" id="Guide_Box-Part0">
+                    <h2 class="h2 text-neon-purple"> <i class="fa-solid fa-bold"></i> </h2>
+                    <p class="card-text fw-500">For important parts that we and the other users must pay attention... we've tried to make it not too much hot and bold so sometimes you'll be able to really pay attention on this type of typings</p>
+                </div>
+                <div class="slider-container box-container bg-light shadow-sm p-3 text-center" style="display: none;" id="Guide_Box-Part1">
+                    <h2 class="h2 text-neon-purple"> <i class="fa-solid fa-italic"></i> </h2>
+                    <p class="card-text fst-italic">Put some italian efficiency and taste in your text so you'll make it way better (may be). Anyways, this one is also an another method to take users attention, so, try it!</p>
+                </div>
+                <div class="slider-container box-container bg-light shadow-sm p-3 text-center" style="display: none;" id="Guide_Box-Part2">
+                    <h2 class="h2 text-neon-purple"> <i class="fa-solid fa-underline"></i> </h2>
+                    <p class="card-text text-decoration-underline">3rd in a row. Underline the coolest parts of your posts and emphasis them, but do not overdue with it, it may cause some sort of discomfort</p>
+                </div>
+                <div class="slider-container box-container bg-light shadow-sm p-3 text-center" style="display: none;" id="Guide_Box-Part3">
+                    <h2 class="h2 text-neon-purple"> <i class="fa-solid fa-palette"></i> </h2>
+                    <p class="card-text style-font">Put some <span class="text-danger">r</span><span style="color: darkorange;">a</span><span class="text-warning">i</span><span class="text-success">n</span><span class="text-primary">b</span><span style="color: indigo;">o</span><span style="color: violet;">w</span> in your posts. It's not only black and white war</p>
+                </div>
+                <div class="slider-container box-container bg-light shadow-sm p-3 text-center" style="display: none;" id="Guide_Box-Part4">
+                    <h2 class="h2 text-neon-purple"> <i class="fa-solid fa-link"></i> </h2>
+                    <p class="card-text">A very useful feature for everyone and every post. Put a <a href="#" class="text-primary text-decoration-none">link covered with a text</a>, to make it look way better and interesting in your posts</p>
+                </div>
+                <div class="slider-container box-container bg-light shadow-sm p-3 text-center" style="display: none;" id="Guide_Box-Part5">
+                    <h2 class="h2 text-neon-purple"> <i class="fa-regular fa-message"></i> </h2>
+                    <p class="card-text">
+                        <span class="card-text info-popover p-0" id="InfoPopover_Example1" data-bs-toggle="popover" data-bs-container="body" data-bs-placement="top" data-bs-custom-class="tooltip-asset-one shadow-sm p-0" data-bs-content="Hello there! We luv u <3">Tooltips...</span> Another interesting and interactive way to talk to with your followers. The only action that they'll need to do is to tap or hover (if they're a PC users) and the text will appear automatically
+                    </p>
+                </div>
+                <div class="slider-container box-container bg-light shadow-sm p-3 text-center" style="display: none;" id="Guide_Box-Part6">
+                    <h2 class="h2 text-neon-purple"> <i class="fa-regular fa-note-sticky"></i> </h2>
+                    <p class="card-text">Write your own <span class="fw-500">shortcuts</span>, so your readers and followers will be able to interact with you via your own shortcuts</p>
+                </div>
+            </div>
+            <div class="card-group mt-2">
+                <div class="card border-0 me-1">
+                    <div class="box-container text-start">
+                        <div class="box-container bg-light pt-0 pb-1 ps-2 pe-2 d-inline-block w-100">
+                            <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="0-TextEditorStyle" data-bs-paste-to="Test_TextArea"> <i class="fa-solid fa-bold"></i> </button>
+                            <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="1-TextEditorStyle" data-bs-paste-to="Test_TextArea"> <i class="fa-solid fa-italic" id="1-TextEditorStyle"></i> </button>
+                            <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="2-TextEditorStyle" data-bs-paste-to="Test_TextArea"> <i class="fa-solid fa-underline" id="2-TextEditorStyle"></i> </button>
+                            <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="3-TextEditorStyle" data-bs-paste-to="Test_TextArea"> <i class="fa-solid fa-font" id="3-TextEditorStyle"></i> </button>
+                            <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="4-SetStyle"> <i class="fa-solid fa-palette"></i> </button>
+                            <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="5-SetStyle"> <i class="fa-solid fa-link"></i> </button>
+                            <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="6-SetStyle"> <i class="fa-regular fa-message"></i> </button>
+                            <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="7-SetStyle"> <i class="fa-regular fa-note-sticky"></i> </button>
+                            <button type="button" class="btn btn-sm btn-standard me-1 mt-1"> <i class="fa-regular fa-copy"></i> </button>
+                        </div>
+                        <div class="mt-1">
+                            <textarea id="Test_TextArea" class="form-control shadow-none" rows="5" placeholder="Enter your desired text here"></textarea>
+                        </div>
+                        <div class="mt-1">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="box-container">
+                                        <div class="d-none">
+                                            <input type="hidden" id="Guide_Box-StepVal" value="0" />
+                                            <input type="hidden" id="Guide_Box-MaxStepVal" value="6" />
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                <button type="button" class="btn btn-standard btn-slide-to-prev w-100" id="Guide_Box-PrevSlide" disabled> <i class="fa-solid fa-arrow-left"></i> Prev. Example</button>
+                                            </div>
+                                            <div class="col">
+                                                <button type="button" class="btn btn-standard btn-slide-to-next w-100" id="Guide_Box-NextSlide">Next Example <i class="fa-solid fa-arrow-right"></i> </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <button type="button" class="btn btn-standard-asset w-100 bg-neon-purple text-light text-decoder" id="Test_TextArea-Decoder1" data-paste-to="TestedChars_Lbl">Compilate Text</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card border-0">
+                    <div class="bordered-container p-2 h-100">
+                        <p class="card-text white-space-on" id="TestedChars_Lbl"><span class="fw-500">Use and type sth on text editor to show the final result here...</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-container shadow-standard" id="TextEditorSettings_Container">
+    <div class="header-container p-2 text-center" id="TextEditorSettings_Container-Header">
+        <button type="button" class="btn btn-close btn-sm float-end rounded-circle ms-1" id="TextEditorSettings_Container-Close"></button>
+        <h5 class="h5 text-truncate p-1" id="TextEditorsSettings_HeaderText_Lbl">Text Editor Settings</h5>
+    </div>
+    <div class="box-container p-2 pt-1 mt-1" id="TextEditorSettings_Container-Box">
+        <div class="box-container bg-light p-2">
+            <span class="card-text fw-500">Type: <span class="text-muted" id="TES_Type_Span"></span></span>
+            <div></div>
+            <small class="card-text text-muted">to change the type go back to the previous widget</small>
+        </div>
+        <div class="mt-2">
+            <div class="form-floating">
+                <div class="d-none">
+                    <input type="hidden" id="TextType_Val" value="0" />
+                    <input type="hidden" id="PasteTo_Val" value="Test_TextArea" />
+                    <input type="hidden" id="WidgetId_Val" value="Preloaded_Container" />
+                </div>
+                <input type="text" id="PreparedText1_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
+                <label for="PreparedText1_Val" class="fw-500" id="PreparedText1_Lbl">Prepared Text, 1</label>
+            </div>
+            <div class="form-floating mt-2">
+                <input type="text" id="PreparedText2_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
+                <label for="PreparedText2_Val" class="fw-500" id="PreparedText2_Lbl">Prepared Text, 2</label>
+            </div>
+            <div class="mt-2">
+                <button type="button" class="btn btn-primary w-100 btn-standard-asset" id="AddTextToTheTextEditor_Btn">Add Text</button>
+            </div>
+        </div>
+    </div>
+</div>

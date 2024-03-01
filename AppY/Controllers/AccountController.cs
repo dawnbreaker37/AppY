@@ -47,6 +47,17 @@ namespace AppY.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> SignOut()
+        {
+            if(User.Identity.IsAuthenticated)
+            {
+                await _signInManager.SignOutAsync();
+                return RedirectToAction("Create", "Account");
+            }
+            else return RedirectToAction("Index");
+        }
+
+        [HttpPost]
         public async Task<IActionResult> LogIn(SignIn Model)
         {
             if (ModelState.IsValid)
@@ -143,6 +154,17 @@ namespace AppY.Controllers
                 if (Result) return Json(new { success = true, alert = "You've successfully updated your password. Congratulations!" });
             }
             return Json(new { success = false, alert = "Unable to reset your password. Please, try again later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword(ChangePassword Model)
+        {
+            if (ModelState.IsValid)
+            {
+                bool Result = await _account.ResetPasswordAsync(Model);
+                if (Result) return Json(new { success = true, alert = "You've successfully changed your password", date = DateTime.Now });
+            }
+            return Json(new { success = false, alert = "Something went wrong. Please, check all datas and then try again" });
         }
 
         [HttpGet]
