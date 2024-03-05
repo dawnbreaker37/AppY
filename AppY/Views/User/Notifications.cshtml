@@ -1,0 +1,327 @@
+﻿@model NotificationModel
+@{
+    ViewData["Title"] = "Notifications";
+
+    User? UserInfo = ViewBag.UserInfo;
+}
+
+<div class="main-sidebar" id="Main_SideBar">
+    <div class="d-none">
+        <form method="get" asp-controller="Notification" asp-action="GetNotificationInfo" id="GetNotificationInfo_Form">
+            <input type="hidden" name="Id" id="GNI_Id_Val" value="0" />
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
+        <form method="post" asp-controller="Notification" asp-action="MarkasRead" id="MarkTheNotificationAsRead_Form">
+            <input type="hidden" name="Id" id="MaR_Id_Val" value="0" />
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
+        <form method="post" asp-controller="Notification" asp-action="Delete" id="DeleteNotification_Form">
+            <input type="hidden" name="Id" id="DN_Id_Val" value="0" />
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
+        <form method="post" asp-controller="Notification" asp-action="Pin" id="PinTheNotification_Form">
+            <input type="hidden" name="Id" id="PN_Id_Val" value="0" />
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
+        <form method="post" asp-controller="Notification" asp-action="Unpin" id="UnpinTheNotification_Form">
+            <input type="hidden" name="Id" id="UPN_Id_Val" value="0" />
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="NotificationInfo_Container">
+        <div class="header-container p-2 pb-0 text-center" id="NotificationInfo_Container-Header">
+            <button type="button" class="btn btn-standard btn-sm me-1 float-start" id="NotificationCategory_Btn"> <i class="fa-solid fa-circle text-muted"></i> </button>
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="NotificationInfo_Container-Close"></button>
+            <h5 class="h5 text-truncate p-1" id="NotificationTitle_Lbl">Notification Title</h5>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="NotificationInfo_Container-Box">
+            <div class="box-container p-1">
+                <p class="card-text white-space-on" id="NotificationDescription_Lbl">Notification main text/description</p>
+                <div class="box-container bg-light mt-1 p-1 ps-2 pe-2 float-end ms-1 rounded-pill">
+                    <small class="card-text" id="NotificationOtherInfo_Lbl">Is Checked?, Date and Time</small>
+                </div>
+                <div class="box-container rounded-pill bg-light mt-1 p-1 ps-2 pe-2 float-end ms-1" id="IsUnkillable_Btn"> <small><span class="text-muted"> <i class="fa-regular fa-clock"></i> </span></small> </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="main-container shadow-standard" id="Preloaded_Container">
+    <div class="header-container p-2 text-center" id="Preloaded_Container-Header">
+        <span class="h5 text-truncate p-1" id="HeaderText_Lbl">Notifications</span>
+        <div></div>
+        <small class="card-text text-muted"><span id="NotificationCount_Span">@ViewBag.NotificationsCount</span> notification(s)</small>
+    </div>
+    <div class="box-container p-2 pt-1 mt-1" id="Preloaded_Container-Box">
+        <nav>
+            <div class="nav nav-tabs mx-auto text-center" id="nav-tab" role="tablist">
+                <button class="nav-link active" id="nav-AllNotifications-tab" data-bs-toggle="tab" data-bs-target="#nav-AllNotifications" type="button" role="tab" aria-controls="nav-AllNotifications" aria-selected="true">All ∙ <span id="AllNotificationsCount_BtnSpan">@ViewBag.NotificationsCount</span></button>
+                <button class="nav-link" id="nav-MissedNotifications-tab" data-bs-toggle="tab" data-bs-target="#nav-MissedNotifications" type="button" role="tab" aria-controls="nav-MissedNotifications" aria-selected="false">Missed ∙ <span id="MissedNotificationsCount_BtnSpan">@ViewBag.MissedNotificationsCount</span></button>
+                <button class="nav-link" id="nav-CheckedNotifications-tab" data-bs-toggle="tab" data-bs-target="#nav-CheckedNotifications" type="button" role="tab" aria-controls="nav-CheckedNotifications" aria-selected="false">Checked ∙ <span id="CheckedNotificationsCount_BtnSpan">@ViewBag.CheckedNotificationsCount</span></button>
+                <button class="nav-link" id="nav-Instructions-tab" data-bs-toggle="tab" data-bs-target="#nav-Instructions" type="button" role="tab" aria-controls="nav-Instructions" aria-selected="false">About</button>
+            </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade show active" id="nav-AllNotifications" role="tabpanel" aria-labelledby="nav-AllNotifications-tab" tabindex="0">
+                <div class="box-container p-2" id="ForAllNotifications_Box">
+                    @if(ViewBag.NotificationsCount == 0)
+                    {
+                        <div class="box-container text-center mt-2">
+                            <h2 class="h2"> <i class="fa-regular fa-bell-slash"></i> </h2>
+                            <h5 class="h5 style-font">No Notifications</h5>
+                            <small class="card-text text-muted">You haven't got any notification for now. Tap on <span class="fw-500">About</span> button to get more information about notifications</small>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach(NotificationModel Notification in ViewBag.Notifications)
+                        {
+                            <div class="box-container bg-light mt-2 p-2" id="@Notification.Id-ForAll_Notification_Box">
+                                <div class="dropdown-center">
+                                    <button class="btn btn-standard btn-sm float-end ms-1" type="button" data-bs-toggle="dropdown" aria-expanded="false"> <i class="fa-solid fa-ellipsis-h"></i> </button>
+                                    <ul class="dropdown-menu p-1 shadow-sm">
+                                        @if(!Notification.IsUnkillable)
+                                        {
+                                            <li class="text-center"><small class="card-text text-muted text-center">@Notification.SentAt.ToShortDateString(), at @Notification.SentAt.ToShortTimeString()</small></li>
+                                            <li><button type="button" class="dropdown-item btn-sm text-danger delete-notification" id="@Notification.Id-Dropdown_DeleteNotification"> <i class="fa-regular fa-trash-can"></i> Delete</button></li>
+                                        }
+                                        else
+                                        {
+                                            <li class="text-center"><span class="text-dark" id="@Notification.Id-ForAllUnkillableNotification"><small class="card-text"><i class="fa-regular fa-clock"></i> </small></span> <small class="card-text text-muted text-center">@Notification.SentAt.ToShortDateString(), at @Notification.SentAt.ToShortTimeString()</small></li>
+                                        }
+                                        <li><button type="button" class="dropdown-item btn-sm get-notification-info" id="@Notification.Id-Dropdown_ForAll_GetNotificationFullInfo"> <i class="fa-solid fa-circle-info"></i> Get more</button></li>
+                                        @if(!Notification.IsPinned)
+                                        {
+                                            <li><button type="button" class="dropdown-item btn-sm pin-the-notification" id="@Notification.Id-Dropdown_ForAllPinTheNotification"> <i class="fa-solid fa-anchor"></i> Pin</button></li>
+                                            <li><button type="button" class="dropdown-item btn-sm unpin-the-notification" style="display:none;" id="@Notification.Id-Dropdown_ForAllUnpinTheNotification"> <i class="fa-solid fa-anchor-circle-xmark"></i> Unpin</button></li>
+                                        }
+                                        else
+                                        {
+                                            <li><button type="button" class="dropdown-item btn-sm pin-the-notification" id="@Notification.Id-Dropdown_ForAllPinTheNotification" style="display: none;"> <i class="fa-solid fa-anchor"></i> Pin</button></li>
+                                            <li><button type="button" class="dropdown-item btn-sm unpin-the-notification" id="@Notification.Id-Dropdown_ForAllUnpinTheNotification"> <i class="fa-solid fa-anchor-circle-xmark"></i> Unpin</button></li>
+                                        }
+                                        @if (!Notification.IsChecked)
+                                        {
+                                            <li><button type="button" class="dropdown-item btn-sm notification-mark-as-read" id="@Notification.Id-Dropdown_ForAll_NotificationMarkAsRead"> <i class="fa-solid fa-check-double"></i> Mark as read </button></li>
+                                        }
+                                    </ul>
+                                </div>
+                                <div class="box-container rounded-pill p-0">
+                                    @if (!Notification.IsChecked)
+                                    {
+                                        <small class="card-text text-muted"> <span id="@Notification.Id-ForAllIsChecked_Span"><i class="fa-solid fa-check text-muted"></i></span> <span id="ForAllNotifications_DateTime-@Notification.Id">@Notification.SentAt.ToShortDateString(), at @Notification.SentAt.ToShortTimeString()</span></small>
+                                    }
+                                    else
+                                    {
+                                        <small class="card-text text-muted"> <span id="@Notification.Id-ForAllIsChecked_Span"><i class="fa-solid fa-check-double text-primary"></i></span> <span id="ForAllNotifications_DateTime-@Notification.Id">@Notification.SentAt.ToShortDateString(), at @Notification.SentAt.ToShortTimeString()</span></small>
+                                    }
+                                    @if(Notification.IsPinned)
+                                    {
+                                        <small class="card-text text-muted" id="@Notification.Id-ForAll_IsPinned"> ∙ Pinned</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="card-text text-muted" style="display: none;" id="@Notification.Id-ForAll_IsPinned"> ∙ Pinned</small>
+                                    }
+                                </div>
+                                <h5 class="h5 get-notification-info" id="@Notification.Id-ForAllNotificationTitle">@Notification.Title</h5>
+                                <small class="card-text text-muted">Tap on title to get more info about this notification</small>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+            <div class="tab-pane fade" id="nav-MissedNotifications" role="tabpanel" aria-labelledby="nav-MissedNotifications-tab" tabindex="0">
+                <div class="box-container p-2" id="ForMissedNotifications_Box">
+                    @if (ViewBag.MissedNotificationsCount == 0)
+                    {
+                        <div class="box-container text-center mt-2">
+                            <h2 class="h2"> <i class="fa-regular fa-circle-check"></i> </h2>
+                            <h5 class="h5 style-font">No Missed Notifications</h5>
+                            <small class="card-text text-muted">You've checked your notifications</small>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (NotificationModel Notification in ViewBag.Notifications)
+                        {
+                            <div class="box-container bg-light mt-2 p-2" id="@Notification.Id-ForMissed_Notification_Box">
+                                <div class="dropdown-center">
+                                    <button class="btn btn-standard btn-sm float-end ms-1" type="button" data-bs-toggle="dropdown" aria-expanded="false"> <i class="fa-solid fa-ellipsis-h"></i> </button>
+                                    <ul class="dropdown-menu p-1 shadow-sm">
+                                        @if (!Notification.IsUnkillable)
+                                        {
+                                            <li class="text-center"><small class="card-text text-muted text-center">@Notification.SentAt.ToShortDateString(), at @Notification.SentAt.ToShortTimeString()</small></li>
+                                            <li><button type="button" class="dropdown-item btn-sm text-danger delete-notification" id="@Notification.Id-Dropdown_ForMissed_DeleteNotification"> <i class="fa-regular fa-trash-can"></i> Delete</button></li>
+                                        }
+                                        else
+                                        {
+                                            <li class="text-center"><span class="text-dark" id="@Notification.Id-ForMissed_UnkillableNotification"><small class="card-text"><i class="fa-regular fa-clock"></i> </small></span> <small class="card-text text-muted text-center">@Notification.SentAt.ToShortDateString(), at @Notification.SentAt.ToShortTimeString()</small></li>
+                                        }
+                                        <li><button type="button" class="dropdown-item btn-sm get-notification-info" id="@Notification.Id-Dropdown_ForMissed_GetNotificationFullInfo"> <i class="fa-solid fa-circle-info"></i> Get more</button></li>
+                                        @if (!Notification.IsPinned)
+                                        {
+                                            <li><button type="button" class="dropdown-item btn-sm pin-the-notification" id="@Notification.Id-Dropdown_ForMissed_PinTheNotification"> <i class="fa-solid fa-anchor"></i> Pin</button></li>
+                                            <li><button type="button" class="dropdown-item btn-sm unpin-the-notification" id="@Notification.Id-Dropdown_ForMissed_UnpinTheNotification" style="display: none;"> <i class="fa-solid fa-anchor-circle-xmark"></i> Unpin</button></li>
+                                        }
+                                        else
+                                        {
+                                            <li><button type="button" class="dropdown-item btn-sm pin-the-notification" id="@Notification.Id-Dropdown_ForMissed_PinTheNotification" style="display: none;"> <i class="fa-solid fa-anchor"></i> Pin</button></li>
+                                            <li><button type="button" class="dropdown-item btn-sm unpin-the-notification" id="@Notification.Id-Dropdown_ForMissed_UnpinTheNotification"> <i class="fa-solid fa-anchor-circle-xmark"></i> Unpin</button></li>
+                                        }
+                                        @if (!Notification.IsChecked)
+                                        {
+                                            <li><button type="button" class="dropdown-item btn-sm notification-mark-as-read" id="@Notification.Id-Dropdown_ForMissed_NotificationMarkAsRead"> <i class="fa-solid fa-check-double"></i> Mark as read </button></li>
+                                        }
+                                    </ul>
+                                </div>
+                                <div class="box-container rounded-pill p-0">
+                                    @if (!Notification.IsChecked)
+                                    {
+                                        <small class="card-text text-muted"> <span id="@Notification.Id-ForMissed_IsChecked_Span"><i class="fa-solid fa-check text-muted"></i></span> <span id="ForAllNotifications_DateTime-@Notification.Id">@Notification.SentAt.ToShortDateString(), at @Notification.SentAt.ToShortTimeString()</span></small>
+                                    }
+                                    else
+                                    {
+                                        <small class="card-text text-muted"> <span id="@Notification.Id-ForMissed_IsChecked_Span"><i class="fa-solid fa-check-double text-primary"></i></span> <span id="ForAllNotifications_DateTime-@Notification.Id">@Notification.SentAt.ToShortDateString(), at @Notification.SentAt.ToShortTimeString()</span></small>
+                                    }
+                                    @if (Notification.IsPinned)
+                                    {
+                                        <small class="card-text text-muted" id="@Notification.Id-ForMissed_IsPinned"> ∙ Pinned</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="card-text text-muted" style="display: none;" id="@Notification.Id-ForMissed_IsPinned"> ∙ Pinned</small>
+                                    }
+                                </div>
+                                <h5 class="h5 get-notification-info" id="@Notification.Id-ForMissed_NotificationTitle">@Notification.Title</h5>
+                                <small class="card-text text-muted">Tap on title to get more info about this notification</small>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+            <div class="tab-pane fade" id="nav-CheckedNotifications" role="tabpanel" aria-labelledby="nav-CheckedNotifications-tab" tabindex="0">
+                <div class="box-container p-2" id="ForCheckedNotifications_Box">
+                    @if (ViewBag.CheckedNotificationsCount == 0)
+                    {
+                        <div class="box-container text-center mt-2">
+                            <h2 class="h2"> <i class="fa-regular fa-bell"></i> </h2>
+                            <h5 class="h5 style-font">No Checked Notifications</h5>
+                            <small class="card-text text-muted">You have not checked any notification. Mark them as read from your missed list to appear them here</small>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (NotificationModel Notification in ViewBag.Notifications)
+                        {
+                            <div class="box-container bg-light mt-2 p-2" id="@Notification.Id-ForChecked_Notification_Box">
+                                <div class="dropdown-center">
+                                    <button class="btn btn-standard btn-sm float-end ms-1" type="button" data-bs-toggle="dropdown" aria-expanded="false"> <i class="fa-solid fa-ellipsis-h"></i> </button>
+                                    <ul class="dropdown-menu p-1 shadow-sm">
+                                        @if (!Notification.IsUnkillable)
+                                        {
+                                            <li class="text-center"><small class="card-text text-muted text-center">@Notification.SentAt.ToShortDateString(), at @Notification.SentAt.ToShortTimeString()</small></li>
+                                            <li><button type="button" class="dropdown-item btn-sm text-danger delete-notification" id="@Notification.Id-Dropdown_ForChecked_DeleteNotification"> <i class="fa-regular fa-trash-can"></i> Delete</button></li>
+                                        }
+                                        else
+                                        {
+                                            <li class="text-center"><span class="text-dark" id="@Notification.Id-ForChecked_UnkillableNotification"><small class="card-text"><i class="fa-regular fa-clock"></i> </small></span> <small class="card-text text-muted text-center">@Notification.SentAt.ToShortDateString(), at @Notification.SentAt.ToShortTimeString()</small></li>
+                                        }
+                                        <li><button type="button" class="dropdown-item btn-sm get-notification-info" id="@Notification.Id-Dropdown_ForMissed_GetNotificationFullInfo"> <i class="fa-solid fa-circle-info"></i> Get more</button></li>
+                                        @if (!Notification.IsPinned)
+                                        {
+                                            <li><button type="button" class="dropdown-item btn-sm pin-the-notification" id="@Notification.Id-Dropdown_ForChecked_PinTheNotification"> <i class="fa-solid fa-anchor"></i> Pin</button></li>
+                                            <li><button type="button" class="dropdown-item btn-sm unpin-the-notification" id="@Notification.Id-Dropdown_ForChecked_UnpinTheNotification" style="display: none;"> <i class="fa-solid fa-anchor-circle-xmark"></i> Unpin</button></li>
+                                        }
+                                        else
+                                        {
+                                            <li><button type="button" class="dropdown-item btn-sm pin-the-notification" id="@Notification.Id-Dropdown_ForChecked_PinTheNotification" style="display: none;"> <i class="fa-solid fa-anchor"></i> Pin</button></li>
+                                            <li><button type="button" class="dropdown-item btn-sm unpin-the-notification" id="@Notification.Id-Dropdown_ForChecked_UnpinTheNotification"> <i class="fa-solid fa-anchor-circle-xmark"></i> Unpin</button></li>
+                                        }
+                                    </ul>
+                                </div>
+                                <div class="box-container rounded-pill p-0">
+                                    <small class="card-text text-muted"> <span id="@Notification.Id-ForChecked_IsChecked_Span"><i class="fa-solid fa-check-double text-primary"></i></span> <span id="ForAllNotifications_DateTime-@Notification.Id">@Notification.SentAt.ToShortDateString(), at @Notification.SentAt.ToShortTimeString()</span></small>
+                                    @if (Notification.IsPinned)
+                                    {
+                                        <small class="card-text text-muted" id="@Notification.Id-ForChecked_IsPinned"> ∙ Pinned</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="card-text text-muted" style="display: none;" id="@Notification.Id-ForChecked_IsPinned"> ∙ Pinned</small>
+                                    }
+                                </div>
+                                <h5 class="h5 get-notification-info" id="@Notification.Id-ForChecked_NotificationTitle">@Notification.Title</h5>
+                                <small class="card-text text-muted">Tap on title to get more info about this notification</small>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+            <div class="tab-pane fade" id="nav-Instructions" role="tabpanel" aria-labelledby="nav-Instructions-tab" tabindex="0">
+                <div class="box-container p-2">
+                    <h5 class="h5">About Notifications</h5>
+                    <p class="card-text">Every time when you got a notifications it will appear at this page. Notifications may contain some important information for you, as for example when you restore or change your password, a notification will be automatically sent to your account and to your email. The category of any notifications is included in its <span class="fw-500">title</span> or may be set near <span class="fw-500">date and time</span> info. <br/>These cases are many and we're going to introduce to you some of these cases</p>
+                    <div class="box-container bg-light mt-3 p-2">
+                        <h2 class="h2"> <i class="fa-solid fa-lock"></i> </h2>
+                        <h5 class="h5 style-font">Security Notification</h5>
+                        <small class="card-text text-muted">Notifications received from us (usually, sent automatically) to inform you that something has changed in your account's <span class="fw-500">security settings</span>. This kind of notifications are usually sent to your account as well as to your <span class="fw-500">email</span></small>
+                    </div>
+                    <div class="box-container bg-light mt-2 p-2">
+                        <h2 class="h2 text-primary"> <i class="fa-solid fa-bolt"></i> </h2>
+                        <h5 class="h5 style-font">Update Notification</h5>
+                        <small class="card-text text-muted">When every time you are going to get an update or already has got it, we will send to you a notification with the <span class="fw-500">release note</span> link of it</small>
+                    </div>
+                    <div class="box-container bg-light mt-2 p-2">
+                        <h2 class="h2"> <i class="fa-regular fa-user"></i> </h2>
+                        <h5 class="h5 style-font">User Notification</h5>
+                        <small class="card-text text-muted">Some users may send to you a notification (for example, if they want to say something important to you). That notification may contain the text of a <span class="fw-500">discussion message</span>, or a free-texted message. In order to prevert you from spammers, we've limited the number of possibly sent messages from a single user to <span class="fw-500">12</span> per day</small>
+                    </div>
+                    <div class="box-container bg-light mt-2 p-2">
+                        <h2 class="h2 text-neon-purple"> <i class="fa-regular fa-comments"></i> </h2>
+                        <h5 class="h5 style-font">Discussion Notification</h5>
+                        <small class="card-text text-muted">Any update that occurred with a discussion in which you are a member will be automatically sent to you. But you still can mute notifications from any discussion, so you'll not get them</small>
+                    </div>
+                    <div class="box-container bg-light mt-2 p-2">
+                        <h2 class="h2 text-primary"> <i class="fa-solid fa-user-shield"></i> </h2>
+                        <h5 class="h5 style-font">Supports Notification</h5>
+                        <small class="card-text text-muted">Notifications, received from our <span class="fw-500">supports</span>. They may contain any kind of information and cannot be deleted until you haven't read them (marked as read)</small>
+                    </div>
+                    <div class="box-container mt-2">
+                        <h5 class="h5">Categories and Urgency</h5>
+                        <p class="card-text">In order not to overload the notification widgets with information, their <span class="fw-500">categories</span> and therefore their<span class="fw-500">urgency</span> are classified with some colorful indicators. Here're all categories with their urgentity levels:</p>
+                        <div class="box-container bg-light mt-2 p-2">
+                            <small class="card-text style-font"> <i class="fa-solid fa-circle text-primary"></i> Notifications from other users ∙ not urgent</small>
+                        </div>
+                        <div class="box-container bg-light mt-2 p-2">
+                            <small class="card-text style-font"> <i class="fa-solid fa-circle text-warning"></i> Notifications from discussions ∙ not urgent</small>
+                        </div>
+                        <div class="box-container bg-light mt-2 p-2">
+                            <small class="card-text style-font"> <i class="fa-solid fa-circle text-neon-purple"></i> Notifications about updates ∙ not urgent</small>
+                        </div>
+                        <div class="box-container bg-light mt-2 p-2">
+                            <small class="card-text style-font"> <i class="fa-solid fa-circle text-danger"></i> Notifications about your profile security updates ∙ possibly urgent, useful and undeletable (they'll remove automatically after few days)</small>
+                        </div>
+                        <div class="box-container bg-light mt-2 p-2">
+                            <small class="card-text style-font"> <i class="fa-solid fa-circle text-muted"></i> Other notifications ∙ usually not urgent</small>
+                        </div>
+                        <div class="box-container bg-light mt-2 p-2">
+                            <small class="card-text style-font"> <i class="fa-regular fa-clock"></i> Notifications with this marker cannot be removed manually. They'll remove automatically after few days ∙ usually urgent</small>
+                        </div>
+                    </div>
+                    <div class="box-container mt-2">
+                        <h5 class="h5">Notification Example</h5>
+                        <p class="card-text">And at last we want to introduce to you a notification example, that you may receive. Here's it:</p>
+                        <div class="box-container bg-light mt-2 p-2">
+                            <button type="button" class="btn btn-standard float-end btn-sm ms-1 disabled" disabled> <i class="fa-solid fa-ellipsis-h"></i> </button>
+                            <small class="card-text text-muted"> <i class="fa-solid fa-check text-muted"></i> yesterday, at 22:45 ∙ Pinned</small>
+                            <h5 class="h5">Notification Title</h5>
+                            <small class="card-text text-muted">Tap on title to get more info about this notification</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

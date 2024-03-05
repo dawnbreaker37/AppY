@@ -23,6 +23,7 @@ namespace AppY.Models
         public string? AvatarUrl { get; set; }
         public DateTime? PasswordChanged { get; set; }
         public bool IsDisabled { get; set; }
+        public List<NotificationModel>? Notifications { get; set; }
         [NotMapped]
         public string? UnpicturedAvatarInfo { get; set; }
     }

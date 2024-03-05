@@ -11,6 +11,11 @@ window.onload = function () {
     displayCorrect(fullWidth);
     additionalBtnSelector(fullWidth);
 
+    if ($("#AvatarSticker_Hdn_Val").val() != "") {
+        $(".unpictured-container-label").html($("#AvatarSticker_Hdn_Val").val());
+        $(".unpictured-container-label-sm").html($("#AvatarSticker_Hdn_Val").val());
+    }
+
     if (fullWidth >= 768) {
         animatedOpen(false, "SmallsidePreloaded_Container", true, false);
         if ($("#SmallsidePreloaded_Container").css("display") == "block") {
@@ -242,6 +247,66 @@ $("#EditAccount_Form").on("submit", function (event) {
     });
 });
 
+$("#SetProfilePhoto_Form").on("submit", function (event) {
+    event.preventDefault();
+
+    let files = $("#SelectaFile_Val").get(0).files;
+    let url = $(this).attr("action");
+    let formData = new FormData();
+    formData.append("id", $("#SetProfilePhoto_Id_Val").val());
+    formData.append("file", files[0]);
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+            if (response.success) {
+                animatedClose(false, "ProfilePhoto_Container", true, true);
+                $("#AvatarUrl_Id").attr("src", "/Avatars/" + response.result);
+                $("#AvatarNone_Box").slideUp(400);
+                $("#Avatar_Box").slideDown(400);
+                setTimeout(function () {
+                    $("#AvatarTestUrl_Val").attr("src", "/Avatars/" + response.result);
+                    $("#DeleteAvatar_Box").fadeIn(250);
+                    $("#PicturedAvatar_Box").fadeIn(250);
+                    $("#ProfilePhoto-Header").fadeOut(250);
+                }, 400);
+                closeSidebar();
+            }
+            else {
+                alert('<i class="fa-regular fa-circle-xmark fa-shake fa-flip-horizontal text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
+            }
+        }
+    });
+});
+$("#DeleteProfilePhoto_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#Avatar_Box").slideUp(400);
+            $("#AvatarNone_Box").slideDown(400);
+            animatedClose(false, "ProfilePhoto_Container", true, true);
+            setTimeout(function () {
+                $("#AvatarUrl_Id").attr("src", "#");
+                $("#AvatarTestUrl_Val").attr("src", "#");
+                $("#DeleteAvatar_Box").fadeOut(250);
+                $("#PicturedAvatar_Box").fadeOut(250);
+                $("#ProfilePhoto-Header").fadeIn(250);
+            }, 400);
+            closeSidebar();
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake fa-flip-horizontal text-danger"></i>', response.alert, "Okay", null, 0, null, null, null, 4.5);
+        }
+    });
+});
+
 $("#EditAvatarDesign_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -259,6 +324,7 @@ $("#EditAvatarDesign_Form").on("submit", function (event) {
             $("#AvatarNone_Box").css("background-color", "#" + response.bgColor);
             $("#AvatarNoneSm_Box").css("background-color", "#" + response.bgColor);
             $("#AvatarStyleChange_Box").css("background-color", "#" + response.bgColor);
+            $("#UnpicturedAvatar_Lbl").html(" " + response.sticker + " ");
         }
         else {
             alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
@@ -351,6 +417,189 @@ $("#ConfirmPassword").on("keyup", function () {
     }
 });
 
+$("#GetNotificationInfo_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            let title = $("#" + response.result.id + "-ForAllNotificationTitle").html();
+            let isChecked = $("#" + response.result.id + "-ForAllIsChecked_Span").html();
+            let urgencyValue = setUrgencyIcon(response.result.notificationCategoryId);
+            let isUnkillable = $("#" + response.result.id + "-ForAllUnkillableNotification").html();
+
+            $("#NotificationCategory_Btn").html(" " + urgencyValue + " ");
+            $("#NotificationTitle_Lbl").html(title);
+            $("#NotificationDescription_Lbl").html(response.result.description);
+            if (isUnkillable != "") {
+                $("#IsUnkillable_Btn").fadeIn(300);
+            }
+            else $("#IsUnkillable_Btn").fadeOut(300);
+
+            if (isChecked) $("#NotificationOtherInfo_Lbl").html("<span class='text-primary'> " + isChecked + " </span> <span class='text-muted'>" + dateAndTimeTranslator(response.result.sentAt) + "</span>");
+            else $("#NotificationOtherInfo_Lbl").html("<span class='text-muted'> " + isChecked + " </span> <span class='text-muted'>" + dateAndTimeTranslator(response.result.sentAt) + "</span>");
+
+            openSidebar();
+            animatedOpen(false, "NotificationInfo_Container", true, false);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4.25);
+        }
+    });
+});
+$("#MarkTheNotificationAsRead_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#" + response.id + "-Dropdown_ForAll_NotificationMarkAsRead").fadeOut(250);
+            $("#" + response.id + "-Dropdown_ForChecked_NotificationMarkAsRead").fadeOut(250);
+            $("#" + response.id + "-Dropdown_ForMissed_NotificationMarkAsRead").fadeOut(250);
+            $("#" + response.id + "-ForAllIsChecked_Span").html("<i class='fa-solid fa-check-double text-primary'></i> ");
+            $("#" + response.id + "-ForMissed_IsChecked_Span").html("<i class='fa-solid fa-check-double text-primary'></i> ");
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.25);
+        }
+    });
+});
+$("#PinTheNotification_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#" + response.id + "-Dropdown_ForCheckedPinTheNotification").fadeOut(300);
+            $("#" + response.id + "-Dropdown_ForMissedPinTheNotification").fadeOut(300);
+            $("#" + response.id + "-Dropdown_ForAllPinTheNotification").fadeOut(300);
+            $("#" + response.id + "-Dropdown_ForCheckedUnpinTheNotification").fadeIn(300);
+            $("#" + response.id + "-Dropdown_ForMissedUnpinTheNotification").fadeIn(300);
+            $("#" + response.id + "-Dropdown_ForAllUnpinTheNotification").fadeIn(300);
+
+            $("#" + response.id + "-ForAll_IsPinned").fadeIn(250);
+            $("#" + response.id + "-ForMissed_IsPinned").fadeIn(250);
+            $("#" + response.id + "-ForChecked_IsPinned").fadeIn(250);
+            alert('<i class="fa-solid fa-thumbtack fa-bounce text-primary"></i>', response.alert, "Done", null, 0, null, null, null, 4.5);
+        }
+        else {
+            alert('<i class="fa-solid fa-exclamation text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.25);
+        }
+    });
+});
+$("#UnpinTheNotification_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#" + response.id + "-Dropdown_ForCheckedPinTheNotification").fadeIn(300);
+            $("#" + response.id + "-Dropdown_ForMissedPinTheNotification").fadeIn(300);
+            $("#" + response.id + "-Dropdown_ForAllPinTheNotification").fadeIn(300);
+            $("#" + response.id + "-Dropdown_ForCheckedUnpinTheNotification").fadeOut(300);
+            $("#" + response.id + "-Dropdown_ForMissedUnpinTheNotification").fadeOut(300);
+            $("#" + response.id + "-Dropdown_ForAllUnpinTheNotification").fadeOut(300);
+
+            $("#" + response.id + "-ForAll_IsPinned").fadeOut(250);
+            $("#" + response.id + "-ForMissed_IsPinned").fadeOut(250);
+            $("#" + response.id + "-ForChecked_IsPinned").fadeOut(250);
+            alert("<i class='fa-solid fa-slash text-danger'>", response.alert, "Done", null, 0, null, null, null, 3.75);
+        }
+        else {
+            alert('<i class="fa-solid fa-exclamation text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
+        }
+    });
+});
+$("#DeleteNotification_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let currentCount = parseInt($("#NotificationCount_Span").text());
+            let missedNotificationsCount = parseInt($("#MissedNotificationsCount_BtnSpan").text());
+            let checkedNotificationsCount = parseInt($("#CheckedNotificationsCount_BtnSpan").text());
+            currentCount--;
+
+            if (missedNotificationsCount == 1) {
+                missedNotificationsCount--;
+                let noMoreNotifications_ForMissed_Div = $('<div class="box-container text-center mt-2" style="display: none;"></div>');
+                let icon_ForMissed = $('<h2 class= "h2"> <i class="fa-regular fa-circle-check"></i> </h2>');
+                let title_ForMissed = $('<h5 class="h5 style-font">No Missed Notifications</h5>');
+                let description_ForMissed = $('<small class="card-text text-muted">You have checked your notifications</small>');
+
+                noMoreNotifications_ForMissed_Div.append(icon_ForMissed);
+                noMoreNotifications_ForMissed_Div.append(title_ForMissed);
+                noMoreNotifications_ForMissed_Div.append(description_ForMissed);
+
+                slideToLeft(response.id + "-ForMissed_Notification_Box");
+                setTimeout(function () {
+                    $("#ForMissedNotifications_Box").append(noMoreNotifications_ForMissed_Div);
+                    noMoreNotifications_ForMissed_Div.fadeIn(300);
+                }, 1050);
+            }
+            else {
+                slideToLeft(response.id + "-ForMissed_Notification_Box");
+            }
+
+            if (checkedNotificationsCount == 1) {
+                checkedNotificationsCount--;
+                let noMoreNotifications_ForChecked_Div = $('<div class="box-container text-center mt-2" style="display: none;"></div>');
+                let icon_ForChecked = $('<h2 class= "h2"> <i class="fa-regular fa-bell"></i> </h2>');
+                let title_ForChecked = $('<h5 class="h5 style-font">No Checked Notifications</h5>');
+                let description_ForChecked = $('<small class="card-text text-muted">You have not checked any notification. Mark them as read from your missed list to appear them here</small>');
+
+                noMoreNotifications_ForChecked_Div.append(icon_ForChecked);
+                noMoreNotifications_ForChecked_Div.append(title_ForChecked);
+                noMoreNotifications_ForChecked_Div.append(description_ForChecked);
+
+                slideToLeft(response.id + "-ForChecked_Notification_Box");
+                setTimeout(function () {
+                    $("#ForCheckedNotifications_Box").append(noMoreNotifications_ForChecked_Div);
+                    noMoreNotifications_ForChecked_Div.fadeIn(300);
+                }, 1050);
+            }
+            else {
+                slideToLeft(response.id + "-ForChecked_Notification_Box");
+            }
+
+            if (currentCount <= 0) {
+                let noMoreNotifications_Div = $('<div class="box-container text-center mt-2" style="display: none;"></div>');
+                let icon = $('<h2 class= "h2"> <i class="fa-regular fa-circle-check"></i> </h2>');
+                let title = $('<h5 class="h5 style-font">No Missed Notifications</h5>');
+                let description = $('<small class="card-text text-muted">You have checked all your notifications</small>');
+
+                noMoreNotifications_Div.append(icon);
+                noMoreNotifications_Div.append(title);
+                noMoreNotifications_Div.append(description);
+
+                slideToLeft(response.id + "-ForAll_Notification_Box");
+                setTimeout(function () {
+                    $("#ForAllNotifications_Box").append(noMoreNotifications_Div);
+                    noMoreNotifications_Div.fadeIn(300);
+                }, 1050);
+
+                $("#NotificationCount_Span").text(currentCount);
+                $("#MissedNotificationsCount_BtnSpan").text(missedNotificationsCount);
+                $("#AllNotificationsCount_BtnSpan").text(currentCount);
+                $("#CheckedNotificationsCount_BtnSpan").text(checkedNotificationsCount);
+            }
+            else {
+                //slideToLeft(response.id + "-" + ForAll_Notification_Box);
+                $("#" + response.id + "-ForAll_Notification_Box").slideUp(350);
+            }
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4.25);
+        }
+    });
+});
+
 $("#LogIn_Email_Val").on("change", function () {
     let val = $(this).val();
     if (val.includes("@") && val.includes(".")) {
@@ -383,6 +632,49 @@ $("#ChangeToSingleUseType_Btn").on("click", function () {
         $("#RecoverViaReserveCode_Box").fadeOut(0);
         animatedOpen(false, "ForgotPassword_Container", true, false);
     }, 450);
+});
+
+$(document).on("click", ".get-notification-info", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#GNI_Id_Val").val(trueId);
+        $("#GetNotificationInfo_Form").submit();
+    }
+    else $("#GNI_Id_Val").val(0);
+});
+$(document).on("click", ".notification-mark-as-read", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#MaR_Id_Val").val(trueId);
+        $("#MarkTheNotificationAsRead_Form").submit();
+    }
+    else {
+        $("#MaR_Id_Val").val(0);
+    }
+});
+$(document).on("click", ".pin-the-notification", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#PN_Id_Val").val(trueId);
+        $("#PinTheNotification_Form").submit();
+    }
+    else $("#PN_Id_Val").val(0);
+});
+$(document).on("click", ".unpin-the-notification", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#UPN_Id_Val").val(trueId);
+        $("#UnpinTheNotification_Form").submit();
+    }
+    else $("#UPN_Id_Val").val(0);
+});
+$(document).on("click", ".delete-notification", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#DN_Id_Val").val(trueId);
+        $("#DeleteNotification_Form").submit();
+    }
+    else $("#DN_Id_Val").val(0);
 });
 
 $(document).on("keyup change", ".form-control-check-input", function () {
@@ -516,6 +808,15 @@ $(document).on("click", ".set-from-into", function (event) {
     }
 });
 
+$(document).on("click", ".set-the-icon", function (event) {
+    let iconValue = $(this).html();
+    if (iconValue != "") {
+        $("#EditAvatarDesign_AvatarStickerUrl_Val").val(iconValue);
+        $("#UnpicturedAvatarSm_Lbl").html(" " + iconValue + " ");
+        $("#AvatarStyleChange_MainLbl").html(" " + iconValue + " ");
+    }
+});
+
 $(document).on("click", ".set-style", function (event) {
     let trueId = parseInt(getTrueId(event.target.id));
     if (trueId != null) {
@@ -589,6 +890,26 @@ $("#SetRandomColors_Btn").on("click", function () {
     else $(this).click();
 });
 
+$("#SetAvatarChar_Btn").on("click", function () {
+    let char = $("#AvatarChar").val();
+    let compiledChar;
+    let fontWeight = $("#FontWeight_Val").val();
+    let rotationValue = $("#Rotation_Val").val();
+    let fontFamily = $("#FontFamily_Val").val();
+    if (char != "") {
+        if (rotationValue > 0) {
+            compilledClass = "transform:rotate(" + rotationValue + "deg);";
+            compiledChar = "<div class='" + fontFamily + "'style = 'transform:rotate(" + rotationValue + "deg);font-weight:'" + fontWeight + ";'>" + char + "</div>";
+        }
+        else {
+            compiledChar = "<div class='" + fontFamily + "'style = 'font-weight:" + fontWeight + ";'>" + char + "</div>";
+        }
+
+        $("#EditAvatarDesign_AvatarStickerUrl_Val").val(compiledChar);
+        $("#UnpicturedAvatarSm_Lbl").html(compiledChar);
+        $("#AvatarStyleChange_MainLbl").html(compiledChar);
+    }
+});
 $("#AvatarBgColor_Val").on("change", function () {
     let value = $(this).val();
     if (value.length == 6) {
@@ -638,6 +959,23 @@ $("#ColorPickerVia_RGB").on("click", function () {
     $('#ColorPickerVia_Hex').removeClass('btn-primary');
 });
 
+$("#SelectaFile_Val").on("change", function () {
+    let fileInfo = $(this).get(0).files;
+    if (fileInfo != null) {
+        $("#SelectedFileInfo_Lbl").text(fileInfo[0].name + ", in " + fileInfo.length + " quantity(ies)");
+    }
+});
+
+$(document).on("click", ".set-font", function () {
+    let fontFamily = $(this).attr("data-bs-font");
+    let setTo = $(this).attr("data-bs-set-in");
+    if (fontFamily != "null" && setTo != "") {
+        $("#" + setTo).val(fontFamily);
+    }
+    else {
+        $("#" + setTo).val(null);
+    }
+});
 $(document).on("change", ".color-picker-range", function (event) {
     let colorValArr = [];
     let classValues = document.getElementsByClassName("color-picker-range");
@@ -680,6 +1018,13 @@ $(document).on("click", ".text-editor", function (event) {
     }
 });
 
+$(document).on("click", ".btn-file-click", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#" + trueId).click();
+    }
+});
+
 function getTrueId(name) {
     let trueId = name.substring(0, name.lastIndexOf("-"));
     if (trueId != null || trueId != undefined) return trueId;
@@ -700,6 +1045,75 @@ function closeSidebar() {
             $("#Main_SideBar").css("left", "-1200px");
         }, 550);
     }
+}
+
+function slideToLeft(element) {
+    $("#" + element).css("background-color", "transparent");
+    $("#" + element).css("backdrop-filter", "blur(9px)");
+    setTimeout(function () {
+        $("#" + element).css("transition", "all ease 0.5s");
+        $("#" + element).css("margin-left", "-1200px");
+    }, 350);
+    setTimeout(function () {
+        $("#" + element).fadeOut(450);
+    }, 600);
+}
+
+function setUrgencyIcon(value) {
+    switch (parseInt(value)) {
+        case 1:
+            value = "<i class=\"fa-solid fa-circle text-danger\"></i>";
+            break;
+        case 2:
+            value = "<i class=\"fa-solid fa-circle text-warning\"></i>";
+            break;
+        case 3:
+            value = "<i class=\"fa-solid fa-circle text-neon-purple\"></i>";
+            break;
+        case 4:
+            value = "<i class=\"fa-solid fa-circle text-primary\"></i>";
+            break;
+        case 5:
+            value = "<i class=\"fa-solid fa-circle text-orange\"></i>";
+            break;
+        default:
+            value = "<i class=\"fa-solid fa-circle text-muted\"></i>";
+            break;
+    }
+
+    return value;
+}
+
+function dateAndTimeTranslator(value) {
+    if (value != null) {
+        let dateAndTime = new Date(value);
+        let currentDateAndTime = new Date();
+        let result = currentDateAndTime - dateAndTime;
+
+        let yearsInResult = 0;
+        let monthsInResult = 0;
+        let daysInResult = parseInt(Math.round((((result / 1000) / 100) / 60) / 24));
+        let finalResult;
+
+        if (daysInResult >= 30) {
+            monthsInResult = Math.round(daysInResult / 30);
+            finalResult = monthsInResult + " m ago";
+        }
+        else if (daysInResult >= 365) {
+            yearsInResult = Math.round(daysInResult / 365);
+            finalResult = yearsInResult + " y ago";
+        }
+        else {
+            let hours = dateAndTime.getHours() < 10 ? "0" + dateAndTime.getHours() : dateAndTime.getHours();
+            let mins = dateAndTime.getMinutes() < 10 ? "0" + dateAndTime.getMinutes() : dateAndTime.getMinutes();
+
+            if (daysInResult == 0) finalResult = "today, at " + hours + ":" + mins;
+            else if (daysInResult == 1) finalResult = "yesterday, at " + hours + ":" + mins;
+            else finalResult = daysInResult + " d ago, at " + hours + ":" + mins;
+        }
+        return finalResult;
+    }
+    else return null;
 }
 
 function valueToHex(value) {
@@ -877,11 +1291,10 @@ function findAllUsersFromText(text) {
 
 function additionalBtnSelector(width) {
     if (width < 768) {
-        $("#FirstReserve_Btn").html(' <i class="fa-solid fa-bars text-muted"></i> <br/>Menu');
+        $("#FirstReserve_Btn").html(' <i class="fa-solid fa-bars text-muted"></i> <br/><small>Menu</small>');
         $("#FirstReserve_Btn").addClass("open-sidebar");
         $("#FirstMain_Btn").fadeOut(0);
         $("#FirstReserve_Btn").fadeIn(0);
-
     }
 }
 
@@ -934,6 +1347,7 @@ function animatedOpen(forAll, element, sticky, closeAllOtherContainers) {
         }
 
         if (!closeAllOtherContainers) {
+
             $("." + element).fadeIn(300);
             if (sticky) {
                 $("." + element).css("bottom", botOffNavbarH + 18 + "px");
@@ -970,6 +1384,7 @@ function animatedOpen(forAll, element, sticky, closeAllOtherContainers) {
         }
 
         if (!closeAllOtherContainers) {
+
             $("#" + element).fadeIn(300);
             if (sticky) {
                 $("#" + element).css("bottom", botOffNavbarH + 18 + "px");
@@ -1172,6 +1587,7 @@ function displayCorrect(width) {
             $(".main-container").css("left", 0);
             $(".smallside-box-container").css("width", "100%");
             $(".smallside-box-container").css("left", 0);
+            $(".collapse-horizontal-container").css("width", fullWidth + "px");
             //$(".smallside-modal-container").css("left", "2.4%");
             //$(".smallside-modal-container").css("width", "95%");
         }
@@ -1190,6 +1606,7 @@ function displayCorrect(width) {
             $(".main-container").css("width", leftW + "px");
             $(".main-container").css("left", leftBarW + "px");
             $(".smallside-box-container").css("width", smallSideContainerW + 2 + "px");
+            $(".collapse-horizontal-container").css("width", smallSideContainerW * 0.975 + "px");
             //$(".smallside-modal-container").css("left", "10px");
             //$(".smallside-modal-container").css("width", smallSideContainerW - 19 + "px");
         }

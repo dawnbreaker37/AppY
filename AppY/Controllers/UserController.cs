@@ -4,6 +4,7 @@ using AppY.Models;
 using AppY.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 using System.Text;
@@ -15,13 +16,15 @@ namespace AppY.Controllers
         private readonly Context _context;
         private readonly UserManager<User> _userManager;
         private readonly IUser _user;
+        private readonly INotification _notification;
         private readonly IMemoryCache _memoryCache;
 
-        public UserController(Context context, UserManager<User> userManager, IUser user, IMemoryCache memoryCache)
+        public UserController(Context context, UserManager<User> userManager, IUser user, INotification notification, IMemoryCache memoryCache)
         {
             _context = context;
             _userManager = userManager;
             _user = user;
+            _notification = notification;
             _memoryCache = memoryCache;
         }
         
@@ -63,6 +66,40 @@ namespace AppY.Controllers
             return RedirectToAction("Create", "Account");
         }
 
+        public async Task<IActionResult> Notifications()
+        {
+            if(User.Identity.IsAuthenticated)
+            {
+                string? UserId_Str = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (UserId_Str != null)
+                {
+                    bool TryParseUserId = Int32.TryParse(UserId_Str, out int UserId);
+                    if (TryParseUserId)
+                    {
+                        User? UserInfo = await _user.GetMainUserInfoAsync(UserId);
+                        await _notification.DeleteAncientNotificationsAsync(UserId);
+                        IQueryable<NotificationModel>? NotificationsPreview = _notification.GetNotifications(UserId, 0, 35);
+                        if (NotificationsPreview != null)
+                        {
+                            List<NotificationModel>? Notifications = await NotificationsPreview.ToListAsync();
+                            if (Notifications != null)
+                            {
+                                ViewBag.UserInfo = UserInfo;
+                                ViewBag.Notifications = Notifications;
+                                ViewBag.MissedNotificationsCount = Notifications.Count(n => !n.IsChecked);
+                                ViewBag.CheckedNotificationsCount = Notifications.Count(n => n.IsChecked);
+                                ViewBag.NotificationsCount = Notifications.Count;
+
+                                return View();
+                            }
+                        }
+                    }
+                }
+                return RedirectToAction("Index", "Home");
+            }
+            else return RedirectToAction("Create", "Account");
+        }
+
         [HttpPost]
         public async Task<IActionResult> Edit(EditUserInfo_ViewModel Model)
         {
@@ -84,11 +121,29 @@ namespace AppY.Controllers
             if (ModelState.IsValid)
             {
                 bool Result = await _user.EditAvatarDesignAsync(Model);
-                if (Result) return Json(new { success = true, alert = "Avatar design has been successfully updated", bgColor = Model.BgColor, fgColor = Model.FgColor });
+                if (Result) return Json(new { success = true, alert = "Avatar design has been successfully updated", bgColor = Model.BgColor, fgColor = Model.FgColor, sticker = Model.AvatarStickerUrl });
             }
             return Json(new { success = false, alert = "An unexpected error occured. Please, check all datas and try to edit avatar design again" });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> SetProfilePhoto(int Id, IFormFile File)
+        {
+            if (ModelState.IsValid)
+            {
+                string? Result = await _user.SetProfilePhotoAsync(Id, File);
+                if (!String.IsNullOrEmpty(Result)) return Json(new { success = true, result = Result });
+            }
+            return Json(new { success = false, alert = "Wrong image format. The only accepted extension are: <span class='fw-500'>.jpg</span>, <span class='fw-500'>.jpeg</span> and <span class='fw-500'>.png</span>" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteProfilePhoto(int Id)
+        {
+            bool Result = await _user.DeleteProfilePhotoAsync(Id, null);
+            if (Result) return Json(new { success = true });
+            else return Json(new { success = false, alert = "We're sorry, but an unexpected error occured. Please, try to delete your profile photo later" });
+        }
 
         [HttpGet]
         public async Task<IActionResult> IsShortnameUnique(int Id, string? Shortname)

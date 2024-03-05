@@ -23,20 +23,31 @@
                     else
                     {
                         <div class="col" id="ForthBtns_Box">
-                            <a asp-controller="Account" asp-action="Create" class="btn btn-navbar w-100" id="ForthMain_Btn"> <i class="fa-solid fa-arrow-right-to-bracket text-muted"></i> <br />Sign</a>
+                            <a asp-controller="Account" asp-action="Create" class="btn btn-navbar w-100" id="ForthMain_Btn"> <i class="fa-solid fa-arrow-right-to-bracket text-muted"></i> <br /><small>Sign</small>
+
+                        </a>
                             <button type="button" class="btn btn-navbar w-100" style="display: none;" id="ForthReserve_Btn"></button>
                         </div>
                     }
                     <div class="col">
-                        <a asp-controller="Home" asp-action="Index" class="btn btn-navbar w-100" id="FirstMain_Btn"> <i class="fa-solid fa-house text-muted"></i> <br />Home</a>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-navbar w-100" id="FirstMain_Btn"> <i class="fa-solid fa-house text-muted"></i> <br /><small>Home</small></a>
                         <button type="button" class="btn btn-navbar w-100" style="display: none;" id="FirstReserve_Btn"></button>
                     </div>
                     <div class="col">
-                        <a asp-controller="Home" asp-action="Search" class="btn btn-navbar w-100" id="SecondMain_Btn"> <i class="fa-solid fa-magnifying-glass text-muted"></i> <br />Search</a>
+                        <a asp-controller="Home" asp-action="Search" class="btn btn-navbar w-100" id="SecondMain_Btn"> <i class="fa-solid fa-magnifying-glass text-muted"></i> <br /><small>Search</small></a>
                         <button type="button" class="btn btn-navbar w-100" style="display: none;" id="SecondReserve_Btn"></button>
                     </div>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <div class="col">
+                            <a asp-controller="User" asp-action="Notifications" class="btn btn-navbar w-100" id="FifthMain_Btn"> <i class="fa-regular fa-bell text-muted"></i> <br /><small>Notifications</small>
+
+                        </a>
+                            <button type="button" class="btn btn-navbar w-100" style="display: none;" id="FifthReserve_Btn"></button>
+                        </div>
+                    }
                     <div class="col">
-                        <a asp-controller="User" asp-action="Account" class="btn btn-navbar w-100" id="ThirdMain_Btn"> <i class="fa-regular fa-circle-user text-muted"></i> <br />Account</a>
+                        <a asp-controller="User" asp-action="Account" class="btn btn-navbar w-100" id="ThirdMain_Btn"> <i class="fa-regular fa-circle-user text-muted"></i> <br /><small>Account</small></a>
                         <button type="button" class="btn btn-navbar w-100" style="display: none;" id="ThirdReserve_Btn"></button>
                     </div>
                 </div>

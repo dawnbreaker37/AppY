@@ -13,13 +13,15 @@ namespace AppY.Repositories
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IUser _userRepository;
+        private readonly INotification _notification;
 
-        public Account(Context context, UserManager<User> userManager, SignInManager<User> signInManager, IUser userRepository) : base(context)
+        public Account(Context context, UserManager<User> userManager, SignInManager<User> signInManager, IUser userRepository, INotification notification) : base(context)
         {
             _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
             _userRepository = userRepository;
+            _notification = notification;
         }
 
         public async Task<bool> ResetPasswordAsync(ChangePassword Model)
@@ -32,6 +34,17 @@ namespace AppY.Repositories
                     IdentityResult? Result = await _userManager.ChangePasswordAsync(UserInfo, Model.OldPassword, Model.NewPassword);
                     if(Result != null && Result.Succeeded)
                     {
+                        Notifications_ViewModel notificationModel = new Notifications_ViewModel
+                        {
+                            Title = "Password Reseted",
+                            Description = "Your account's password has been successfully reseted at " + DateTime.Now.ToShortDateString() + ", " + DateTime.Now.ToShortTimeString() + ". Please, check your email for more information",
+                            IsUntouchable = true,
+                            NotificationCategoryId = 1,
+                            IsPinned = false,
+                            UserId = UserInfo.Id
+                        };
+
+                        await _notification.SendNotificationAsync(notificationModel);
                         await _context.Users.AsNoTracking().Where(u=>u.Id == Model.Id && !u.IsDisabled).ExecuteUpdateAsync(u=>u.SetProperty(u=>u.PasswordChanged, DateTime.Now));
                         return true;
                     }
@@ -103,7 +116,18 @@ namespace AppY.Repositories
                     IdentityResult? Result = await _userManager.ResetPasswordAsync(UserInfo, Model.Token, Model.Password);
                     if(Result != null && Result.Succeeded)
                     {
+                        Notifications_ViewModel notificationModel = new Notifications_ViewModel
+                        {
+                            Title = "Password Updated",
+                            Description = "Your account's password has been successfully updated at " + DateTime.Now.ToShortDateString() + ", " + DateTime.Now.ToShortTimeString() + ". Please, check your email for more information. <br/> <span class='fw-500'>Attention!</span> If this action was not triggered by you, immediately restore your password from <a href='/Account/Create' class='text-decoration-none text-primary'>sign up</a> page",
+                            IsUntouchable = true,
+                            NotificationCategoryId = 1,
+                            UserId = UserInfo.Id
+                        };
+                        await _notification.SendNotificationAsync(notificationModel);
                         await _context.Users.AsNoTracking().Where(u => u.Email == Model.Email && !u.IsDisabled).ExecuteUpdateAsync(u => u.SetProperty(u => u.PasswordChanged, DateTime.Now));
+                        await _context.SaveChangesAsync();
+
                         return true;
                     }
                 }

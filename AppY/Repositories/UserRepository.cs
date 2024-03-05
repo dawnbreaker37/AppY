@@ -12,17 +12,19 @@ namespace AppY.Repositories
     {
         private readonly Context _context;
         private readonly UserManager<User> _userManager;
+        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IMemoryCache _memoryCache;
-        public UserRepository(Context context, UserManager<User> userManager, IMemoryCache memoryCache) : base(context)
+        public UserRepository(Context context, UserManager<User> userManager, IWebHostEnvironment webHostEnvironment, IMemoryCache memoryCache) : base(context)
         {
             _context = context;
             _userManager = userManager;
+            _webHostEnvironment = webHostEnvironment;
             _memoryCache = memoryCache;
         }
 
         public async Task<User?> GetMainUserInfoAsync(int Id)
         {
-            if (Id != 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, AvatarUrl = u.AvatarUrl, Email = u.Email, AvatarBgColor = u.AvatarBgColor, AvatarFgColor = u.AvatarFgColor, EmailConfirmed = u.EmailConfirmed, Description = u.Description, PseudoName = u.PseudoName, ShortName = u.ShortName, PasswordChanged = u.PasswordChanged }).FirstOrDefaultAsync(u => u.Id == Id && !u.IsDisabled);
+            if (Id != 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, AvatarUrl = u.AvatarUrl, Email = u.Email, AvatarBgColor = u.AvatarBgColor, AvatarFgColor = u.AvatarFgColor, EmailConfirmed = u.EmailConfirmed, Description = u.Description, PseudoName = u.PseudoName, ShortName = u.ShortName, PasswordChanged = u.PasswordChanged, AvatarStickerUrl = u.AvatarStickerUrl }).FirstOrDefaultAsync(u => u.Id == Id && !u.IsDisabled);
             else return null;
         }
 
@@ -105,7 +107,7 @@ namespace AppY.Repositories
         {
             if(Model.Id != 0)
             {
-                int Result = await _context.Users.AsNoTracking().Where(u => u.Id == Model.Id).ExecuteUpdateAsync(u => u.SetProperty(u => u.AvatarBgColor, Model.BgColor).SetProperty(u => u.AvatarFgColor, Model.FgColor));
+                int Result = await _context.Users.AsNoTracking().Where(u => u.Id == Model.Id).ExecuteUpdateAsync(u => u.SetProperty(u => u.AvatarBgColor, Model.BgColor).SetProperty(u => u.AvatarFgColor, Model.FgColor).SetProperty(p => p.AvatarStickerUrl, Model.AvatarStickerUrl));
                 if (Result != 0) return true;
             }
             return false;
@@ -119,6 +121,32 @@ namespace AppY.Repositories
                 else return UserInfo.AvatarStickerUrl;
             }
             else return "?";
+        }
+
+        public async Task<string?> SetProfilePhotoAsync(int Id, IFormFile File)
+        {
+            if(Id != 0 && File != null)
+            {
+                string? FileExtension = Path.GetExtension(File.FileName);
+                string? NewFileName = Guid.NewGuid().ToString("D").Substring(4, 16);
+                using(FileStream fs = new FileStream(_webHostEnvironment.WebRootPath + "/Avatars/" + NewFileName + FileExtension, FileMode.Create))
+                {
+                    await File.CopyToAsync(fs);
+                    int Result = await _context.Users.AsNoTracking().Where(u => u.Id == Id && !u.IsDisabled).ExecuteUpdateAsync(u => u.SetProperty(u => u.AvatarUrl, NewFileName + FileExtension));
+                    if (Result > 0) return NewFileName + FileExtension;
+                }
+            }
+            return null;
+        }
+
+        public async Task<bool> DeleteProfilePhotoAsync(int Id, string? File)
+        {
+            if(Id != 0)
+            {
+                int Result = await _context.Users.AsNoTracking().Where(u => u.Id == Id && !u.IsDisabled).ExecuteUpdateAsync(u => u.SetProperty(u => u.AvatarUrl, File));
+                if (Result != 0) return true;
+            }
+            return false;
         }
     }
 }

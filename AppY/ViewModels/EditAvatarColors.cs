@@ -13,5 +13,6 @@ namespace AppY.ViewModels
         [MaxLength(6)]
         [MinLength(6)]
         public string? FgColor { get; set; }
+        public string? AvatarStickerUrl { get; set; }
     }
 }

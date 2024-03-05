@@ -21,6 +21,20 @@ body {
   margin-bottom: 60px;
 }
 
+.dropdown-menu {
+    border: 1px solid rgb(240, 240, 240);
+    background-color: transparent;
+    backdrop-filter: blur(9px);
+    border-radius: 8px;
+    transition: all ease 0.15s;
+}
+.dropdown-item {
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all ease 0.3s;
+}
+
 .list-group {
     border-radius: 8px;
     transition: all ease 0.3s;
@@ -59,10 +73,18 @@ body {
 }
 
 .image-container {
-    height: 70px;
-    width: 80px;
+    height: 90px;
+    width: 90px;
     object-fit: contain;
-    border-radius: 17px;
+    border: 1px solid #f0f0f0;
+    border-radius: 90px;
+    transition: all ease 0.3s;
+}
+.image-container-sm {
+    height: 35px;
+    width: 35px;
+    object-fit: contain;
+    border-radius: 35px;
     transition: all ease 0.3s;
 }
 
@@ -92,6 +114,14 @@ body {
     transition: all ease 0.45s;
 }
 
+.h-collapse-prehead {
+    overflow-y: hidden;
+    height: auto;
+    min-height: 125px;
+    max-height: 375px;
+    transition: all ease 0.3s;
+}
+
 .user-via-shortname {
     border-radius: 34px;
     font-weight: 500;
@@ -113,6 +143,10 @@ body {
     border-radius: 8px 8px 0 0;
 }
 
+.border-radius-sharp {
+    border-radius: 0;
+}
+
 .special-form-control {
     cursor: pointer;
     font-family: 'Trebuchet MS';
@@ -129,8 +163,57 @@ body {
     background-color: #f8f9fa;
 }
 
+.nav-link {
+    cursor: pointer;
+    background-color: transparent;
+    font-weight: 500;
+    border: 0;
+    transition: all ease 0.3s;
+}
+.nav-link:hover,
+.nav-link:active {
+    border: 1px 1px 0 1px solid #f8f9fa;
+}
+
 .style-font {
     font-family: 'Trebuchet MS';
+}
+.cursive-font {
+    font-family: cursive;
+}
+.system-ui-font {
+    font-family: system-ui;
+}
+.tahoma-font {
+    font-family: Tahoma;
+}
+.serif-font {
+    font-family: serif;
+}
+.math-font {
+    font-family: 'Cambria Math'
+}
+.courier-font {
+    font-family: 'Courier New';
+}
+.lucida-font {
+    font-family: 'Lucida Console';
+}
+
+.form-control-type-file {
+    cursor: pointer;
+    border-radius: 8px;
+    width: 100%;
+    background-color: rgb(240, 240, 240);
+    border: 1px solid #f8f9fa;
+    transition: all ease 0.3s;
+}
+
+.text-orange {
+    color: darkorange;
+}
+.bg-orange {
+    background-color: darkorange;
 }
 
 .tooltip-asset-one {
@@ -158,6 +241,10 @@ body {
     border-radius: 6px;
     font-weight: 500;
     transition: all ease 0.3s;
+}
+
+.mh-230 {
+    max-height: 230px;
 }
 
 .btn-standard {
