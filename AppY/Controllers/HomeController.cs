@@ -1,6 +1,8 @@
 using AppY.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Linq;
+using System.Security.Claims;
 
 namespace AppY.Controllers
 {
@@ -13,8 +15,16 @@ namespace AppY.Controllers
             _logger = logger;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            if(User.Identity.IsAuthenticated)
+            {
+                string? CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if(CurrentUserId != null)
+                {
+                    HttpContext.Response.Cookies.Append("CurrentUserId", CurrentUserId);
+                }
+            }
             return View();
         }
 

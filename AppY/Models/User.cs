@@ -24,6 +24,8 @@ namespace AppY.Models
         public DateTime? PasswordChanged { get; set; }
         public bool IsDisabled { get; set; }
         public List<NotificationModel>? Notifications { get; set; }
+        public List<Discussion>? Discussions { get; set; }
+        public List<DiscussionMessage>? DiscussionMessages { get; set; }
         [NotMapped]
         public string? UnpicturedAvatarInfo { get; set; }
     }

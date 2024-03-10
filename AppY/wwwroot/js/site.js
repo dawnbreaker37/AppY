@@ -40,7 +40,6 @@ window.onresize = function () {
     additionalBtnSelector(fullWidth);
 }
 
-
 $("#SignUp_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -600,6 +599,145 @@ $("#DeleteNotification_Form").on("submit", function (event) {
     });
 });
 
+$("#CreateDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            if (response.isPrivate) {
+                alert('<i class="fa-regular fa-circle-check text-neon-purple fa-shake"></i>', "Discussion has been successfully created. Since this discussion is a private discussion here's the password for it: <span class='fw-500'>" + response.password + "</span>", "Go to Discussion", "Close", 1, 0, "/discussion/discuss/" + response.result, null, 7.5);
+            }
+            else document.location.href = "/discussion/discuss/" + response.result;
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake text-danger"></i>', response.alert, "Close", null, 0, null, null, null, 5);
+        }
+    });
+});
+$("#GetDiscussions_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        $("#Discussions_Container-Box").empty();
+        if (response.success) {
+            if (response.count == 1) $("#DiscussionsCount_Span").text("single discussion");
+            else $("#DiscussionsCount_Span").text(response.count + " discussions");
+            if (response.count > 0) {
+                let tooltipReminder = $("<div class='box-container bg-light p-1'></div>");
+                let tolltipReminderText = $('<span class="h6">Tap on discussion to enter it</span>');
+                let tooltipDivider = $("<div></div>");
+                let tooltipSmallReminder = $("<small class='card-text text-muted'>Tap on others icon to edit other settings</small>");
+                tooltipReminder.append(tolltipReminderText);
+                tooltipReminder.append(tooltipDivider);
+                tooltipReminder.append(tooltipSmallReminder);
+                $("#Discussions_Container-Box").append(tooltipReminder);
+
+                $.each(response.result, function (index) {
+                    let div = $("<div class='box-container bg-light p-2 mt-2 relocate-to-discussion'></div>");
+                    let name = $("<h6 class='h6'></h6>");
+                    let joinedAndCreated = $("<small class='card-text text-muted'></small>");
+                    div.attr("id", response.result[index].id + "-RelocateToDiscussion");
+                    name.html(response.result[index].discussionName);
+                    joinedAndCreated.html("created " + dateAndTimeTranslator(response.result[index].createdAt) + ", joined " + dateAndTimeTranslator(response.result[index].joinedAt));
+
+                    div.append(name);
+                    div.append(joinedAndCreated);
+
+                    $("#Discussions_Container-Box").append(div);
+                });
+            }
+            else {
+                let div = $("<div class='box-container p-2'></div>");
+                let icon = $('<h2 class="h2"> <i class="fa-solid fa-xmark"></i> </h2>');
+                let title = $("<h6 class='h6'>No Discussions</h6>");
+                let description = $("<small class='card-text text-muted'>you haven't got any discussions yet</small>");
+
+                div.append(icon);
+                div.append(title);
+                div.append(description);
+
+                $("#Discussions_Container-Box").append(div);
+            }
+        }
+        else {
+            let div = $("<div class='box-container p-2'></div>");
+            let icon = $('<h2 class="h2"> <i class="fa-solid fa-xmark"></i> </h2>');
+            let title = $("<h6 class='h6'>No Discussions</h6>");
+            let description = $("<small class='card-text text-muted'>you haven't got any discussions yet</small>");
+
+            div.append(icon);
+            div.append(title);
+            div.append(description);
+
+            $("#Discussions_Container-Box").append(div);
+        }
+
+        openSidebar();
+        animatedOpen(false, "Discussions_Container", true, false);
+    });
+});
+
+$("#EditDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#EditDiscussionInfo_Box").removeClass("show");
+            $("#Preloaded_Container_ShowBox-Open").text(response.result.name);
+            $("#DiscussionName_Lbl").text(response.result.name);
+            $("#DiscussionShortlink_Lbl").html("@" + response.result.shortlink);
+            $("#ShortlinkAdditional_Lbl").html("@<span class='user-select-all'>" + response.result.shortlink + "</span>");
+            if (response.result.description != null) {
+                $("#DiscussionDescription_Lbl").html(response.result.description);
+            }
+            else {
+                $("#DiscussionDescription_Lbl").html("No description");
+            }
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Done", null, 0, null, null, null, 4.5);
+        }
+    });
+});
+
+$("#SendDiscussionMessage_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+        }
+    });
+});
+
+$("#IsShortlinkFree_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            $("#ShortLinkFreedomness_Lbl").html("Entered shortlink is <span class='text-primary'>free to use</span>");
+            $("#DiscussionInfoEdit_SbmtBtn").attr("disabled", false);
+        }
+        else {
+            $("#ShortLinkFreedomness_Lbl").html("Entered shortlink is <span class='text-danger'>not free to use</span>. Try to use another one");
+            $("#DiscussionInfoEdit_SbmtBtn").attr("disabled", true);
+        }
+
+        setTimeout(function () {
+            $("#ShortLinkFreedomness_Lbl").text("Required characters for shortlink are: [A-Z, a-z], [0-9] and [_]. Required shortlink length: from 4 and up to 20 characters");
+        }, 5000);
+    });
+});
+
 $("#LogIn_Email_Val").on("change", function () {
     let val = $(this).val();
     if (val.includes("@") && val.includes(".")) {
@@ -614,6 +752,23 @@ $("#SubmitSingleUsingCode_Code_Val").on("keyup", function () {
     let value = $(this).val();
     if (value.length >= 8) {
         $("#SubmitSingleUsingCode_Form").submit();
+    }
+});
+
+$("#DiscussionShortlink_Val").on("change", function () {
+    $("#IDSF_Shortlink_Val").val($(this).val());
+    if ($(this).val().length >= 4 && $(this).val().length <= 20) {
+        $("#IsShortlinkFree_Form").submit();
+    }
+    else {
+        $("#DiscussionInfoEdit_SbmtBtn").attr("disabled", true);
+        $("#ShortLinkFreedomness_Lbl").html("Shortlink is <span class='text-danger'>too short</span>. It should contain <span class='fw-500'>[4-20] chars</span>");
+        $("#IDSF_Shortlink_Val").val($("#CurrentShortLink_Val").val());
+        $("#DiscussionShortlink_Val").val($("#CurrentShortLink_Val").val());
+
+        setTimeout(function () {
+            $("#ShortLinkFreedomness_Lbl").text("Required characters for shortlink are: [A-Z, a-z], [0-9] and [_]. Required shortlink length: from 4 and up to 20 characters");
+        }, 6000);
     }
 });
 
@@ -632,6 +787,13 @@ $("#ChangeToSingleUseType_Btn").on("click", function () {
         $("#RecoverViaReserveCode_Box").fadeOut(0);
         animatedOpen(false, "ForgotPassword_Container", true, false);
     }, 450);
+});
+
+$(document).on("click", ".relocate-to-discussion", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        document.location.href = "/Discussion/Discuss/" + trueId
+    }
 });
 
 $(document).on("click", ".get-notification-info", function (event) {
@@ -1025,6 +1187,19 @@ $(document).on("click", ".btn-file-click", function (event) {
     }
 });
 
+$(document).on("click", ".discussion-header", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        headerTransform(trueId);
+    }
+});
+$(document).on("click", ".discussion-header-return", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        headerReturn(trueId);
+    }
+});
+
 function getTrueId(name) {
     let trueId = name.substring(0, name.lastIndexOf("-"));
     if (trueId != null || trueId != undefined) return trueId;
@@ -1033,6 +1208,7 @@ function getTrueId(name) {
 
 function openSidebar() {
     if (fullWidth < 768) {
+        $(".btn-fixed-close-sidebar").fadeIn(300);
         $("#Main_SideBar").fadeIn(250);
         $("#Main_SideBar").css("left", 0);
     }
@@ -1040,11 +1216,54 @@ function openSidebar() {
 
 function closeSidebar() {
     if (fullWidth < 768) {
+        $(".btn-fixed-close-sidebar").fadeOut(300);
         setTimeout(function () {
             $("#Main_SideBar").fadeOut(350);
             $("#Main_SideBar").css("left", "-1200px");
         }, 550);
     }
+}
+
+$(document).on("click", ".btn-hide", function (event) {
+    let trueId = getTrueId(event.target.id);
+    let secondId = $("#" + event.target.id).attr("data-bs-title");
+    if (trueId != null) {
+        if (secondId != undefined) hide(trueId, secondId);
+        else hide(trueId, null);
+    }
+});
+
+function hide(element, openAnotherElement) {
+    if (openAnotherElement == null) {
+        $("#" + element).fadeOut(350);
+    }
+    else {
+        $("#" + element).fadeOut(225);
+        setTimeout(function () {
+            $("#" + openAnotherElement).fadeIn(250);
+        }, 225);
+    }
+}
+
+function headerTransform(element) {
+    $("#" + element).css("filter", "none");
+    $(".header-container").slideUp(300);
+    $(".discussion-box").slideUp(300);
+    setTimeout(function () {
+        $("#" + element).fadeIn(0);
+        $("#" + element).css("margin-left", 0);
+    }, 350);
+}
+function headerReturn(element) {
+    $("#" + element).css("filter", "blur(16px)");
+    $("#" + element).css("margin-left", "-1200px");
+    setTimeout(function () {
+        $("#" + element).fadeOut(0);
+    }, 250);
+    setTimeout(function () {
+        $(".header-container").fadeIn(300);
+        $(".discussion-box").fadeIn(300);
+    }, 300);
 }
 
 function slideToLeft(element) {
@@ -1299,44 +1518,29 @@ function additionalBtnSelector(width) {
 }
 
 function slide(forAll, element) {
-    if (!forAll) {
-        $(".slider-container").css("margin-left", "32px");
-        setTimeout(function () {
-            $(".slider-container").css("margin-left", "-6000px");
-            $(".slider-container").fadeOut(350);
-        }, 350);
-        setTimeout(function () {
-            $("#" + element).fadeIn(0);
-        }, 700);
-        setTimeout(function () {
-            $("#" + element).css("margin-left", "40px");
-        }, 750);
-        setTimeout(function () {
-            $("#" + element).css("margin-left", 0);
-        }, 1200);
-    }
-
-    //if (forAll) {
-    //    $(".slider-container").fadeIn(0);
-    //    $(".slider-container").css("margin-left", "16px");
+    //if (!forAll) {
+    //    $(".slider-container").css("margin-left", "32px");
     //    setTimeout(function () {
-    //        $(".slider-container").css("margin-left", 0);
-    //    }, 350);
-    //}
-    //else {
-    //    $(".slider-container").css("margin-left", "16px");
-    //    setTimeout(function () {
-    //        $(".slider-container").css("margin-left", "-1200px");
-    //        $(".slider-container").fadeOut(0);
+    //        $(".slider-container").css("margin-left", "-6000px");
+    //        $(".slider-container").fadeOut(350);
     //    }, 350);
     //    setTimeout(function () {
     //        $("#" + element).fadeIn(0);
-    //        $("#" + element).css("margin-left", "16px");
-    //        setTimeout(function () {
-    //            $("#" + element).css("margin-left", 0);
-    //        }, 100);
-    //    }, 350);
+    //    }, 700);
+    //    setTimeout(function () {
+    //        $("#" + element).css("margin-left", "40px");
+    //    }, 750);
+    //    setTimeout(function () {
+    //        $("#" + element).css("margin-left", 0);
+    //    }, 1200);
     //}
+
+    $(".slider-container").css("opacity", "0.0");
+    setTimeout(function () {
+        $(".slider-container").fadeOut(0);
+        $("#" + element).css("opacity", "1.0");
+        $("#" + element).fadeIn(0);
+    }, 300);
 }
 
 function animatedOpen(forAll, element, sticky, closeAllOtherContainers) {
@@ -1488,6 +1692,11 @@ function alert(icon, text, btn1Text, btn2Text, btn1Action, btn2Action, btn1WhatT
                     }, 350);
                 });
                 break;
+            case 1:
+                $("#Alert_Container-Btn1").on("click", function () {
+                    document.location.href = btn1Action;
+                });
+                break;
             default:
                 $("#Alert_Container-Btn1").on("click", function () {
                     $("#Alert_Container").css("top", "12px");
@@ -1520,6 +1729,10 @@ function alert(icon, text, btn1Text, btn2Text, btn1Action, btn2Action, btn1WhatT
                     }, 350);
                 });
                 break;
+            case 1:
+                $("#Alert_Container-Btn2").on("click", function () {
+                    document.location.href = btn2Action;
+                });
             default:
                 $("#Alert_Container-Btn2").on("click", function () {
                     $("#Alert_Container").css("top", "12px");
@@ -1563,17 +1776,24 @@ function alert(icon, text, btn1Text, btn2Text, btn1Action, btn2Action, btn1WhatT
 } 
 
 function displayCorrect(width) {
-    let neededH = fullHeight - 24 - botOffNavbarH;
+    let topNavbarH = $(".top-navbar").innerHeight();
+    let neededH = fullHeight - 24 - botOffNavbarH - topNavbarH;
     let sideBarStatus = $("#Main_SideBar").css("margin-left");
     sideBarStatus = sideBarStatus == undefined ? -1200 : parseInt(sideBarStatus);
 
     $(".main-container").css("max-height", neededH + "px");
     $(".smallside-box-container").css("max-height", neededH + "px");
+    $(".mh-max").css("height", neededH + "px");
+    $(".messages-container").css("bottom", botOffNavbarH + 12 + "px");
 
     if (sideBarStatus < 0) {
         $("#MainBotOffNavbar").css("width", "100%");
         $(".main-container").css("width", "100%");
         $(".main-container").css("left", 0);
+        $(".top-navbar").css("width", "100%");
+        $(".top-navbar").css("left", 0);
+        $(".messages-container").css("width", fullWidth - 10 + "px");
+        $(".messages-container").css("left", "5px");
     }
     else {
         if (width < 768) {
@@ -1588,6 +1808,8 @@ function displayCorrect(width) {
             $(".smallside-box-container").css("width", "100%");
             $(".smallside-box-container").css("left", 0);
             $(".collapse-horizontal-container").css("width", fullWidth + "px");
+            $(".messages-container").css("width", fullWidth - 10 + "px");
+            $(".messages-container").css("left", "5px");
             //$(".smallside-modal-container").css("left", "2.4%");
             //$(".smallside-modal-container").css("width", "95%");
         }
@@ -1600,6 +1822,8 @@ function displayCorrect(width) {
             $("#MainBotOffNavbar").css("width", leftW + "px");
             $("#MainBotOffNavbar_Box").css("width", leftW + "px");
             $("#MainBotOffNavbar").css("left", leftBarW + "px");
+            $(".top-navbar").css("width", leftW + "px");
+            $(".top-navbar").css("left", leftBarW + "px");
 
             $("#Main_SideBar").fadeIn(0);
             $("#Main_SideBar").css("left", 0);
@@ -1607,11 +1831,23 @@ function displayCorrect(width) {
             $(".main-container").css("left", leftBarW + "px");
             $(".smallside-box-container").css("width", smallSideContainerW + 2 + "px");
             $(".collapse-horizontal-container").css("width", smallSideContainerW * 0.975 + "px");
+            $(".messages-container").css("width", leftW - 20 + "px");
+            $(".messages-container").css("left", leftBarW + 10  + "px");
             //$(".smallside-modal-container").css("left", "10px");
             //$(".smallside-modal-container").css("width", smallSideContainerW - 19 + "px");
         }
     }
 }
+
+$(document).on("change", ".checkbox-select", function (event) {
+    let value = $("#" + event.target.id).prop("checked");
+    if (value) {
+        $("#" + event.target.id).val(true);
+    }
+    else {
+        $("#" + event.target.id).val(false);
+    }
+});
 
 $(document).on("mouseover", ".info-popover", function () {
     $(this).popover("show");

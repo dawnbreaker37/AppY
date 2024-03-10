@@ -21,6 +21,39 @@ body {
   margin-bottom: 60px;
 }
 
+.messages-box-separator {
+    margin-top: 135px;
+}
+
+.current-user-message-main-box {
+    max-width: 55%;
+    transition: all ease 0.3s;
+}
+.other-users-message-main-box {
+    max-width: 40%;   
+    transition: all ease 0.3s;
+}
+
+.current-user-message-box {
+    cursor: pointer;
+    max-width: 100%;
+    width: auto;
+    border-radius: 12px;
+    background-color: #0d6efd;
+    color: #fdfdfd;
+    transition: all ease 0.3s;
+}
+.other-users-message-box {
+    cursor: pointer;
+    max-width: 100%;
+    width: auto;
+    border-radius: 12px;
+    background-color: #f8f9fa;
+    color: black;
+    transition: all ease 0.3s;
+}
+
+
 .dropdown-menu {
     border: 1px solid rgb(240, 240, 240);
     background-color: transparent;
@@ -47,12 +80,27 @@ body {
     background-color: rgb(240, 240, 240);
     transition: all ease 0.3s;
 }
+
+.image-picture-none-container-md {
+    width: 45px;
+    height: 45px;
+    border-radius: 45px;
+    background-color: rgb(240, 240, 240);
+    transition: all ease 0.3s;
+}
+
 .unpictured-container-label {
     width: 100%;
     font-weight: 500;
     text-align: center;
     font-size: 50px;
     line-height: 95px;
+    transition: all ease 0.3s;
+}
+
+.modal-content {
+    border: 0;
+    border-radius: 8px;
     transition: all ease 0.3s;
 }
 
@@ -72,12 +120,29 @@ body {
     transition: all ease 0.37s;
 }
 
+.unpictured-container-label-md {
+    width: 100%;
+    font-weight: 500;
+    text-align: center;
+    font-size: 28px;
+    line-height: 45px;
+    transition: all ease 0.37s;
+}
+
 .image-container {
     height: 90px;
     width: 90px;
     object-fit: contain;
     border: 1px solid #f0f0f0;
     border-radius: 90px;
+    transition: all ease 0.3s;
+}
+.image-container-md {
+    height: 55px;
+    width: 55px;
+    object-fit: contain;
+    border: 1px solid #f0f0f0;
+    border-radius: 55px;
     transition: all ease 0.3s;
 }
 .image-container-sm {
@@ -91,7 +156,6 @@ body {
 .btn-group-member {
     cursor: pointer;
     border-radius: 8px;
-/*    font-weight: 500;*/
     text-align: left;
     border: 1px solid transparent;
     background-color: #f8f9fa;
@@ -143,6 +207,15 @@ body {
     border-radius: 8px 8px 0 0;
 }
 
+.top-navbar {
+    z-index: 1000;
+    top: 0;
+    backdrop-filter: blur(6px);
+    position: fixed;
+    border-radius: 1px;
+    transition: all ease 0.3s;
+}
+
 .border-radius-sharp {
     border-radius: 0;
 }
@@ -161,6 +234,20 @@ body {
 }
 .special-form-control:focus {
     background-color: #f8f9fa;
+}
+
+.discussion-header {
+    cursor: pointer;
+    font-weight: 500;
+    color: black;
+    opacity: 1;
+    transform: scale(1);
+    transition: all ease 0.3s;
+}
+.discussion-header:hover,
+.discussion-header:active {
+    transform: scale(1.2);
+    opacity: 0.65;
 }
 
 .nav-link {
@@ -198,6 +285,43 @@ body {
 }
 .lucida-font {
     font-family: 'Lucida Console';
+}
+
+.btn-message-example {
+    cursor: pointer;
+    color: black;
+    font-weight: 500;
+    border-radius: 34px;
+    background-color: #f8f9fa;
+    transition: all ease 0.3s;
+}
+.btn-message-example:hover,
+.btn-message-example:active {
+    background-color: #f0f0f0;
+}
+
+.messages-container {
+    position: fixed;
+    background-color: #f8f9fa;
+    backdrop-filter: blur(9px);
+    border-radius: 8px;
+    transition: all ease 0.325s;
+}
+
+.message-form-control {
+    cursor: pointer;
+    width: 65%;
+    background-color: #f8f9fa;
+    border: 0;
+    resize: none;
+    padding: 10px;
+    outline: none;
+    border-radius: 8px;
+    transition: all ease 0.325s;
+}
+
+.border-radius-rounded {
+    border-radius: 100px;
 }
 
 .form-control-type-file {

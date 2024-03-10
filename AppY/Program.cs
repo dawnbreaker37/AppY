@@ -21,7 +21,9 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddTransient(typeof(IBase<>), typeof(Base<>));
 builder.Services.AddTransient<IAccount, Account>();
 builder.Services.AddTransient<IUser, UserRepository>();
-builder.Services.AddTransient<INotification, AppY.Repositories.Notification>();
+builder.Services.AddTransient<INotification, Notification>();
+builder.Services.AddTransient<IDiscussion, DiscussionRepository>();
+builder.Services.AddTransient<IDiscussionMessage, DiscussionMessageRepository>();
 builder.Services.AddTransient<IMailMessages, MailMessages>();
 
 builder.Services.AddIdentity<User, IdentityRole<int>>(Opt =>

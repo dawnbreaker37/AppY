@@ -11,5 +11,8 @@ namespace AppY.Data
         public DbSet<User> Users { get; set; }
         public DbSet<NotificationModel> Notifications { get; set; }
         public DbSet<NotificationCategory> NotificationCategories { get; set; }
+        public DbSet<Discussion> Discussions { get; set; }
+        public DbSet<DiscussionUsers> DiscussionUsers { get; set; }
+        public DbSet<DiscussionMessage> DiscussionMessages { get; set; }
     }
 }

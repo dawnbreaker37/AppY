@@ -1,0 +1,182 @@
+﻿@model Discussion
+@{
+    ViewData["Title"] = "Discussion";
+
+    User? UserInfo = ViewBag.UserInfo;
+    Discussion? DiscussionInfo = ViewBag.Discussion;
+    string? DiscussionAvatar = ViewBag.DiscussionAvatar;
+    int MessagesCount = ViewBag.MessagesCount;
+}
+
+<div class="main-sidebar" id="Main_SideBar">
+    <div class="d-none">
+        <input type="hidden" id="CurrentShortLink_Val" value="@DiscussionInfo.Shortlink" />
+        <form method="get" asp-controller="Discussion" asp-action="IsShortlinkFree" id="IsShortlinkFree_Form">
+            <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+            <input type="hidden" name="Shortlink" id="IDSF_Shortlink_Val" />
+        </form>
+    </div>
+</div>
+
+<div class="main-container mh-max shadow-standard" id="Preloaded_Container">
+    <div class="box-container p-2" style="display: none; margin-left: -1200px;" id="Preloaded_Container_ShowBox">
+        <div class="box-container text-center">
+            <button type="button" class="btn btn-light btn-standard-asset btn-sm float-start me-1 discussion-header-return" id="Preloaded_Container_ShowBox-Return">Back</button>
+            @if (DiscussionInfo.AvatarUrl == null)
+            {
+                <div class="image-picture-none-container bg-light mx-auto">
+                    <div class="unpictured-container-label">@DiscussionAvatar</div>
+                </div>
+            }
+            else
+            {
+                <div class="image-container mx-auto">
+                </div>
+            }
+            <span class="h3 mt-1" id="DiscussionName_Lbl">@DiscussionInfo.Name</span>
+            <div></div>
+            <small class="card-text text-muted" id="DiscussionShortlink_Lbl">@@@DiscussionInfo.Shortlink</small>
+        </div>
+        <div class="box-container mt-3">
+            <div class="row">
+                <div class="col">
+                    <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-solid fa-users"></i> <br/>Members</button>
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell-slash"></i> <br />Mute</button>
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-standard-asset btn-light w-100" data-bs-toggle="collapse" data-bs-target="#EditDiscussionInfo_Box" aria-expanded="false" aria-controls="EditDiscussionInfo_Box"> <i class="fa-regular fa-pen-to-square"></i> <br />Edit</button>
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-solid fa-circle-info"></i> <br />Info</button>
+                </div>
+            </div>
+        </div>
+        <div class="box-container mt-2">
+            <div class="bordered-container p-2">
+                <small class="card-text text-muted fw-500">Description</small>
+                <div></div>
+                @if (DiscussionInfo.Description != null)
+                {
+                    <small class="card-text white-space-on" id="DiscussionDescription_Lbl">@DiscussionInfo.Description</small>
+                }
+                else
+                {
+                    <small class="card-text white-space-on" id="DiscussionDescription_Lbl">No description</small>
+                }
+            </div>
+            <div class="bordered-container p-2 mt-1">
+                <small class="card-text text-muted fw-500">Shortlink</small>
+                <div></div>
+                <small class="card-text" id="ShortlinkAdditional_Lbl">@@<span class="user-select-all">@DiscussionInfo.Shortlink</span></small>
+            </div>
+        </div>
+        <div class="box-container">
+            <div class="collapse" id="EditDiscussionInfo_Box">
+                <div class="bordered-container mt-2 p-2">
+                    <h6 class="h6 ms-1">Edit Discussion's Info</h6>
+                    <div class="box-container mt-3">
+                        <form method="post" asp-controller="Discussion" asp-action="Edit" id="EditDiscussion_Form">
+                            <div class="d-none">
+                                <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                                <input type="hidden" name="UserId" value="@UserInfo.Id" />
+                            </div>
+                            <div class="form-floating">
+                                <input asp-for="Name" autocomplete="off" class="form-control shadow-none" value="@DiscussionInfo.Name" placeholder="Discussion's name is required" maxlength="100" />
+                                <label asp-for="Name" class="fw-500">Name</label>
+                            </div>
+                            <div class="form-floating mt-3">
+                                <input asp-for="Shortlink" id="DiscussionShortlink_Val" autocomplete="off" class="form-control shadow-none strong-input" value="@DiscussionInfo.Shortlink" placeholder="Discussion's shortlink is required" maxlength="20" />
+                                <label asp-for="Shortlink" class="fw-500">Shortlink(@@)</label>
+                            </div>
+                            <div class="ms-1">
+                                <small class="card-text text-muted" id="ShortLinkFreedomness_Lbl">Required characters for shortlink are: [A-Z, a-z], [0-9] and [_]. Required shortlink length: from 4 and up to 20 characters</small>
+                            </div>
+                            <div class="form-floating mt-3">
+                                <textarea id="DiscussionDescription" name="Description" autocomplete="off" rows="4" style="height: 150px;" class="form-control shadow-none" placeholder="Any important information about your discussion" maxlength="600">@DiscussionInfo.Description</textarea>
+                                <label for="DiscussionDescription" class="fw-500">Description</label>
+                            </div>
+                            <div class="mt-2">
+                                <button type="submit" class="btn btn-standard text-primary w-100" id="DiscussionInfoEdit_SbmtBtn">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="header-container p-2 bg-light" id="Preloaded_Container-Header">
+        <span class="h5 text-truncate p-1 discussion-header" id="Preloaded_Container_ShowBox-Open">@DiscussionInfo.Name</span>
+        <div></div>
+        <small class="card-text text-muted ms-1" id="DiscussionStatusBar_Lbl">@ViewBag.MembersCount.ToString("N0") member(s)</small>
+    </div>
+    <div class="box-container p-2 pt-1 mt-1 discussion-box" id="Prealoded_Container-Box">
+        <div class="box-container" id="Messages_Container_Box">
+            <div class="box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto" id="Presentation_Box">
+                <h1 class="h1"> <i class="fa-solid fa-quote-left fa-bounce text-neon-purple"></i> </h1>
+                <h3 class="h3 style-font">Meet the Discussions!</h3>
+                <small class="card-text text-muted">a very new way for sending and receiving messages from a large group of people. <a asp-controller="Home" asp-action="Toolbox" class="card-text text-decoration-none text-primary">Learn more</a> about discussions...</small>
+                <div class="mt-2 text-center">
+                    <button type="button" class="btn btn-standard btn-hide" data-bs-title="NoSentMessages_Box" id="Presentation_Box-Hide">Got It</button>
+                </div>
+            </div>
+            @if (MessagesCount == 0)
+            {
+                <div class="box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto" style="display: none;" id="NoSentMessages_Box">
+                    <h1 class="h1"> <i class="fa-regular fa-comment-dots"></i> </h1>
+                    <h3 class="h3 style-font">No Sent Messages</h3>
+                    <small class="card-text text-muted">be the first one who've sent a message in this discussion</small>
+                </div>
+                @*+add tooltips like in tesla as reminders and cool features of messages with icons*@
+                <div class="current-user-message-main-box float-end p-2">
+                    <div class="current-user-message-box p-2 mt-1">
+                        <p class="card-text white-space-on">Hello, world!</p>
+                    </div>
+                    <div class="mt-1 me-1 float-end">
+                        <small class="card-text text-muted"> <span class="text-primary"><i class="fa-solid fa-check-double"></i></span> today, 1:07</small>
+                    </div>
+                </div>
+@*                 <div class="messages-box-separator"></div> *@
+                <div class="other-users-message-main-box float-start p-2">
+                        <div class="ms-1">
+                            <small class="card-text text-muted">Chat Member 2</small>
+                        </div>
+                    <div class="other-users-message-box p-2 mt-1">
+                        <p class="card-text white-space-on">Hello, there!</p>
+                    </div>
+                    <div class="mt-1 me-1">
+                        <small class="card-text text-muted"> <span class="text-primary"><i class="fa-solid fa-check-double"></i></span> today, 1:11</small>
+                    </div>
+                </div>
+                <div class="messages-box-separator"></div>
+                <div class="other-users-message-main-box float-start p-2">
+                        <div class="ms-1">
+                            <small class="card-text text-muted">Chat Member 3</small>
+                        </div>
+                    <div class="other-users-message-box p-2 mt-1">
+                        <p class="card-text white-space-on">Hello, there!</p>
+                    </div>
+                    <div class="mt-1 me-1">
+                        <small class="card-text text-muted"> <span class="text-primary"><i class="fa-solid fa-check-double"></i></span> today, 11:51</small>
+                    </div>
+                </div>
+            }
+            <div class="messages-container overflow-hidden ps-1 pe-1">
+                <div>
+                    <form method="post" asp-controller="DiscussionMessage" asp-action="SendMessage" id="SendDiscussionMessage_Form">
+                        <div class="d-none">
+                            <input type="hidden" name="DiscussionId" value="@DiscussionInfo.Id" />
+                            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+                        </div>
+                        <textarea name="Text" id="SendDiscussionMessage_Text_Val" class="message-form-control mt-2 overflow-hidden form-control-check-input" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendDiscussionMessage_SbmtBtn"></textarea>
+                        <div class="ms-1 float-end mt-2 me-2">
+                            <button type="button" class="btn btn-message-example btn-sm me-2 mt-2"> <i class="fa-solid fa-plus"></i> </button>
+                            <button type="submit" class="btn btn-message-example btn-sm bg-primary text-light mt-2" id="SendDiscussionMessage_SbmtBtn" disabled>Send</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
