@@ -1,9 +1,11 @@
+using AppY.Abstractions;
 using AppY.Data;
 using AppY.Interfaces;
 using AppY.Models;
 using AppY.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,8 +25,8 @@ builder.Services.AddTransient<IAccount, Account>();
 builder.Services.AddTransient<IUser, UserRepository>();
 builder.Services.AddTransient<INotification, Notification>();
 builder.Services.AddTransient<IDiscussion, DiscussionRepository>();
-builder.Services.AddTransient<IDiscussionMessage, DiscussionMessageRepository>();
 builder.Services.AddTransient<IMailMessages, MailMessages>();
+builder.Services.AddTransient<Message, DiscussionMessageRepository>();
 
 builder.Services.AddIdentity<User, IdentityRole<int>>(Opt =>
 {

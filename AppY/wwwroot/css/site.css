@@ -22,7 +22,7 @@ body {
 }
 
 .messages-box-separator {
-    margin-top: 135px;
+    margin-top: 170px;
 }
 
 .current-user-message-main-box {
@@ -71,6 +71,11 @@ body {
 .list-group {
     border-radius: 8px;
     transition: all ease 0.3s;
+}
+
+.bg-blur {
+    background-color: transparent;
+    backdrop-filter: blur(9px);
 }
 
 .image-picture-none-container {
@@ -298,6 +303,11 @@ body {
 .btn-message-example:hover,
 .btn-message-example:active {
     background-color: #f0f0f0;
+}
+
+.on-start-position {
+    bottom: 0;
+    display: block;
 }
 
 .messages-container {
@@ -535,5 +545,8 @@ body {
 @media screen and (max-width: 768px) {
     .alert-container {
         width: 90%;
+    }
+    .messages-box-separator {
+        margin-top: 140px;
     }
 }

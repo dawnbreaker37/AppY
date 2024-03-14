@@ -51,6 +51,7 @@ namespace AppY.Controllers
         {
             if(User.Identity.IsAuthenticated)
             {
+                if(Request.Cookies.ContainsKey("CurrentUserId")) Response.Cookies.Delete("CurrentUserId");
                 await _signInManager.SignOutAsync();
                 return RedirectToAction("Create", "Account");
             }

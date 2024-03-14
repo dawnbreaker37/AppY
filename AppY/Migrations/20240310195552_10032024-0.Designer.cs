@@ -4,6 +4,7 @@ using AppY.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppY.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20240310195552_10032024-0")]
+    partial class _100320240
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,6 +46,9 @@ namespace AppY.Migrations
                         .HasMaxLength(600)
                         .HasColumnType("nvarchar(600)");
 
+                    b.Property<bool>("IsChecked")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -56,8 +62,8 @@ namespace AppY.Migrations
                     b.Property<string>("Password")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("RemovedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("ReactionId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Shortlink")
                         .HasMaxLength(20)
@@ -134,29 +140,6 @@ namespace AppY.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("DiscussionUsers");
-                });
-
-            modelBuilder.Entity("AppY.Models.MutedDiscussion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DiscussionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DiscussionId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("MutedDiscussions");
                 });
 
             modelBuilder.Entity("AppY.Models.NotificationCategory", b =>
@@ -511,25 +494,6 @@ namespace AppY.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AppY.Models.MutedDiscussion", b =>
-                {
-                    b.HasOne("AppY.Models.Discussion", "Discussion")
-                        .WithMany("MutedDiscussions")
-                        .HasForeignKey("DiscussionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppY.Models.User", "User")
-                        .WithMany("MutedDiscussions")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Discussion");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("AppY.Models.NotificationModel", b =>
                 {
                     b.HasOne("AppY.Models.NotificationCategory", "NotificationCategory")
@@ -618,8 +582,6 @@ namespace AppY.Migrations
             modelBuilder.Entity("AppY.Models.Discussion", b =>
                 {
                     b.Navigation("DiscussionMessages");
-
-                    b.Navigation("MutedDiscussions");
                 });
 
             modelBuilder.Entity("AppY.Models.NotificationCategory", b =>
@@ -630,8 +592,6 @@ namespace AppY.Migrations
             modelBuilder.Entity("AppY.Models.User", b =>
                 {
                     b.Navigation("DiscussionMessages");
-
-                    b.Navigation("MutedDiscussions");
 
                     b.Navigation("Notifications");
                 });

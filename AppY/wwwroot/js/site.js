@@ -16,11 +16,12 @@ window.onload = function () {
         $(".unpictured-container-label-sm").html($("#AvatarSticker_Hdn_Val").val());
     }
 
+    statusSlider("StatusBar_Lbl", 1);
+
     if (fullWidth >= 768) {
         animatedOpen(false, "SmallsidePreloaded_Container", true, false);
         if ($("#SmallsidePreloaded_Container").css("display") == "block") {
             setTimeout(function () {
-
                 animatedOpen(false, "Preloaded_Container", true, false);
             }, 650);
         }
@@ -616,6 +617,65 @@ $("#CreateDiscussion_Form").on("submit", function (event) {
         }
     });
 });
+$("#DeleteTheDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#Preloaded_Container").css("pointer-events", "none");
+            $("#Preloaded_Container").css("filter", "blur(9px)");
+            alert('<i class="fa-regular fa-trash-can"></i>', response.alert, "Done", null, 0, null, null, null, 4.25);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake text-danger" style="--fa-animation-duration: 2.3s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
+        }
+    });
+});
+$("#RestoreTheDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let currentCount = parseInt($("#DiscussionsCount_Span").text());
+            currentCount--;
+
+            alert('<i class="fa-solid fa-arrow-rotate-right fa-spin text-neon-purple" style="--fa-animation-duration: 0.9s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", "Go to Discussion", 0, 1, null, "/Discussion/Discuss/" + response.id, 4.75);
+            if (currentCount <= 0) {
+                $("#DiscussionsCount_Span").text("no deleted");
+                $("#GetDeletedDiscussions_Form_Box").fadeOut(350);
+                slideToLeft(response.id + "-DeletedDiscussionBox");
+
+                let div = $("<div class='box-container p-2 text-center'></div>");
+                let icon = $('<h1 class="h1"> <i class="fa-solid fa-xmark"></i> </h1>');
+                let title = $("<h3 class='h3'>No Deleted Discussions</h3>");
+                let description = $("<small class='card-text text-muted'>You have restored all your deleted discussions</small>");
+
+                setTimeout(function () {
+                    animatedClose(false, "Discussions_Container", true, true);
+                }, 400);
+                setTimeout(function () {
+                    div.append(icon);
+                    div.append(title);
+                    div.append(description);
+                    $("#Discussions_Container-Box").append(div);
+                    animatedOpen(false, "Discussions_Container", true, false);
+                }, 900);
+            }
+            else {
+                $("#DiscussionsCount_Span").text(currentCount);
+                slideToLeft(response.id + "-DeletedDiscussionBox");
+            }
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
+        }
+    });
+});
+
 $("#GetDiscussions_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -624,8 +684,9 @@ $("#GetDiscussions_Form").on("submit", function (event) {
     $.get(url, data, function (response) {
         $("#Discussions_Container-Box").empty();
         if (response.success) {
-            if (response.count == 1) $("#DiscussionsCount_Span").text("single discussion");
-            else $("#DiscussionsCount_Span").text(response.count + " discussions");
+            $("#Discussions_Container_Header").text("Discussions");
+            if (response.count == 1) $("#DiscussionsCount_Span").text("single");
+            else $("#DiscussionsCount_Span").text(response.count);
             if (response.count > 0) {
                 let tooltipReminder = $("<div class='box-container bg-light p-1'></div>");
                 let tolltipReminderText = $('<span class="h6">Tap on discussion to enter it</span>');
@@ -638,9 +699,11 @@ $("#GetDiscussions_Form").on("submit", function (event) {
 
                 $.each(response.result, function (index) {
                     let div = $("<div class='box-container bg-light p-2 mt-2 relocate-to-discussion'></div>");
-                    let name = $("<h6 class='h6'></h6>");
-                    let joinedAndCreated = $("<small class='card-text text-muted'></small>");
+                    let name = $("<h6 class='h6 relocate-to-discussion'></h6>");
+                    let joinedAndCreated = $("<small class='card-text text-muted relocate-to-discussion'></small>");
                     div.attr("id", response.result[index].id + "-RelocateToDiscussion");
+                    name.attr("id", response.result[index].id + "-Name_Lbl_RelocateToDiscussion");
+                    joinedAndCreated.attr("id", response.result[index].id + "-DateNTime_Lbl_RelocateToDiscussion");
                     name.html(response.result[index].discussionName);
                     joinedAndCreated.html("created " + dateAndTimeTranslator(response.result[index].createdAt) + ", joined " + dateAndTimeTranslator(response.result[index].joinedAt));
 
@@ -651,8 +714,8 @@ $("#GetDiscussions_Form").on("submit", function (event) {
                 });
             }
             else {
-                let div = $("<div class='box-container p-2'></div>");
-                let icon = $('<h2 class="h2"> <i class="fa-solid fa-xmark"></i> </h2>');
+                let div = $("<div class='box-container p-2 text-center'></div>");
+                let icon = $('<h2 class="h2"> <i class="fa-regular fa-xmark-circle"></i> </h2>');
                 let title = $("<h6 class='h6'>No Discussions</h6>");
                 let description = $("<small class='card-text text-muted'>you haven't got any discussions yet</small>");
 
@@ -680,7 +743,87 @@ $("#GetDiscussions_Form").on("submit", function (event) {
         animatedOpen(false, "Discussions_Container", true, false);
     });
 });
+$("#GetDeletedDiscussions_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
 
+    $.get(url, data, function (response) {
+        if (response.success) {
+            $("#Discussions_Container-Box").empty();
+            if (response.count > 0) {
+                $("#Discussions_Container_Header").text("Deleted Discussions");
+                $("#DiscussionsCount_Span").text(response.count);
+                $.each(response.result, function (index) {
+                    let div = $("<div class='box-container bg-light p-2 mt-2'></div>");
+                    let name = $("<span class='h6'></span>");
+                    let separatorZero = $("<div></div>");
+                    let joinedAndDeleted = $("<small class='card-text text-muted'></small>");
+                    let separatorOne = $("<div class='mt-2'></div>");
+                    let selectToRestore = $('<button type="button" class="btn btn-standard btn-sm select-to-restore-the-discussion"> <i class="fa-solid fa-arrow-rotate-right"></i> Restore</button>')
+
+                    div.attr("id", response.result[index].discussionId + "-DeletedDiscussionBox");
+
+                    name.html(response.result[index].discussionName);
+                    if (response.result[index].deletedAt != null) joinedAndDeleted.html("created " + dateAndTimeTranslator(response.result[index].createdAt) + ", deleted " + dateAndTimeTranslator(response.result[index].deletedAt));
+                    else joinedAndDeleted.html("created " + dateAndTimeTranslator(response.result[index].createdAt) + ", deleted recently");
+                    selectToRestore.attr("id", response.result[index].discussionId + "-SelectToRestoreTheDiscussion");
+
+                    div.append(name);
+                    div.append(separatorZero);
+                    div.append(joinedAndDeleted);
+                    div.append(separatorOne);
+                    div.append(selectToRestore);
+
+                    $("#Discussions_Container-Box").append(div);
+                });
+
+                openSidebar();
+                animatedOpen(false, "Discussions_Container", true, false);
+            }
+            else alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
+        }
+        else alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
+    });
+});
+
+$("#GetMembersInfo_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            $("#MembersInfo_Container").empty();
+            $("#GetMembersInfo_SbmtBtn").attr("disabled", true);
+            if (response.count > 0) {
+                if (response.count == 1) $("#MembersCount_Lbl").text(response.count + " member");
+                else $("#MembersCount_Lbl").text(response.count + " members");
+
+                $.each(response.result, function (index) {
+                    let div = $("<div class='box-container bg-light p-2 mt-2'></div>");
+                    let userName = $("<span class='h6 get-user-info-by-id'></span>");
+                    let separator = $("<div></div>");
+                    let joinedAt_Small = $("<small class='card-text text-muted'></small>");
+
+                    userName.html(response.result[index].userName);
+                    userName.attr("id", response.result[index].userId + "-GetUserInfoViaId");
+                    joinedAt_Small.text("joined " + dateAndTimeTranslator(response.result[index].joinedAt));
+
+                    div.append(userName);
+                    div.append(separator);
+                    div.append(joinedAt_Small);
+
+                    $("#MembersInfo_Container").append(div);
+                });
+                slideToRight("MembersInfoMain_Container");
+            }
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Done", null, 0, null, null, null, 4);
+        }
+    });
+});
 $("#EditDiscussion_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -691,6 +834,7 @@ $("#EditDiscussion_Form").on("submit", function (event) {
             $("#EditDiscussionInfo_Box").removeClass("show");
             $("#Preloaded_Container_ShowBox-Open").text(response.result.name);
             $("#DiscussionName_Lbl").text(response.result.name);
+            $("#AdditionalInfo_DiscussionName_Lbl").text(response.result.name);
             $("#DiscussionShortlink_Lbl").html("@" + response.result.shortlink);
             $("#ShortlinkAdditional_Lbl").html("@<span class='user-select-all'>" + response.result.shortlink + "</span>");
             if (response.result.description != null) {
@@ -705,6 +849,42 @@ $("#EditDiscussion_Form").on("submit", function (event) {
         }
     });
 });
+$("#MuteTheDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-regular fa-bell-slash fa-shake" style="--fa-animation-duration: 2.3s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Done", null, 0, null, null, null, 4.25);
+            $("#MuteTheDiscussion_Box").fadeOut(0);
+            $("#UnmuteTheDiscussion_Box").fadeIn(0);
+            $("#IsMutedHeader_Span").html(' <i class="fa-regular fa-bell-slash"></i> ');
+            $("#IsMutedHeader_Span").fadeIn(350);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-danger fa-shake"></i>', response.alert, "Done", null, 0, null, null, null, 4);
+        }
+    });
+});
+$("#UnmuteTheDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-regular fa-bell fa-shake" style="--fa-animation-duration: 2.3s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Done", null, 0, null, null, null, 4.25);
+            $("#UnmuteTheDiscussion_Box").fadeOut(0);
+            $("#MuteTheDiscussion_Box").fadeIn(0);
+            $("#IsMutedHeader_Span").html("");
+            $("#IsMutedHeader_Span").fadeOut(350);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-danger fa-shake" style="--fa-animation-duration: 2s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Done", null, 0, null, null, null, 4);
+        }
+    });
+});
 
 $("#SendDiscussionMessage_Form").on("submit", function (event) {
     event.preventDefault();
@@ -713,6 +893,148 @@ $("#SendDiscussionMessage_Form").on("submit", function (event) {
 
     $.post(url, data, function (response) {
         if (response.success) {
+            $("#SendDiscussionMessage_Text_Val").val(null);
+            $("#SendDiscussionMessage_SbmtBtn").attr("disabled", true);
+
+            let sentMessagesCount = $("#SentMessagesCount_Val").val();
+
+            let nextMsgSeparator = $("<div><br/><br/><br/><br/></div>");
+            let mainMessageBox = $("<div class='current-user-message-main-box float-end p-2'></div>");
+            let textBox = $("<div class='current-user-message-box p-2 mt-1'></div>");
+            let textElement = $("<p class='card-text white-space-on'></p>");
+            let additionalInfoBox = $("<div class='mt-1 me-1 float-end'></div>");
+            let additionalInfoSmall = $("<small class='card-text text-muted'></small>");
+            let isCheckedSpan = $("<span></span>");
+            let dateTimeSpan = $("<span></span>");
+
+            textElement.html(response.result.text);
+            isCheckedSpan.html(' <i class="fa-solid fa-check"></i> ');
+            dateTimeSpan.text(dateAndTimeTranslator(response.result.sentAt));
+            additionalInfoSmall.append(isCheckedSpan);
+            additionalInfoSmall.append(dateTimeSpan);
+            textBox.append(textElement);
+            additionalInfoBox.append(additionalInfoSmall);
+            mainMessageBox.append(textElement);
+            mainMessageBox.append(additionalInfoBox);
+
+            if (sentMessagesCount <= 0) {
+                $("#Presentation_Box").fadeOut(350);
+                $("#NoSentMessages_Box").fadeOut(350);
+                setTimeout(function () {
+                    $("#Messages_Container_Box").append(mainMessageBox);
+                    $("#Messages_Container_Box").append(nextMsgSeparator);
+                }, 400);
+            }
+            else {
+                $("#Messages_Container_Box").append(mainMessageBox);
+                $("#Messages_Container_Box").append(nextMsgSeparator);
+            }
+            $("#SentMessagesCount_Val").val(++sentMessagesCount);
+            $("#DiscussionStatusBar_Lbl").text(sentMessagesCount + " messages");
+            setTimeout(function () {
+                $("#SendDiscussionMessage_SbmtBtn").attr("disabled", false);
+            }, 800);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
+        }
+    });
+});
+$("#GetMessageInfo_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            let isChecked;
+            let isEdited;
+            if (response.result.isEdited) {
+                isEdited = ", edited";
+            }
+            else isEdited = "";
+            if (response.result.isChecked) isChecked = ' <i class="fa-solid fa-check-double text-primary"></i> ';
+            else isChecked = ' <i class="fa-solid fa-check"></i> ';
+
+            if (response.userId == response.result.userId) {
+                $("#EditDiscussionMsg_Col").fadeIn(0);
+                $("#DeleteDiscussionMsg_Col").fadeIn(0);
+                $("#DDM_Id_Val").val(response.id);
+
+                if (response.result.daysPassed > 4) {
+                    $("#EditDiscussionMessage_Box-Open").attr("disabled", true);
+                }
+                else {
+                    $("#EditDiscussionMessage_Box-Open").attr("disabled", false);
+                }
+            }
+            else {
+                $("#EditDiscussionMsg_Col").fadeOut(0);
+                $("#DeleteDiscussionMsg_Col").fadeOut(0);
+            }
+
+            $(".messages-container").css("margin-bottom", "-1200px");
+            $(".messages-container").fadeOut(300);
+            insideBoxOpen("DiscussionOptions_Box");
+
+            setTimeout(function () {
+                $("#DiscussionOptionMessageText_Lbl").html(response.result.text);
+                $("#EditMessage_Text_Lbl").html(response.result.text);
+                $("#EM_NewText_Val").val(response.result.text);
+                $("#DiscussionOptionAdditionalInfo_Lbl").html(isChecked + " " + dateAndTimeTranslator(response.result.sentAt) + isEdited);
+                $("#CurrentGotDiscussionMsg_Id_Val").val(response.id);
+                $("#EM_Id_Val").val(response.id);
+            }, 150);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.25);
+        }
+    });
+});
+$("#EditMessage_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            insideBoxClose(false, "EditDiscussionMessage_Box");
+            insideBoxOpen("SendMessage_Box");
+            $("#" + response.id + "-DiscussionMessage_IsEdited").fadeIn(350);
+            $("#" + response.id + "-DiscussionOptionMsgText_Lbl").html(response.text);
+        }
+        else {
+            alert('<i class="fa-solid fa-ban text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
+        }
+    });
+});
+$("#DeleteDiscussionMessage_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let currentCount = $("#SentMessagesCount_Val").val();
+            currentCount--;
+            if (currentCount <= 0) {
+                $("#NoSentMessages_Box").css("margin-bottm", "-1200px");
+                $("#StatusBar_Lbl-1").text("no sent messages");
+                $("#" + response.id + "-DiscussionMsgBox").fadeOut(350);
+                setTimeout(function () {
+                    insideBoxOpen("NoSentMessages_Box");
+                }, 400);
+            }
+            else {
+                $("#StatusBar_Lbl-1").text(currentCount + " sent messages");
+                $("#" + response.id + "-DiscussionMsgBox").fadeOut(350);
+            }
+            insideBoxClose(false, "DiscussionOptions_Box");
+            insideBoxOpen("SendMessage_Box");
+            $("#SentMessagesCount_Val").val(currentCount);
+        }
+        else {
+            alert('<i class="fa-solid fa-ban text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
         }
     });
 });
@@ -796,6 +1118,32 @@ $(document).on("click", ".relocate-to-discussion", function (event) {
     }
 });
 
+$(document).on("click", ".discussion-options", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#GMI_Id_Val").val(trueId);
+        $("#GetMessageInfo_Form").submit();
+    }
+    else $("#GMI_Id_Val").val(0);
+});
+
+$(document).on("click", ".select-to-restore-the-discussion", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#RestoreTheDiscussion_DiscussionId_Val").val(trueId);
+        $("#RestoreTheDiscussion_Form").submit();
+    }
+    else $("#RestoreTheDiscussion_DiscussionId_Val").val(0);
+});
+
+$(document).on("click", ".delete-discussion-message", function (event) {
+    let id = $("#DDM_Id_Val").val();
+    if (id > 0) {
+        $("#DeleteDiscussionMessage_Form").submit();
+    }
+    else $("#DDM_Id_Val").val(0);
+});
+
 $(document).on("click", ".get-notification-info", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
@@ -870,6 +1218,22 @@ $(document).on("click", ".btn-smallside-open-container", function (event) {
                 animatedOpen(false, trueId, true, false);
             }, 190);
         }
+    }
+});
+$(document).on("click", ".btn-open-inside-box", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $(".messages-container").css("margin-bottom", "-1200px");
+        $(".messages-container").fadeOut(300);
+        setTimeout(function () {
+            insideBoxOpen(trueId);
+        }, 150);
+    }
+});
+$(document).on("click", ".btn-slide-to-right", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        slideToRight(trueId);
     }
 });
 
@@ -957,6 +1321,10 @@ $(document).on("click", ".copy-to-clipboard", function (event) {
     if (trueId != null) {
         navigator.clipboard.writeText($("#" + trueId).html());
         alert('<i class="fa-regular fa-copy text-neon-purple"></i>', "Text has been successfully copied to clipboard", "Done", null, 0, null, null, null, 3.5);
+        insideBoxClose(true, null);
+        setTimeout(function () {
+            insideBoxOpen("SendMessage_Box");
+        }, 750);
     }
 });
 
@@ -1018,6 +1386,21 @@ $(document).on("click", ".set-style", function (event) {
 
         if (currentUrl.toLowerCase().includes("/toolbox")) animatedOpen(false, "TextEditorSettings_Container", true, true);
         else animatedOpen(false, "TextEditorSettings_Container", true, true);
+    }
+});
+
+$(document).on("click", ".delete-message-options", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        insideBoxClose(false, trueId);
+        insideBoxOpen("SendMessage_Box");
+        insideBoxOpen("SendLiveDiscussionMessage_Box");
+        insideBoxOpen("SendChatMessage_Box");
+        setTimeout(function () {
+            $(".got-msg-text").html("Message Text");
+            $(".got-msg-datetime").html("sent date, time, is checked and edited");
+            $(".got-msg-id-value").val(0);
+        }, 450);
     }
 });
 
@@ -1216,6 +1599,7 @@ function openSidebar() {
 
 function closeSidebar() {
     if (fullWidth < 768) {
+        animatedClose(true, "smallside-box-container ", true, true);
         $(".btn-fixed-close-sidebar").fadeOut(300);
         setTimeout(function () {
             $("#Main_SideBar").fadeOut(350);
@@ -1311,9 +1695,8 @@ function dateAndTimeTranslator(value) {
 
         let yearsInResult = 0;
         let monthsInResult = 0;
-        let daysInResult = parseInt(Math.round((((result / 1000) / 100) / 60) / 24));
+        let daysInResult = parseInt(Math.round(result / (1000 * 60 * 60 * 24)));
         let finalResult;
-
         if (daysInResult >= 30) {
             monthsInResult = Math.round(daysInResult / 30);
             finalResult = monthsInResult + " m ago";
@@ -1443,6 +1826,20 @@ function textEditor(elementId, preparedText1, preparedText2, pasteTo) {
     $("#" + pasteTo).focus();
 }
 
+function statusSlider(mainId, maxCount) {
+    if (maxCount > 0) {
+        let currentCount = 0;
+        setInterval(function () {
+            $(".status-slider").fadeOut(350);
+            setTimeout(function () {
+                $("#" + mainId + "-" + currentCount).fadeIn(350);
+            }, 300);
+            currentCount++;
+            if (currentCount > maxCount) currentCount = 0;
+        }, 4500);
+    }
+}
+
 function textDecoder(text, setIn) {
     text = text.replaceAll("[#", "<span>");
     text = text.replace("[[", "<span class='fw-500'>");
@@ -1543,7 +1940,44 @@ function slide(forAll, element) {
     }, 300);
 }
 
+function slideToRight(element) {
+    $("#" + element).fadeIn(0);
+    $("#" + element).css("margin-left", "28px");
+    setTimeout(function () {
+        $("#" + element).css("margin-left", 0);
+    }, 350);
+}
+
+function insideBoxOpen(element) {
+    $("#" + element).fadeIn(0);
+    setTimeout(function () {
+        $("#" + element).css("margin-bottom", "8px");
+    }, 350);
+}
+function insideBoxClose(closeAll, element) {
+    if (!closeAll) {
+        $("#" + element).css("margin-bottom", "24px");
+        setTimeout(function () {
+            $("#" + element).css("margin-bottom", "-1200px");
+        }, 400);
+        setTimeout(function () {
+            $("#" + element).fadeOut(300);
+        }, 750);
+    }
+    else {
+        $(".messages-container").css("margin-bottom", "24px");
+        setTimeout(function () {
+            $(".messages-container").css("margin-bottom", "-1200px");
+        }, 400);
+        setTimeout(function () {
+            $(".messages-container").fadeOut(300);
+        }, 750);
+    }
+}
+
 function animatedOpen(forAll, element, sticky, closeAllOtherContainers) {
+    if (fullWidth < 768) $(".btn-fixed-close-sidebar").fadeIn(300);
+
     if (forAll) {
         let botOffNavbarAdditionalValue = botOffNavbarH;
         if ($("#" + element).hasClass("smallside-box-container")) {
@@ -1551,7 +1985,6 @@ function animatedOpen(forAll, element, sticky, closeAllOtherContainers) {
         }
 
         if (!closeAllOtherContainers) {
-
             $("." + element).fadeIn(300);
             if (sticky) {
                 $("." + element).css("bottom", botOffNavbarH + 18 + "px");
@@ -1694,7 +2127,7 @@ function alert(icon, text, btn1Text, btn2Text, btn1Action, btn2Action, btn1WhatT
                 break;
             case 1:
                 $("#Alert_Container-Btn1").on("click", function () {
-                    document.location.href = btn1Action;
+                    document.location.href = btn1WhatToDo;
                 });
                 break;
             default:
@@ -1731,7 +2164,7 @@ function alert(icon, text, btn1Text, btn2Text, btn1Action, btn2Action, btn1WhatT
                 break;
             case 1:
                 $("#Alert_Container-Btn2").on("click", function () {
-                    document.location.href = btn2Action;
+                    document.location.href = btn2WhatToDo;
                 });
             default:
                 $("#Alert_Container-Btn2").on("click", function () {

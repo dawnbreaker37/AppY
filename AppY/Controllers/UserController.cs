@@ -17,13 +17,15 @@ namespace AppY.Controllers
         private readonly UserManager<User> _userManager;
         private readonly IUser _user;
         private readonly INotification _notification;
+        private readonly IDiscussion _discussion;
         private readonly IMemoryCache _memoryCache;
 
-        public UserController(Context context, UserManager<User> userManager, IUser user, INotification notification, IMemoryCache memoryCache)
+        public UserController(Context context, UserManager<User> userManager, IUser user, INotification notification, IDiscussion discussion, IMemoryCache memoryCache)
         {
             _context = context;
             _userManager = userManager;
             _user = user;
+            _discussion = discussion;
             _notification = notification;
             _memoryCache = memoryCache;
         }
@@ -52,8 +54,11 @@ namespace AppY.Controllers
                             DaysPassedString += DaysPassed.Value.Hours > 0 ? DaysPassed.Value.Hours + " hr." : DaysPassed.Value.Minutes + " min.";
                         }
 
+                        int DeletedDiscussionsCount = await _discussion.GetDeletedDiscussionsCountAsync(UserId);
+
                         ViewBag.UnpicturedAvatarInfo = _user.UnpicturedAvatarSelector(UserInfo);
                         ViewBag.UserInfo = UserInfo;
+                        ViewBag.DeletedDiscussionsCount = DeletedDiscussionsCount;
                         ViewBag.DaysPassed = DaysPassed;
                         ViewBag.DaysPassedStr = DaysPassedString;
                         ViewBag.IsPasswordChangeAllowed = IsPasswordChangeAllowed;

@@ -121,5 +121,34 @@ namespace AppY.Repositories
 
             return 0;
         }
+
+        public async Task<int> SendGroupNotificationsAsync(Notifications_ViewModel Model, List<int> Users)
+        {
+            if(Users.Count > 0 && !String.IsNullOrWhiteSpace(Model.Title) && !String.IsNullOrWhiteSpace(Model.Description))
+            {
+                List<Notifications_ViewModel>? NotificationsList = new List<Notifications_ViewModel>();
+                foreach(int UserId in Users)
+                {
+                    Notifications_ViewModel Notification = new Notifications_ViewModel
+                    {
+                        Title = Model.Title,
+                        Description = Model.Description,
+                        IsDeleted = Model.IsDeleted,
+                        IsPinned = Model.IsPinned,
+                        IsUntouchable = Model.IsUntouchable,
+                        NotificationCategoryId = Model.NotificationCategoryId,
+                        UserId = UserId
+                    };
+                    NotificationsList.Append(Notification);
+                }
+
+                await _context.AddAsync(NotificationsList);
+                await _context.SaveChangesAsync();
+
+                return NotificationsList.Count;
+            }
+
+            return 0;
+        }
     }
 }

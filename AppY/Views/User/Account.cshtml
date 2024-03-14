@@ -5,6 +5,7 @@
     User? UserInfo = ViewBag.UserInfo;
     TimeSpan? DaysFromLastChange = ViewBag.DaysPassed;
     string? UnpicturedAvatarInfo = ViewBag.UnpicturedAvatarInfo;
+    int DeletedDiscussionsCount = ViewBag.DeletedDiscussionsCount;
 }
 
 <div class="main-sidebar" id="Main_SideBar">
@@ -17,10 +18,19 @@
             <input type="hidden" name="Id" value="@UserInfo.Id" />
             <input type="hidden" name="Shortname" id="IsShortnameUnique_Shortname_Val" value="@UserInfo.ShortName" />
         </form>
+        <form method="post" asp-controller="Discussion" asp-action="Restore" id="RestoreTheDiscussion_Form">
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+            <input type="hidden" name="Id" id="RestoreTheDiscussion_DiscussionId_Val" value="0" />
+        </form>
     </div>
 
     <div class="smallside-box-container shadow-standard" id="SecuritySettings_Container">
         <div class="header-container p-2 pb-0 text-center" id="SecuritySettings_Container-Header">
+            <div class="float-start me-1">
+                <form method="post" asp-controller="Account" asp-action="SignOut">
+                    <button type="submit" class="btn btn-light btn-standard-asset btn-sm text-danger">Sign Out</button>
+                </form>
+            </div>
             <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="SecuritySettings_Container-Close"></button>
             <h5 class="h5 text-truncate p-1">Security Settings</h5>
         </div>
@@ -571,9 +581,9 @@
     <div class="smallside-box-container shadow-standard" id="Discussions_Container">
         <div class="header-container p-2 pb-0 text-center" id="Discussions_Container-Header">
             <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Discussions_Container-Close"></button>
-            <span class="h5 text-truncate p-1">Discussions</span>
+            <span class="h5 text-truncate p-1" id="Discussions_Container_Header">Discussions</span>
             <div></div>
-            <small class="card-text text-muted" id="DiscussionsCount_Span">0 discussions</small>
+            <small class="card-text text-muted" id="DiscussionsCount_Lbl"><span id="DiscussionsCount_Span">0</span> discussion(s)</small>
         </div>
         <div class="box-container p-2 pt-1 mt-1" id="Discussions_Container-Box">
 
@@ -663,6 +673,19 @@
                         </div>
                     </form>
                 </div>
+                @if(DeletedDiscussionsCount > 0)
+                {
+                    <div class="w-100" id="GetDeletedDiscussions_Form_Box">
+                        <form method="get" asp-controller="Discussion" asp-action="GetDeletedDiscussions" id="GetDeletedDiscussions_Form">
+                            <div class="d-none">
+                                <input type="hidden" name="Id" value="@UserInfo.Id" />
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-group-member border-radius-sharp w-100"> <i class="fa-regular fa-square-minus text-danger"></i> Deleted Discussions ∙ <span id="DeletedDiscussionCount_Span">@DeletedDiscussionsCount</span></button>
+                            </div>
+                        </form>
+                    </div>
+                }
                 <button type="button" class="btn btn-group-member btn-bottom-rounded btn-smallside-open-container" id="Appearance_Container-Open"> <i class="fa-solid fa-fill-drip"></i> Appearance</button>
             </div>
         </div>

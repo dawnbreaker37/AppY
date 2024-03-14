@@ -30,13 +30,13 @@ namespace AppY.Repositories
 
         public async Task<User?> GetAverageUserInfoAsync(string? Shortname)
         {
-            if (!String.IsNullOrEmpty(Shortname)) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, ShortName = u.ShortName, AvatarUrl = u.AvatarUrl, PseudoName = u.PseudoName, CreatedAt = u.CreatedAt }).FirstOrDefaultAsync(u => u.ShortName != null && (u.ShortName.ToLower() == Shortname.ToLower()));
+            if (!String.IsNullOrWhiteSpace(Shortname)) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, ShortName = u.ShortName, AvatarUrl = u.AvatarUrl, PseudoName = u.PseudoName, CreatedAt = u.CreatedAt }).FirstOrDefaultAsync(u => u.ShortName != null && (u.ShortName.ToLower() == Shortname.ToLower()));
             else return null;
         }
 
         public async Task<string?> GetReserveCodeViaEmailAsync(string? Email)
         {
-            if (!String.IsNullOrEmpty(Email)) return await _context.Users.AsNoTracking().Where(u => u.Email == Email && !u.IsDisabled).Select(u => u.ReserveCode).FirstOrDefaultAsync();
+            if (!String.IsNullOrWhiteSpace(Email)) return await _context.Users.AsNoTracking().Where(u => u.Email == Email && !u.IsDisabled).Select(u => u.ReserveCode).FirstOrDefaultAsync();
             else return null;
         }
 
@@ -64,7 +64,7 @@ namespace AppY.Repositories
 
         public async Task<string?> SubmitReserveCodeViaEmailAsync(string? Email, string ReserveCode)
         {
-            if(!String.IsNullOrEmpty(Email) && !String.IsNullOrEmpty(ReserveCode))
+            if(!String.IsNullOrWhiteSpace(Email) && !String.IsNullOrEmpty(ReserveCode))
             {
                 User? UserInfo = await _userManager.FindByEmailAsync(Email);
                 if(UserInfo != null && UserInfo.ReserveCode == ReserveCode)
@@ -77,7 +77,7 @@ namespace AppY.Repositories
 
         public async Task<string?> SubmitSingleUseCodeAsync(string? Email, string Code)
         {
-            if(!String.IsNullOrEmpty(Email) && !String.IsNullOrEmpty(Code))
+            if(!String.IsNullOrWhiteSpace(Email) && !String.IsNullOrWhiteSpace(Code))
             {
                 bool IsCodeTrue = _memoryCache.TryGetValue(Email + "_singleUseCode", out string? RealCode);
                 if(IsCodeTrue && RealCode == Code)
@@ -91,7 +91,7 @@ namespace AppY.Repositories
 
         public async Task<bool> EditUserInfoAsync(EditUserInfo_ViewModel Model)
         {
-            if(!String.IsNullOrEmpty(Model.PseudoName) && !String.IsNullOrEmpty(Model.ShortName) && Model.Id != 0)
+            if(!String.IsNullOrWhiteSpace(Model.PseudoName) && !String.IsNullOrWhiteSpace(Model.ShortName) && Model.Id != 0)
             {
                 int Result = 0;
                 bool IsShortnameUnique = await IsShortnameUniqueAsync(Model.Id, Model.ShortName);
@@ -147,6 +147,18 @@ namespace AppY.Repositories
                 if (Result != 0) return true;
             }
             return false;
+        }
+
+        public async Task<User?> GetUserSuperShortInfoAsync(int Id)
+        {
+            if (Id != 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, PseudoName = u.PseudoName, ShortName = u.ShortName }).FirstOrDefaultAsync(u => u.Id == Id);
+            else return null;
+        }
+
+        public async Task<User?> GetUserSuperShortInfoAsync(string? Shortname)
+        {
+            if (!String.IsNullOrWhiteSpace(Shortname)) return await _context.Users.AsNoTracking().Select(u => new User { PseudoName = u.PseudoName, ShortName = u.ShortName }).FirstOrDefaultAsync(u => u.ShortName.ToLower() == Shortname.ToLower());
+            else return null;
         }
     }
 }

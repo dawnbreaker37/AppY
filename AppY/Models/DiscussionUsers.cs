@@ -13,5 +13,9 @@ namespace AppY.Models
         public int? DiscussionId {get;set;}
         public User? User { get; set; }
         public Discussion? Discussion { get; set;}
+        [NotMapped]
+        public string? UserName { get; set; }
+        [NotMapped]
+        public string? UserShortlink { get; set; }
     }
 }

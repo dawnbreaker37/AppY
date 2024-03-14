@@ -8,6 +8,7 @@ namespace AppY.Interfaces
         public IQueryable<NotificationModel>? GetNotifications(int UserId, int SkipCount, int LoadCount);
         public Task<NotificationModel?> GetNotificationInfoAsync(int Id, int UserId);
         public Task<int> SendNotificationAsync(Notifications_ViewModel Model);
+        public Task<int> SendGroupNotificationsAsync(Notifications_ViewModel Model, List<int> Users);
         public Task<int> DeleteNotificationAsync(int Id, int UserId);
         public Task<bool> DeleteAncientNotificationsAsync(int UserId);
         public Task<int> MarkAsReadAsync(int Id, int UserId);

@@ -3,15 +3,18 @@ using AppY.Interfaces;
 using AppY.Models;
 using AppY.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace AppY.Repositories
 {
     public class DiscussionRepository : Base<DiscussionRepository>, IDiscussion
     {
         private readonly Context _context;
-        public DiscussionRepository(Context context) : base(context)
+        private readonly INotification _notification;
+        public DiscussionRepository(Context context, INotification notification) : base(context)
         {
             _context = context;
+            _notification = notification;
         }
 
         public async Task<int> CreateDiscussionAsync(Discussion_ViewModel Model)
@@ -27,6 +30,7 @@ namespace AppY.Repositories
                     CreatedAt = DateTime.Now,
                     Description = null,
                     CreatorId = Model.UserId,
+                    RemovedAt = null,
                     IsDeleted = false,
                     IsPrivate = Model.IsPrivate,
                     Password = Model.Password,
@@ -48,6 +52,50 @@ namespace AppY.Repositories
                 await _context.SaveChangesAsync();
 
                 return discussion.Id;
+            }
+            return 0;
+        }
+
+        public async Task<int> DeleteDiscussionAsync(int Id, int UserId, string? DiscussionName)
+        {
+            if (Id != 0 && UserId != 0)
+            {
+                int Result = await _context.Discussions.AsNoTracking().Where(d => d.Id == Id && d.CreatorId == UserId && !d.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true).SetProperty(d => d.RemovedAt, DateTime.Now));
+                if (Result > 0)
+                {
+                    IQueryable<int>? AllMembersIds_Preview = _context.DiscussionUsers.AsNoTracking().Where(d => d.DiscussionId == Id && d.UserId != UserId && !d.IsDeleted).Select(d => d.UserId != null ? (int)d.UserId : 0);
+                    if(AllMembersIds_Preview is not null)
+                    {
+                        List<int>? AllMembersIds = await AllMembersIds_Preview.ToListAsync();
+                        if(AllMembersIds.Count > 0)
+                        {
+                            Notifications_ViewModel Notification = new Notifications_ViewModel()
+                            {
+                                Title = DiscussionName + " discussion has been deleted",
+                                Description = "Hi! The " + DiscussionName + " discussion has been recently deleted by his owner. We've sent this message to inform you that you won't be able no more to enter it. For additional information chat with that discussion owner. Thank You",
+                                IsUntouchable = false,
+                                IsPinned = false,
+                                NotificationCategoryId = 5,
+                                UserId = 0
+                            };
+
+                            int NotificationsResult = await _notification.SendGroupNotificationsAsync(Notification, AllMembersIds);
+                            if (NotificationsResult > 0) return NotificationsResult;
+                        }
+                    }
+                    return Id;
+                }
+            }
+            return 0;
+        }
+
+        public async Task<int> RestoreDiscussionAsync(int Id, int UserId)
+        {
+            if (Id != 0 && UserId != 0)
+            {
+                DateTime? RemovedAt_NoTime = null;
+                int Result = await _context.Discussions.AsNoTracking().Where(d => d.Id == Id && d.CreatorId == UserId && d.IsDeleted && d.RemovedAt.HasValue).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, false).SetProperty(d => d.RemovedAt, RemovedAt_NoTime));
+                if (Result > 0) return Id;
             }
             return 0;
         }
@@ -82,13 +130,25 @@ namespace AppY.Repositories
             else return 0;
         }
 
-        public IQueryable<DiscussionShortInfo>? GetUserDiscussion(int Id)
+        public IQueryable<DiscussionUsers>? GetMembersInfo(int Id)
+        {
+            if (Id != 0) return _context.DiscussionUsers.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).Select(d => new DiscussionUsers { JoinedAt = d.JoinedAt, UserId = d.UserId, UserName = d.User!.PseudoName }).OrderByDescending(d => d.JoinedAt);
+            else return null;
+        }
+
+        public IQueryable<DiscussionShortInfo>? GetUserDiscussions(int Id)
         {
             if (Id != 0) return _context.DiscussionUsers.AsNoTracking().Where(d => d.UserId == Id && !d.IsDeleted).Select(d => new DiscussionShortInfo { Id = d.Id, JoinedAt = d.JoinedAt, DiscussionId = d.DiscussionId, DiscussionName = d.Discussion != null ? d.Discussion.Name : null, CreatedAt = d.Discussion != null ? d.Discussion.CreatedAt : DateTime.Now });
             else return null;
         }
 
-        public async Task<bool> IsShortLinkFree(int Id, string? Shortlink)
+        public IQueryable<DiscussionShortInfo>? GetUserDeletedDiscussions(int Id)
+        {
+            if (Id != 0) return _context.Discussions.AsNoTracking().Where(d => d.CreatorId == Id && d.IsDeleted).Select(d => new DiscussionShortInfo { CreatedAt = d.CreatedAt, DeletedAt = d.RemovedAt, DiscussionName = d.Name, DiscussionId = d.Id, UserId = Id });
+            else return null;
+        }
+
+        public async Task<bool> IsShortLinkFreeAsync(int Id, string? Shortlink)
         {
             if (Id != 0 && !String.IsNullOrEmpty(Shortlink))
             {
@@ -96,6 +156,84 @@ namespace AppY.Repositories
                 return Result ? false : true;
             }
             else return false;
+        }
+
+        public async Task<bool> IsThisDiscussionMutedAsync(int Id, int UserId)
+        {
+            if (Id != 0 && UserId != 0) return await _context.MutedDiscussions.AsNoTracking().AnyAsync(d => d.DiscussionId == Id && d.UserId == UserId);
+            else return false;
+        }
+
+        public  async Task<int> MuteAsync(int Id, int UserId)
+        {
+            if (Id != 0 && UserId != 0)
+            {
+                MutedDiscussion mutedDiscussion = new MutedDiscussion
+                {
+                    DiscussionId = Id,
+                    UserId = UserId
+                };
+                await _context.AddAsync(mutedDiscussion);
+                await _context.SaveChangesAsync();
+
+                return Id;
+            }
+            else return 0;
+        }
+
+        public async Task<int> UnmuteAsync(int Id, int UserId)
+        {
+            if (Id != 0 && UserId != 0)
+            {
+                int Result = await _context.MutedDiscussions.Where(d => d.DiscussionId == Id && d.UserId == UserId).ExecuteDeleteAsync();
+                if (Result != 0) return Id;
+            }
+            return 0;
+        }
+
+        public async Task<int> GetDeletedDiscussionsCountAsync(int Id)
+        {
+            if (Id != 0) return await _context.Discussions.AsNoTracking().CountAsync(d => d.CreatorId == Id && d.IsDeleted);
+            else return 0;
+        }
+
+        public async Task<int> AddMemberToDiscussion(int Id, int UserId)
+        {
+            if (Id != 0 && UserId != 0)
+            {
+                int CurrentUsersCount = await _context.DiscussionUsers.AsNoTracking().CountAsync(d => d.DiscussionId == Id && !d.IsDeleted);
+                if (CurrentUsersCount < 1200)
+                {
+                    DiscussionUsers? DoesThisUserConsistInThisDiscussion = await _context.DiscussionUsers.AsNoTracking().Select(d => new DiscussionUsers { Id = d.Id, JoinedAt = d.JoinedAt, DiscussionId = d.DiscussionId, UserId = d.UserId, IsDeleted = d.IsDeleted }).FirstOrDefaultAsync(d => d.DiscussionId == Id && d.UserId == UserId);
+                    if (DoesThisUserConsistInThisDiscussion != null)
+                    {
+                        if (DoesThisUserConsistInThisDiscussion.IsDeleted)
+                        {
+                            DoesThisUserConsistInThisDiscussion.IsDeleted = false;
+                            await _context.SaveChangesAsync();
+
+                            return UserId;
+                        }
+                        else return 0;
+                    }
+                    else
+                    {
+                        DiscussionUsers discussionUsers = new DiscussionUsers
+                        {
+                            DiscussionId = Id,
+                            UserId = UserId,
+                            IsDeleted = false,
+                            JoinedAt = DateTime.Now
+                        };
+                        await _context.AddAsync(discussionUsers);
+                        await _context.SaveChangesAsync();
+
+                        return UserId;
+                    }
+                }
+                else return -256;
+            }
+            return 0;
         }
     }
 }
