@@ -14,6 +14,8 @@ namespace AppY.ViewModels
         public bool IsDeleted { get; set; }
         public bool IsChecked { get; set; }
         public bool IsEdited { get; set; }
+        public bool IsAutoDeletable { get; set; }
+        public bool IsPinned { get; set; }
         public int UserId { get; set; }
         public bool IsForCurrentUser { get; set; }
         [Required]

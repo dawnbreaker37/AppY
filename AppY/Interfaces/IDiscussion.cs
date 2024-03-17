@@ -10,10 +10,10 @@ namespace AppY.Interfaces
         public Task<int> CreateDiscussionAsync(Discussion_ViewModel Model);
         public Task<int> DeleteDiscussionAsync(int Id, int UserId, string? DiscussionName);
         public Task<int> RestoreDiscussionAsync(int Id, int UserId);
+        public Task<int> AddMemberAsync(int Id, int AdderId, int UserId);
         public Task<bool> EditDiscussionAsync(Discussion_ViewModel Model);
         public Task<int> MuteAsync(int Id, int UserId);
         public Task<int> UnmuteAsync(int Id, int UserId);
-        public Task<int> AddMemberToDiscussion(int Id, int UserId);
         public IQueryable<DiscussionShortInfo>? GetUserDiscussions(int Id);
         public IQueryable<DiscussionShortInfo>? GetUserDeletedDiscussions(int Id);
         public IQueryable<DiscussionUsers>? GetMembersInfo(int Id);

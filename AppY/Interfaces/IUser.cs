@@ -20,6 +20,7 @@ namespace AppY.Interfaces
         public Task<string?> GetReserveCodeViaEmailAsync(string? Email);
         public Task<string?> SubmitSingleUseCodeAsync(string? Email, string Code);
         public Task<string?> SubmitReserveCodeViaEmailAsync(string? Email, string Code);
+        public IQueryable<User>? FindUsers(string? Keyword);
         public string? UnpicturedAvatarSelector(User? UserInfo);
     }
 }

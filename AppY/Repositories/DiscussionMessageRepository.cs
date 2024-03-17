@@ -45,7 +45,10 @@ namespace AppY.Repositories
 
         public async override Task<DiscussionMessage?> GetMessageInfoAsync(int Id, int UserId)
         {
-            if (Id != 0 && UserId != 0) return await _context.DiscussionMessages.AsNoTracking().Where(d => d.Id == Id && !d.IsDeleted && d.UserId == UserId).Select(d => new DiscussionMessage { Text = d.Text, IsChecked = d.IsChecked, IsEdited = d.IsEdited, SentAt = d.SentAt, UserId = d.UserId }).FirstOrDefaultAsync();
+            if (Id != 0 && UserId != 0)
+            {
+                return await _context.DiscussionMessages.AsNoTracking().Where(d => d.Id == Id && !d.IsDeleted && d.UserId == UserId).Select(d => new DiscussionMessage { Text = d.Text, IsChecked = d.IsChecked, IsEdited = d.IsEdited, SentAt = d.SentAt, UserId = d.UserId }).FirstOrDefaultAsync();
+            }
             else return null;
         }
 
@@ -53,9 +56,37 @@ namespace AppY.Repositories
         {
             if (Id != 0 && UserId != 0)
             {
-                return _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).Select(d => new DiscussionMessage { Id = d.Id, IsEdited = d.IsEdited, SentAt = d.SentAt, Text = d.Text, IsChecked = d.IsChecked, UserId = d.UserId, UserPseudoname = d.UserId == UserId ? null : d.User!.PseudoName }).OrderBy(d => d.SentAt).Skip(SkipCount).Take(LoadCount);
+                return _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).Select(d => new DiscussionMessage { Id = d.Id, IsEdited = d.IsEdited, SentAt = d.SentAt, Text = d.Text, IsChecked = d.UserId == UserId ? d.IsChecked : false, IsAutoDeletable = d.IsAutoDeletable, UserId = d.UserId, UserPseudoname = d.UserId == UserId ? null : d.User!.PseudoName }).OrderBy(d => d.SentAt).Skip(SkipCount).Take(LoadCount);
             }
             else return null;
+        }
+
+        public async override Task<int> MarkAsReadAllMessagesAsync(int DiscussionId, int UserId)
+        {
+            if (DiscussionId != 0 && UserId != 0)
+            {
+                int Result = await _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == DiscussionId && d.UserId != UserId && !d.IsChecked).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsChecked, true));
+                if (Result > 0)
+                {
+                    await _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == DiscussionId && d.UserId != UserId && d.IsAutoDeletable && !d.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true));
+                    return DiscussionId;
+                }
+            }
+            return 0;
+        }
+
+        public async override Task<int> MarkAsReadAsync(int MessageId, int UserId)
+        {
+            if(MessageId != 0 && UserId != 0)
+            {
+                int Result = await _context.DiscussionMessages.AsNoTracking().Where(d => d.Id == MessageId && !d.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsChecked, true));
+                if (Result > 0)
+                {
+                    await _context.DiscussionMessages.AsNoTracking().Where(d => d.Id == MessageId && d.IsAutoDeletable).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true));
+                    return MessageId;
+                }
+            }
+            return 0;
         }
 
         public async override Task<int> SendMessageAsync(SendMessage Model)
@@ -72,6 +103,8 @@ namespace AppY.Repositories
                         UserId = Model.UserId,
                         IsDeleted = false,
                         IsEdited = false,
+                        IsPinned = Model.IsPinned,
+                        IsAutoDeletable = Model.IsAutoDeletable,
                         SentAt = Model.SentAt,
                         Text = Model.Text,
                     };

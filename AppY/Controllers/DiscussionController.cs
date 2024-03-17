@@ -103,7 +103,7 @@ namespace AppY.Controllers
                         if (DiscussionInfo != null)
                         {
                             User? CreatorInfo;
-                            bool IsThisDiscussionMuted = await _discussion.IsThisDiscussionMutedAsync(UserInfo.Id, Id);
+                            bool IsThisDiscussionMuted = await _discussion.IsThisDiscussionMutedAsync(Id, UserId);
                             //bool IsThisDiscussionMuted = UserInfo.MutedDiscussions != null ? UserInfo.MutedDiscussions.Any(d => d.DiscussionId == Id) : false;
                             int MessagesCount = await _messages.SentMessagesCountAsync(Id);
                             if (MessagesCount > 0)
@@ -114,6 +114,8 @@ namespace AppY.Controllers
 
                             if (DiscussionInfo.CreatorId != UserInfo.Id) CreatorInfo = await _user.GetUserSuperShortInfoAsync(DiscussionInfo.CreatorId);
                             else CreatorInfo = new User { PseudoName = UserInfo.PseudoName, ShortName = UserInfo.ShortName };
+
+                            await _messages.MarkAsReadAllMessagesAsync(Id, UserId);
 
                             ViewBag.UserInfo = UserInfo;
                             ViewBag.CreatorInfo = CreatorInfo;
@@ -133,15 +135,6 @@ namespace AppY.Controllers
             return RedirectToAction("Create", "Account");
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AddMember(int Id, int UserId)
-        {
-            int Result = await _discussion.AddMemberToDiscussion(Id, UserId);
-            if (Result > 0) return Json(new { success = true, alert = "Member has been successfully added", id = Result });
-            else if (Result == -256) return Json(new { success = false, alert = "We're sorry, but this discussion already contains the maximum amount of users which is equal to 1200 members" });
-            else return Json(new { success = false, alert = "We're sorry, but due to an unexpected error we're temporarily unable to add this user. Please, try to add later. Thank You" });
-        }
-
         [HttpGet]
         public async Task<IActionResult> GetMembersInfo(int Id)
         {
@@ -153,6 +146,17 @@ namespace AppY.Controllers
                 else return Json(new { success = true, count = 0 });
             }
             else return Json(new { success = false, alert = "Unable to get any information about the members of this discussion. Please, try again later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddMember(int Id, int AdderId, int UserId)
+        {
+            Console.WriteLine(Id + ", " + AdderId + ", " + UserId);
+            int Result = await _discussion.AddMemberAsync(Id, AdderId, UserId);
+            if (Result > 0) return Json(new { success = true, id = Result, alert = "User added to discussion" });
+            else if (Result == 0) return Json(new { success = false, error = Result, alert = "An unexpected error occured. Please, try again later" });
+            else if (Result == -128) return Json(new { success = false, error = Result, alert = "You can't add yourself to a discussion" });
+            else return Json(new { success = false, error = Result, alert = "This user already is in this discussion" });
         }
 
         [HttpPost]

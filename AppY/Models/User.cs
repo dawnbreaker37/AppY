@@ -26,7 +26,6 @@ namespace AppY.Models
         public List<NotificationModel>? Notifications { get; set; }
         public List<Discussion>? Discussions { get; set; }
         public List<DiscussionMessage>? DiscussionMessages { get; set; }
-        public List<MutedDiscussion>? MutedDiscussions { get; set; }
         [NotMapped]
         public string? UnpicturedAvatarInfo { get; set; }
     }

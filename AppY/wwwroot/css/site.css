@@ -21,38 +21,60 @@ body {
   margin-bottom: 60px;
 }
 
-.messages-box-separator {
-    margin-top: 170px;
+.blurred-lines {
+    -webkit-user-select: none;
+    -ms-user-select: none; 
+    user-select: none;
+    color: transparent;
+    text-shadow: 0 0 8px #000;
 }
 
 .current-user-message-main-box {
+    width: auto;
     max-width: 55%;
+    margin-top: 20px;
+    left: 100%;
+    transform: translateX(83%);
     transition: all ease 0.3s;
 }
-.other-users-message-main-box {
-    max-width: 40%;   
-    transition: all ease 0.3s;
-}
-
-.current-user-message-box {
+.cur-user-msg-box {
+    width: 100%;
     cursor: pointer;
-    max-width: 100%;
-    width: auto;
-    border-radius: 12px;
-    background-color: #0d6efd;
     color: #fdfdfd;
+    background-color: #0d6efd;
+    border-radius: 34px;
     transition: all ease 0.3s;
 }
-.other-users-message-box {
-    cursor: pointer;
-    max-width: 100%;
-    width: auto;
-    border-radius: 12px;
-    background-color: #f8f9fa;
-    color: black;
+.cur-user-msg-stats-box {
+    background-color: transparent;
+    max-width: 55%;
+    margin-right: 11px;
+    float: right;
+    clear: both;
     transition: all ease 0.3s;
 }
 
+.other-users-message-main-box {
+    margin-top: 20px;
+    max-width: 45%;
+    float: left;
+    transition: all ease 0.3s;
+}
+.other-user-msg-box {
+    max-width: 45%;
+    width: auto;
+    cursor: pointer;
+    color: black;
+    background-color: #f0f0f0;
+    border-radius: 34px;
+    transition: all ease 0.3s;
+}
+.other-user-msg-stats-box {
+    background-color: transparent;
+    max-width: 45%;
+    margin-left: 12px;
+    transition: all ease 0.3s;
+}
 
 .dropdown-menu {
     border: 1px solid rgb(240, 240, 240);

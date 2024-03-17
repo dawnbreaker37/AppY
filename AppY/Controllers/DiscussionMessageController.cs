@@ -79,6 +79,14 @@ namespace AppY.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> MarkasRead(int Id, int UserId)
+        {
+            int Result = await _messages.MarkAsReadAsync(Id, UserId);
+            if (Result > 0) return Json(new { success = true });
+            else return Json(new { success = false, alert = "This message is already read" });
+        }
+
+        [HttpPost]
         public async Task<IActionResult> Delete(int Id, int DiscussionId)
         {
             int UserId = GetCurrentUserIdFromCookies();

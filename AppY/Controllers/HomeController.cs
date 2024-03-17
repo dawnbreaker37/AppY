@@ -1,3 +1,4 @@
+using AppY.Interfaces;
 using AppY.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -9,10 +10,12 @@ namespace AppY.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IUser _user;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IUser user)
         {
             _logger = logger;
+            _user = user;
         }
 
         public async Task<IActionResult> Index()
@@ -25,6 +28,27 @@ namespace AppY.Controllers
                     HttpContext.Response.Cookies.Append("CurrentUserId", CurrentUserId);
                 }
             }
+            return View();
+        }
+
+        public async Task<IActionResult> Search()
+        {
+            string? UserId_Str = null;
+            User? UserInfo = null;
+            if (User.Identity.IsAuthenticated)
+            {
+                if(Request.Cookies.ContainsKey("CurrentUserId"))
+                {
+                    UserId_Str = Request.Cookies["CurrentUserId"];
+                    bool TryParse = Int32.TryParse(UserId_Str, out int UserId);
+                    if(TryParse)
+                    {
+                        UserInfo = await _user.GetMainUserInfoAsync(UserId);
+                    }
+                }
+            }
+            ViewBag.UserInfo = UserInfo;
+
             return View();
         }
 

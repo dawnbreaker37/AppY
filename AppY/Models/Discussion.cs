@@ -19,7 +19,6 @@ namespace AppY.Models
         public string? Password { get; set; }
         public List<User>? Users { get; set; }
         public List<DiscussionMessage>? DiscussionMessages { get; set; }
-        public List<MutedDiscussion>? MutedDiscussions { get; set; }
         [NotMapped]
         public string? CreatorName { get; set; }
     }

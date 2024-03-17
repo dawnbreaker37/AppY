@@ -10,6 +10,8 @@ namespace AppY.Models
         public bool IsEdited { get; set; }
         public DateTime SentAt { get; set; }
         public bool IsChecked { get; set; }
+        public bool IsPinned { get; set; }
+        public bool IsAutoDeletable { get; set; }
         [ForeignKey("User")]
         public int UserId { get; set; }
         [ForeignKey("Discussion")]

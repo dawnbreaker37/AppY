@@ -11,6 +11,8 @@ namespace AppY.Models
         public int? UserId { get; set; }
         [ForeignKey("Discussion")]
         public int? DiscussionId {get;set;}
+        public bool IsMuted { get; set; }
+        public bool IsPinned { get; set; }
         public User? User { get; set; }
         public Discussion? Discussion { get; set;}
         [NotMapped]

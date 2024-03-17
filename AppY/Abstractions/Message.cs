@@ -8,6 +8,8 @@ namespace AppY.Abstractions
     {
         public abstract Task<int> SendMessageAsync(SendMessage Model);
         public abstract Task<int> EditMessageAsync(SendMessage Model);
+        public abstract Task<int> MarkAsReadAllMessagesAsync(int DiscussionId, int UserId);
+        public abstract Task<int> MarkAsReadAsync(int MessageId, int UserId);
         public abstract Task<int> DeleteMessageAsync(int Id, int UserId, int ChatOrDiscussionId);
         public abstract IQueryable<DiscussionMessage>? GetMessages(int Id, int UserId, int SkipCount, int LoadCount);
         public abstract Task<int> SentMessagesCountAsync(int DiscussionId);

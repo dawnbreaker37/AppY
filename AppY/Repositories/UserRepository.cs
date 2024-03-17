@@ -160,5 +160,14 @@ namespace AppY.Repositories
             if (!String.IsNullOrWhiteSpace(Shortname)) return await _context.Users.AsNoTracking().Select(u => new User { PseudoName = u.PseudoName, ShortName = u.ShortName }).FirstOrDefaultAsync(u => u.ShortName.ToLower() == Shortname.ToLower());
             else return null;
         }
+
+        public IQueryable<User>? FindUsers(string? Keyword)
+        {
+            if (!String.IsNullOrWhiteSpace(Keyword))
+            {
+                return _context.Users.AsNoTracking().Where(u => (u.PseudoName != null && u.PseudoName.ToLower().Contains(Keyword.ToLower())) || (u.ShortName != null && u.ShortName.ToLower().Contains(Keyword.ToLower()) || (u.UserName != null && u.UserName.ToLower().Contains(Keyword.ToLower()) || (u.Email != null && u.Email.ToLower().Contains(Keyword.ToLower())))) && !u.IsDisabled).Select(u => new User { Id = u.Id, PseudoName = u.PseudoName, ShortName = u.ShortName });
+            }
+            else return null;
+        }
     }
 }

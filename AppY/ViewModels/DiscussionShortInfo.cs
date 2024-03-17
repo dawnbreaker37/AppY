@@ -10,5 +10,6 @@
         public int? UserId { get; set; }
         public int? DiscussionId { get; set; }
         public bool IsMuted { get; set; }
+        public bool IsPinned { get; set; }
     }
 }

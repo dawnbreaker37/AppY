@@ -157,5 +157,17 @@ namespace AppY.Controllers
             if (Result) return Json(new { success = true, result = Shortname });
             else return Json(new { success = false, });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> FindToAdd(string Keyword)
+        {
+            IQueryable<User>? Results_Preview = _user.FindUsers(Keyword);
+            if(Results_Preview != null)
+            {
+                List<User>? Results = await Results_Preview.ToListAsync();
+                if (Results != null) return Json(new { success = true, result = Results, count = Results.Count });
+            }
+            return Json(new { success = false, alert = "No user found. Try other keywords to find new members for this discussion" });
+        }
     }
 }

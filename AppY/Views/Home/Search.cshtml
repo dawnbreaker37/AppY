@@ -1,0 +1,27 @@
+﻿@model User
+@{
+    ViewData["Title"] = "Search";
+}
+
+<div class="main-container shadow-standard" id="Preloaded_Container">
+    <div class="header-container p-2 text-center" id="Preloaded_Container-Header">
+        <h5 class="h5 text-truncate p-1" id="HeaderText_Lbl">Search</h5>
+    </div>
+    <div class="box-container p-2 pt-1 mt-1" id="Preloaded_Container-Box">
+        <div class="box-container">
+            <form method="post" asp-controller="Discussion" asp-action="Find" id="FindDiscussions_Form">
+                <div class="hstack gap-3">
+                    <input type="text" class="form-control me-auto shadow-none" autocomplete="off" name="Keyword" id="FindDiscussion_Keyword_Val" placeholder="Search for discussions..." />
+                    <button type="submit" class="btn btn-primary btn-standard-asset">Search</button>
+                    <button type="button" class="btn btn-standard"> <i class="fa-solid fa-sliders"></i> </button>
+                </div>
+            </form>
+        </div>
+        <div class="bordered-container mt-2 p-2" id="FoundResults_Box">
+            <div class="box-container text-center">
+                <p class="card-text text-muted"> <i class="fa-solid fa-magnifying-glass"></i> Search for some discussions or chats to appear them here</p>
+            </div>
+        </div>
+    </div>
+</div>
+
