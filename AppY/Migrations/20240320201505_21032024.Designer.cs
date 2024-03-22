@@ -4,6 +4,7 @@ using AppY.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppY.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20240320201505_21032024")]
+    partial class _21032024
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,38 +24,6 @@ namespace AppY.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("AppY.Models.CommandTool", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CommandCall")
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(240)
-                        .HasColumnType("nvarchar(240)");
-
-                    b.Property<int>("DiscussionId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DiscussionId");
-
-                    b.ToTable("Commands");
-                });
 
             modelBuilder.Entity("AppY.Models.Discussion", b =>
                 {
@@ -101,6 +72,38 @@ namespace AppY.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Discussions");
+                });
+
+            modelBuilder.Entity("AppY.Models.DiscussionCommand", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CommandCall")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(240)
+                        .HasColumnType("nvarchar(240)");
+
+                    b.Property<int>("DiscussionId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiscussionId");
+
+                    b.ToTable("DiscussionCommands");
                 });
 
             modelBuilder.Entity("AppY.Models.DiscussionMessage", b =>
@@ -546,10 +549,10 @@ namespace AppY.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("AppY.Models.CommandTool", b =>
+            modelBuilder.Entity("AppY.Models.DiscussionCommand", b =>
                 {
                     b.HasOne("AppY.Models.Discussion", "Discussion")
-                        .WithMany("Commands")
+                        .WithMany("DiscussionCommands")
                         .HasForeignKey("DiscussionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -695,7 +698,7 @@ namespace AppY.Migrations
 
             modelBuilder.Entity("AppY.Models.Discussion", b =>
                 {
-                    b.Navigation("Commands");
+                    b.Navigation("DiscussionCommands");
 
                     b.Navigation("DiscussionMessages");
                 });

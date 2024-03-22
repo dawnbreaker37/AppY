@@ -29,10 +29,10 @@ namespace AppY.Controllers
             int UserId = GetCurrentUserIdFromCookies();
             if(UserId != 0)
             {
-                IQueryable<DiscussionMessage>? Result_Preview = _messages.GetMessages(Id, UserId, SkipCount, 35);
+                IQueryable<IGrouping<DateTime, DiscussionMessage>>? Result_Preview = _messages.GetMessages(Id, UserId, SkipCount, 35);
                 if (Result_Preview != null)
                 {
-                    List<DiscussionMessage>? Result = await Result_Preview.ToListAsync();
+                    List<IGrouping<DateTime, DiscussionMessage>>? Result = await Result_Preview.ToListAsync();
                     if (Result != null) return Json(new { success = true, result = Result, count = Result.Count });
                 }
             }
@@ -100,7 +100,7 @@ namespace AppY.Controllers
 
         public int GetCurrentUserIdFromCookies()
         {
-            string? CurrentUserId_Str = null;
+            string? CurrentUserId_Str;
             if (Request.Cookies.ContainsKey("CurrentUserId"))
             {
                 CurrentUserId_Str = Request.Cookies["CurrentUserId"];

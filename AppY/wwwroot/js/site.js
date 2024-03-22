@@ -678,6 +678,87 @@ $("#RestoreTheDiscussion_Form").on("submit", function (event) {
     });
 });
 
+$("#GetDiscussionShortInfo_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            let div = $("<div class='bordered-container p-2'></div>");
+            let title = $("<span class='h6'></span>");
+            let separatorZero = $("<div></div>");
+            let separatorOne = $("<div class='mt-2'></div>");
+            let shortLink = $("<small class='card-text text-muted'></small>")
+            let description = $("<small class='card-text white-space-on'></small>");
+
+            title.html(response.result.name);
+            if (response.result.description != null) description.html(response.result.description);
+            else description.text("No description");
+            shortLink.text("@" + response.result.shortlink);
+            div.append(title);
+            div.append(separatorZero);
+            div.append(shortLink);
+            div.append(separatorOne);
+            div.append(description);
+
+            alert('<i class="fa-solid fa-circle-info text-primary fa-beat" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 1;"></i>', div, ' <i class="fa-solid fa-arrow-up-right-from-square"></i> To the Discussion', ' <i class="fa-solid fa-xmark"></i> Close', 1, 0, "/Discussion/Discuss/" + response.result.id, null, 450);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
+        }
+    });
+});
+
+$("#FindDiscussions_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        $("#FoundResults_Box").empty();
+        if (response.success) {
+            if (response.count > 0) {
+                let countLbl = $("<h6 class='h6'></h6>");
+                countLbl.text(response.count + " discussion(s) found");
+                $("#FoundResults_Box").append(countLbl);
+                $.each(response.result, function (index) {
+                    let aboutIt_Btn = $("<button type='button' class='btn btn-standard btn-sm float-end ms-1 btn-get-discussion-info'>About</button>");
+                    let div = $("<div class='bordered-container mt-2 p-2'></div>");
+                    let name = $("<h6 class='h6 text-truncate'></h6>");
+                    let createdAt = $("<small class='card-text text-muted'></small>");
+
+                    name.html(response.result[index].discussionName);
+                    createdAt.text("created " + dateAndTimeTranslator(response.result[index].createdAt));
+                    aboutIt_Btn.attr("id", response.result[index].id + "-GetDiscussionInfo_Btn");
+
+                    div.append(aboutIt_Btn);
+                    div.append(name);
+                    div.append(createdAt);
+
+                    $("#FoundResults_Box").append(div);
+                });
+            }
+            else {
+                let div = $("<div class='box-container text-center'></div>");
+                let description = $("<p class='card-text text-muted'></p>");
+                description.html(' <i class="fa-solid fa-magnifying-glass"></i> ' + response.result);
+                div.append(description);
+
+                $("#FoundResults_Box").append(div);
+            }
+        }
+        else {
+            let div = $("<div class='box-container text-center'></div>");
+            let description = $("<p class='card-text text-muted'></p>");
+            description.html(' <i class="fa-solid fa-magnifying-glass"></i> ' + response.result);
+            div.append(description);
+
+            $("#FoundResults_Box").append(div);
+        }
+    });
+});
+
 $("#GetDiscussions_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -691,7 +772,7 @@ $("#GetDiscussions_Form").on("submit", function (event) {
             else $("#DiscussionsCount_Span").text(response.count);
             if (response.count > 0) {
                 let tooltipReminder = $("<div class='box-container bg-light p-1'></div>");
-                let tolltipReminderText = $('<span class="h6">Tap on discussion to enter it</span>');
+                let tolltipReminderText = $("<span class='h6'>Tap on discussion's name to open it</span>");
                 let tooltipDivider = $("<div></div>");
                 let tooltipSmallReminder = $("<small class='card-text text-muted'>Tap on others icon to edit other settings</small>");
                 tooltipReminder.append(tolltipReminderText);
@@ -700,19 +781,67 @@ $("#GetDiscussions_Form").on("submit", function (event) {
                 $("#Discussions_Container-Box").append(tooltipReminder);
 
                 $.each(response.result, function (index) {
-                    let div = $("<div class='box-container bg-light p-2 mt-2 relocate-to-discussion'></div>");
+                    let div = $("<div class='box-container bg-light p-2 mt-2'></div>");
                     let name = $("<h6 class='h6 relocate-to-discussion'></h6>");
                     let joinedAndCreated = $("<small class='card-text text-muted relocate-to-discussion'></small>");
-                    let isMutedIcon = $('<small class="card-text text-muted float-end ms-1"> <i class="fa-regular fa-bell-slash"></i> </small>');
-                    div.attr("id", response.result[index].discussionId + "-RelocateToDiscussion");
-                    isMutedIcon.attr("id", response.result[index].id + "-MutedIcon");
+                    let isMutedIcon = $('<small class="card-text text-orange float-end ms-2 mt-1"> <i class="fa-regular fa-bell-slash"></i> </small>');
+                    let isPinnedIcon = $("<small class='card-text float-end ms-2 mt-1'> <i class='fa-solid fa-thumbtack'></i> </small>");
+
+                    let dropdownDiv = $("<div class='dropdown'></div>");
+                    let dropdownBtn = $("<button type='button' class='btn btn-standard btn-sm float-end ms-2' data-bs-toggle='dropdown' aria-expanded='false'> <i class='fa-solid fa-ellipsis-h'></i> </button>");
+                    let dropdownUl = $("<ul class='dropdown-menu p-1'></ul>");
+                    let dropdownLi0 = $("<li class='text-center'></li>");
+                    let dropdownLi1 = $("<li></li>");
+                    let dropdownLi2 = $("<li></li>");
+                    let dropdownLi3 = $("<li></li>");
+                    let dropdownHeader = $("<small class='card-text text-muted fw-500'></small>");
+                    let dropdownBtn1 = $("<a href='#' class='dropdown-item mt-2'> <i class='fa-solid fa-up-right-from-square'></i> Discussion</a>");
+                    let dropdownBtn2 = $("<button type='button' class='dropdown-item mt-1'></button>");
+                    let dropdownBtn3 = $("<button type='button' class='dropdown-item mt-1'></button>");
+                    dropdownLi0.append(dropdownHeader);
+                    dropdownLi1.append(dropdownBtn1);
+                    dropdownLi2.append(dropdownBtn2);
+                    dropdownLi3.append(dropdownBtn3);
+                    dropdownUl.append(dropdownLi0);
+                    dropdownUl.append(dropdownLi1);
+                    dropdownUl.append(dropdownLi2);
+                    dropdownUl.append(dropdownLi3);
+                    dropdownDiv.append(dropdownBtn);
+                    dropdownDiv.append(dropdownUl);
+
+                    isMutedIcon.attr("id", response.result[index].discussionId + "-MutedIcon");
+                    isPinnedIcon.attr("id", response.result[index].discussionId + "-PinnedIcon");
                     name.attr("id", response.result[index].discussionId + "-Name_Lbl_RelocateToDiscussion");
                     joinedAndCreated.attr("id", response.result[index].discussionId + "-DateNTime_Lbl_RelocateToDiscussion");
                     name.html(response.result[index].discussionName);
                     joinedAndCreated.html("created " + dateAndTimeTranslator(response.result[index].createdAt) + ", joined " + dateAndTimeTranslator(response.result[index].joinedAt));
+                    dropdownHeader.text(dateAndTimeTranslator(response.result[index].createdAt));
+                    dropdownBtn1.attr("href", "/Discussion/Discuss/" + response.result[index].discussionId);
+                    dropdownBtn2.attr("id", response.result[index].discussionId + "-MuteOrUnmuteTheDiscussion");
+                    dropdownBtn3.attr("id", response.result[index].discussionId + "-PinOrUnpinTheDiscussion");
 
-                    if (!response.result[index].isMuted) isMutedIcon.addClass("d-none");
+                    if (!response.result[index].isMuted) {
+                        isMutedIcon.fadeOut(350);
+                        dropdownBtn2.html(" <i class='fa-regular fa-bell-slash'></i> Mute");
+                        dropdownBtn2.addClass("mute-the-discussion");
+                    }
+                    else {
+                        dropdownBtn2.html(" <i class='fa-regular fa-bell'></i> Unmute");
+                        dropdownBtn2.addClass("unmute-the-discussion");
+                    }
 
+                    if (response.result[index].isPinned) {
+                        dropdownBtn3.addClass("unpin-the-discussion");
+                        dropdownBtn3.html(' <i class="fa-solid fa-link-slash"></i> Unpin');
+                    }
+                    else {
+                        isPinnedIcon.fadeOut(350);
+                        dropdownBtn3.addClass("pin-the-discussion");
+                        dropdownBtn3.html(' <i class="fa-solid fa-thumbtack"></i> Pin');
+                    }
+
+                    div.append(dropdownDiv);
+                    div.append(isPinnedIcon);
                     div.append(isMutedIcon);
                     div.append(name);
                     div.append(joinedAndCreated);
@@ -747,7 +876,10 @@ $("#GetDiscussions_Form").on("submit", function (event) {
         }
 
         openSidebar();
-        animatedOpen(false, "Discussions_Container", true, false);
+        animatedClose(true, "smallside-box-container", true, true);
+        setTimeout(function () {
+            animatedOpen(false, "Discussions_Container", true, false);
+        }, 300);
     });
 });
 $("#GetDeletedDiscussions_Form").on("submit", function (event) {
@@ -808,18 +940,105 @@ $("#GetMembersInfo_Form").on("submit", function (event) {
 
                 $.each(response.result, function (index) {
                     let div = $("<div class='box-container bg-light p-2 mt-2'></div>");
+                    let memberAccessBadge = $("<small type='button' class='card-text style-font ms-2'></small>");
                     let userName = $("<span class='h6 get-user-info-by-id'></span>");
                     let separator = $("<div></div>");
                     let joinedAt_Small = $("<small class='card-text text-muted'></small>");
 
+                    let dropdownDiv = $("<div class='dropdown'></div>");
+                    let dropdownBtn = $("<button type='button' class='btn btn-standard btn-sm float-end ms-2' data-bs-toggle='dropdown' aria-expanded='false'> <i class='fa-solid fa-ellipsis-h'></i> </button>");
+                    let dropdownUl = $("<ul class='dropdown-menu p-1'></ul>");
+                    let dropdownLi0 = $("<li class='text-center'></li>");
+                    let dropdownLi1 = $("<li></li>");
+                    let dropdownLi2 = $("<li></li>");
+                    let dropdownLi3 = $("<li></li>");
+                    let dropdownLi4 = $("<li></li>");
+                    let dropdownHeader = $("<small class='card-text text-muted fw-500'></small>");
+                    let dropdownBtn1 = $("<a href='#' class='dropdown-item'></a>");
+                    let dropdownBtn3 = $("<button type='button' class='dropdown-item mt-1 text-danger'> <i class='fas fa-user-times'></i> Delete</button>");
+                    let dropdownBtn2 = $("<button type='button' class='dropdown-item mt-1'></button>");
+                    let dropdownBtn4 = $("<button type='button' class='dropdown-item mt-1'></button>");
+                    dropdownLi0.append(dropdownHeader);
+                    dropdownLi1.append(dropdownBtn1);
+                    dropdownLi2.append(dropdownBtn2);
+                    dropdownLi3.append(dropdownBtn3);
+                    dropdownLi4.append(dropdownBtn4);
+                    dropdownUl.append(dropdownLi0);
+                    dropdownUl.append(dropdownLi1);
+                    dropdownUl.append(dropdownLi2);
+                    dropdownUl.append(dropdownLi4);
+                    dropdownUl.append(dropdownLi3);
+                    dropdownDiv.append(dropdownBtn);
+                    dropdownDiv.append(dropdownUl);
+
+                    div.attr("id", response.result[index].userId + "-Member_Container");
                     userName.html(response.result[index].userName);
                     userName.attr("id", response.result[index].userId + "-GetUserInfoViaId");
-                    joinedAt_Small.text("joined " + dateAndTimeTranslator(response.result[index].joinedAt));
+                    joinedAt_Small.attr("id", response.result[index].userId + "-JoinedAt_Small");
+                    dropdownBtn1.html(" <i class='fa-solid fa-up-right-from-square'></i> " + response.result[index].userName + "'s Page");
+                    memberAccessBadge.attr("id", response.result[index].userId + "-MemberInfoAccessLevel");
+                    dropdownBtn1.attr("href", "/User/Info/" + response.result[index].userId);
+                    dropdownBtn4.attr("id", response.result[index].userId + "-BlockTheUser");
 
+                    if (response.result[index].isBlocked) {
+                        div.css("border", "1px solid orange");
+                        joinedAt_Small.html("<span class='badge bg-orange text-light style-font p-1'>Blocked</span> joined " + dateAndTimeTranslator(response.result[index].joinedAt));
+                    }
+                    else joinedAt_Small.html("joined " + dateAndTimeTranslator(response.result[index].joinedAt));
+
+                    if (response.currentUserAccessLevel > response.result[index].accessLevel) {
+                        dropdownBtn2.attr("id", response.result[index].userId + "-BtnEditAccessLevel");
+                        dropdownBtn2.attr("data-bs-title", response.currentUserId);
+                        dropdownBtn2.addClass("btn-edit-access-level");
+                        dropdownBtn2.fadeIn(0);
+
+                        dropdownBtn3.fadeIn(0);
+                        dropdownBtn3.addClass("btn-delete-user-from-discussion");
+                        dropdownBtn3.attr("id", response.result[index].userId + "-DeleteUserFromDiscussion");
+
+                        if (response.result[index].accessLevel == 0) dropdownBtn2.html(' <i class="fa-solid fa-user-tag"></i> Set as Admin');
+                        else dropdownBtn2.html(' <i class="fa-regular fa-circle-user"></i> Set as Standard');
+
+                        if (!response.result[index].isBlocked) {
+                            dropdownBtn4.fadeIn(0);
+                            dropdownBtn4.addClass("btn-block-the-user-out-from-the-discussion");
+                            dropdownBtn4.html(' <i class="fa-solid fa-user-minus"></i> Block');
+                        }
+                        else {
+                            dropdownBtn4.fadeIn(0);
+                            dropdownBtn2.fadeOut(0);
+                            dropdownBtn3.fadeOut(0);
+                            dropdownBtn4.addClass("btn-unblock-the-user-out-from-the-discussion");
+                            dropdownBtn4.html(' <i class="fa-solid fa-user-check"></i> Unlock');
+                        }
+                    }
+                    else {
+                        dropdownBtn2.fadeOut(0);
+                        dropdownBtn3.fadeOut(0);
+                        dropdownBtn4.fadeOut(0);
+                    }
+
+                    if (response.result[index].accessLevel == 1) {
+                        dropdownBtn2.attr("data-bs-html", 0);
+                        memberAccessBadge.addClass("text-danger");
+                        memberAccessBadge.text("Admin");
+                    }
+                    else if (response.result[index].accessLevel == 2) {
+                        memberAccessBadge.addClass("text-primary");
+                        memberAccessBadge.text("Owner");
+                        dropdownBtn2.attr("data-bs-html", 0);
+                    }
+                    else {
+                        memberAccessBadge.fadeOut(350);
+                        dropdownBtn2.attr("data-bs-html", 1);
+                    }
+                    div.append(dropdownDiv);
                     div.append(userName);
+                    div.append(memberAccessBadge);
                     div.append(separator);
                     div.append(joinedAt_Small);
 
+                    $("#EAL_ChangerId_Val").val(response.currentUserId);
                     $("#MembersInfo_Container").append(div);
                 });
                 slideToRight("MembersInfoMain_Container");
@@ -830,6 +1049,88 @@ $("#GetMembersInfo_Form").on("submit", function (event) {
         }
     });
 });
+
+$("#BlockTheUserOutFromTheDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-regular fa-circle-check fa-spin fa-spin text-orange" style="--fa-animation-duration: 0.65s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Done", null, 0, null, null, null, 4.25);
+            let membersCount = parseInt($("#MembersCount_Lbl").text());
+            if (membersCount <= 1) $("#MembersCount_Lbl").text("1 member");
+            else $("#MembersCount_Lbl").text(--membersCount + " members");
+            $("#" + response.result + "-Member_Container").css("border", "1px solid orange");
+            $("#" + response.result + "-JoinedAt_Small").html("<span class='badge p-1 bg-orange text-light style-font'>Blocked</span>");
+            $("#" + response.result + "-BlockTheUser").removeClass("btn-block-the-user-out-from-the-discussion");
+            $("#" + response.result + "-BlockTheUser").addClass("btn-unblock-the-user-out-from-the-discussion");
+            $("#" + response.result + "-BlockTheUser").html(' <i class="fa-solid fa-user-check"></i> Unblock');
+            $("#" + response.result + "-BtnEditAccessLevel").fadeOut(350);
+            $("#" + response.result + "-DeleteUserFromDiscussion").fadeOut(350);
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake text-danger" style="--fa-animation-duration: 0.85s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
+    });
+});
+$("#UnblockTheUserOutFromTheDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-regular fa-circle-check fa-spin fa-spin text-neon-purple" style="--fa-animation-duration: 0.65s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Done", null, 0, null, null, null, 4.25);
+
+            let membersCount = parseInt($("#MembersCount_Lbl").text());
+            $("#MembersCount_Lbl").text(++membersCount + " members");
+            $("#" + response.result + "-Member_Container").css("border", "none");
+            $("#" + response.result + "-JoinedAt_Small").html("<span class='badge bg-primary text-light p-1 style-font'>Unblocked</span>");
+            $("#" + response.result + "-BlockTheUser").addClass("btn-block-the-user-out-from-the-discussion");
+            $("#" + response.result + "-BlockTheUser").removeClass("btn-unblock-the-user-out-from-the-discussion");
+            $("#" + response.result + "-BlockTheUser").html(' <i class="fa-solid fa-user-minus"></i> Block');
+            $("#" + response.result + "-BtnEditAccessLevel").fadeIn(350);
+            $("#" + response.result + "-DeleteUserFromDiscussion").fadeIn(350);
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake text-danger" style="--fa-animation-duration: 0.9s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
+    });
+});
+
+$("#ChangeAccessLevel_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#EAL_UserId_Val").val(0);
+            $("#EAL_AccessLevel_Val").val(0);
+            animatedClose(false, "EditAccessLevel_Container", true, true);
+
+            $("#" + response.userId + "-BtnEditAccessLevel").attr("data-bs-html", response.result == 0 ? 1 : 0);
+            switch (parseInt(response.result)) {
+                case 0:
+                    $("#" + response.userId + "-MemberInfoAccessLevel").fadeOut(350);
+                    $("#" + response.userId + "-BtnEditAccessLevel").html(' <i class="fa-solid fa-user-tag"></i> Set as Admin');
+                    break;
+                case 1:
+                    $("#" + response.userId + "-BtnEditAccessLevel").html(' <i class="fa-regular fa-circle-user"></i> Set as Standard');
+                    $("#" + response.userId + "-MemberInfoAccessLevel").addClass("text-danger");
+                    $("#" + response.userId + "-MemberInfoAccessLevel").text("Admin");
+                    $("#" + response.userId + "-MemberInfoAccessLevel").fadeIn(350);
+                    break;
+                default:
+                    $("#" + response.userId + "-BtnEditAccessLevel").html(' <i class="fa-solid fa-user-tag"></i> Set as Admin');
+                    $("#" + response.userId + "-MemberInfoAccessLevel").fadeOut(350);
+                    break;
+            }
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4.25);
+        }
+    });
+});
+
+
 $("#AddMemberToDiscussion_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -846,6 +1147,63 @@ $("#AddMemberToDiscussion_Form").on("submit", function (event) {
             else if (parseInt(response.error) == -128) alert('<i class="fa-solid fa-user-xmark"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
             else alert('<i class="fa-regular fa-circle-xmark fa-shake text-warning" style="--fa-animation-duration: 2.3s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
         }
+    });
+});
+
+$("#JoinToDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            insideBoxOpen("SendMessage_Box");
+            $("#JoinToDiscussion_SbmtBtn").html(' <i class="fa-regular fa-circle-check"></i> <br/>Joined');
+            $("#JoinToDiscussion_SbmtBtn").attr("disabled", true);
+            $("#SendDiscussionMessage_Text_Val").attr("readonly", false);
+            $("#SendDiscussionMessage_Text_Val").attr("disabled", false);
+            $("#LeaveTheDiscussion_SbmtBtn").attr("disabled", false);
+            alert('<i class="fa-solid fa-right-to-bracket text-primary"></i>', response.alert, "Done", null, 0, null, null, null, 4.5);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake text-danger" style="--fa-animation-duration: 2.3s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 4.25);
+        }
+    });
+});
+$("#LeaveTheDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            insideBoxClose("SendMessage_Box");
+            $("#JoinToDiscussion_SbmtBtn").html(' <i class="fa-solid fa-right-to-bracket"></i> <br/>Join');
+            $("#JoinToDiscussion_SbmtBtn").attr("disabled", false);
+            $("#SendDiscussionMessage_Text_Val").attr("readonly", true);
+            $("#SendDiscussionMessage_Text_Val").attr("disabled", true);
+            $("#SendDiscussionMessage_SbmtBtn").attr("disabled", true);
+            $("#LeaveTheDiscussion_SbmtBtn").attr("disabled", true);
+            alert('<i class="fa-solid fa-right-from-bracket"></i>', response.alert, "Done", null, 0, null, null, null, 4.5);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake text-danger" style="--fa-animation-duration: 2.3s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 4.25);
+        }
+    });
+});
+$("#DeleteUserFromDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let membersCount = parseInt($("#MembersCount_Lbl").text());
+            if (membersCount <= 1) $("#MembersCount_Lbl").text("1 member");
+            else $("#MembersCount_Lbl").text(--membersCount + " members");
+            slideToLeft(response.result + "-Member_Container");
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake text-danger" style="--fa-animation-duration: 1.25s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 4.25);
     });
 });
 
@@ -886,6 +1244,10 @@ $("#MuteTheDiscussion_Form").on("submit", function (event) {
             $("#UnmuteTheDiscussion_Box").fadeIn(0);
             $("#IsMutedHeader_Span").html(' <i class="fa-regular fa-bell-slash"></i> ');
             $("#IsMutedHeader_Span").fadeIn(350);
+            $("#" + response.result + "-MuteOrUnmuteTheDiscussion").html(" <i class='fa-regular fa-bell-slash'></i> Unmute");
+            $("#" + response.result + "-MuteOrUnmuteTheDiscussion").removeClass("mute-the-discussion");
+            $("#" + response.result + "-MuteOrUnmuteTheDiscussion").addClass("unmute-the-discussion");
+            $("#" + response.result + "-MutedIcon").slideDown(350);
         }
         else {
             alert('<i class="fa-regular fa-circle-xmark text-danger fa-shake"></i>', response.alert, "Done", null, 0, null, null, null, 4);
@@ -904,9 +1266,49 @@ $("#UnmuteTheDiscussion_Form").on("submit", function (event) {
             $("#MuteTheDiscussion_Box").fadeIn(0);
             $("#IsMutedHeader_Span").html("");
             $("#IsMutedHeader_Span").fadeOut(350);
+            $("#" + response.result + "-MuteOrUnmuteTheDiscussion").html(" <i class='fa-regular fa-bell'></i> Mute");
+            $("#" + response.result + "-MuteOrUnmuteTheDiscussion").addClass("mute-the-discussion");
+            $("#" + response.result + "-MuteOrUnmuteTheDiscussion").removeClass("unmute-the-discussion");
+            $("#" + response.result + "-MutedIcon").slideUp(350);
         }
         else {
             alert('<i class="fa-regular fa-circle-xmark text-danger fa-shake" style="--fa-animation-duration: 2s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Done", null, 0, null, null, null, 4);
+        }
+    });
+});
+$("#PinTheDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-solid fa-thumbtack fa-bounce" style="--fa-animation-duration: 1.15s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Done", null, 0, null, null, null, 4.25);
+            $("#" + response.result + "-PinnedIcon").slideDown(350);
+            $("#" + response.result + "-PinOrUnpinTheDiscussion").html(' <i class="fa-solid fa-link-slash"></i> Unpin');
+            $("#" + response.result + "-PinOrUnpinTheDiscussion").addClass("unpin-the-discussion");
+            $("#" + response.result + "-PinOrUnpinTheDiscussion").removeClass("pin-the-discussion");
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-warning fa-shake" style="--fa-animation-duration: 2.3s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
+        }
+    });
+});
+$("#UnpinTheDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-solid fa-link-slash"></i>', response.alert, "Done", null, 0, null, null, null, 4.25);
+            $("#" + response.result + "-PinOrUnpinTheDiscussion").html(' <i class="fa-solid fa-thumbtack"></i> Pin');
+            $("#" + response.result + "-PinnedIcon").slideUp(350);
+            $("#" + response.result + "-PinOrUnpinTheDiscussion").addClass("pin-the-discussion");
+            $("#" + response.result + "-PinOrUnpinTheDiscussion").removeClass("unpin-the-discussion");
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-warning fa-shake" style="--fa-animation-duration: 2.3s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
         }
     });
 });
@@ -999,7 +1401,7 @@ $("#GetMessageInfo_Form").on("submit", function (event) {
             }
 
             $(".messages-container").css("margin-bottom", "-1200px");
-            $(".messages-container").fadeOut(300);
+            $(".messages-container").fadeOut(100);
             insideBoxOpen("DiscussionOptions_Box");
 
             setTimeout(function () {
@@ -1122,9 +1524,58 @@ $("#FindUsersToAdd_Form").on("submit", function (event) {
             let header = $('<small class="card-text text-muted"> <i class="fa-solid fa-magnifying-glass"></i> </small>' + response.alert);
 
             container.append(header);
-
             $("#FindUsersResults_Box").append(container);
         }
+    });
+});
+
+$("#GetDiscussionCommands_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        $("#CreatedAdditionalCommands_Box").empty();
+        $("#CreateCommand_Box").fadeOut(300);
+        $("#CommandsInfo_Box").fadeIn(300);
+        if (response.success) {
+            if (response.count > 0) {
+                $.each(response.result, function (index) {
+                    let div = $("<div></div>");
+                    let small = $("<small class='card-text text-muted'></small>");
+                    let insideSpan = $("<span class='fw-50'></span>");
+                    insideSpan.text(response.result[index].command);
+                    small.text(response.result[index].description);
+
+                    small.append(span);
+                    div.append(small);
+                    $("#CreatedAdditionalCommands_Box").append(div);
+                });
+            }
+            else {
+                let div = $("<div></div>");
+                let small = $("<small class='card-text text-muted'>No additional created commands for this discussion</small>");
+                div.append(small);
+
+                $("#CreatedAdditionalCommands_Box").append(div);
+            }
+        }
+        else {
+            alert('<i class="fa-solid fa-terminal text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
+            let div = $("<div></div>");
+            let small = $("<small class='card-text text-muted'>No additional created commands for this discussion</small>");
+            let separatorZero = $("<div class='mt-2'></div>");
+            let createCmd_Btn = $("<button type='button' class='btn btn-light btn-standard-asset shadow-none btn-sm btn-execute-cmd'> <i class='fa-solid fa-plus'></i> Create a Command</button>");
+            createCmd_Btn.attr("data-bs-html", "/create");
+
+            div.append(small);
+            div.append(separatorZero);
+            div.append(createCmd_Btn);
+
+            $("#CreatedAdditionalCommands_Box").append(div);
+        }
+        $("#CreatedAdditionalCommands_Box").fadeIn(350);
+        $("#AdditionalCommands_Box").fadeIn(350);
     });
 });
 
@@ -1200,6 +1651,65 @@ $("#ChangeToSingleUseType_Btn").on("click", function () {
     }, 450);
 });
 
+$(document).on("click", ".btn-get-discussion-info", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#GSI_Id_Val").val(trueId);
+        $("#GetDiscussionShortInfo_Form").submit();
+    }
+    else $("#GSI_Id_Val").val(0);
+});
+
+$(document).on("click", ".btn-block-the-user-out-from-the-discussion", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#BU_UserId_Val").val(trueId);
+        $("#BlockTheUserOutFromTheDiscussion_Form").submit();
+    }
+    else $("#BU_UserId_Val").val(0);
+});
+$(document).on("click", ".btn-unblock-the-user-out-from-the-discussion", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#UBU_UserId_Val").val(trueId);
+        $("#UnblockTheUserOutFromTheDiscussion_Form").submit();
+    }
+    else $("#BU_UserId_Val").val(0);
+});
+
+$(document).on("click", ".pin-the-discussion", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#PinTheDiscussion_Id_Val").val(trueId);
+        $("#PinTheDiscussion_Form").submit();
+    }
+    else $("#PinTheDiscussion_Id_Val").val(0);
+});
+$(document).on("click", ".unpin-the-discussion", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#UnpinTheDiscussion_Id_Val").val(trueId);
+        $("#UnpinTheDiscussion_Form").submit();
+    }
+    else $("#UnpinTheDiscussion_Id_Val").val(0);
+});
+$(document).on("click", ".mute-the-discussion", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#MuteTheDiscussion_Id_Val").val(trueId);
+        $("#MuteTheDiscussion_Form").submit();
+    }
+    else $("#MuteTheDiscussion_Id_Val").val(0);
+});
+$(document).on("click", ".unmute-the-discussion", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#UnmuteTheDiscussion_Id_Val").val(trueId);
+        $("#UnmuteTheDiscussion_Form").submit();
+    }
+    else $("#UnmuteTheDiscussion_Id_Val").val(0);
+});
+
 $(document).on("click", ".add-member-to-discussion", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
@@ -1232,6 +1742,31 @@ $(document).on("click", ".mark-as-read-discussion-message", function (event) {
     else $("#MAR_Id_Val").val(0);
 });
 
+$(document).on("click", ".btn-delete-user-from-discussion", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#DUFD_Id_Val").val(trueId);
+        $("#DeleteUserFromDiscussion_Form").submit();
+    }
+    else $("#DUFD_Id_Val").val(0);
+})
+$(document).on("click", ".btn-edit-access-level", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        let accessLevel = $(this).attr("data-bs-html");
+        let changerId = $(this).attr("data-bs-title");
+        if (parseInt(accessLevel) >= 0 && parseInt(accessLevel) < 2 && changerId != null) {
+            $("#EAL_AccessLevel_Val").val(accessLevel);
+            $("#EAL_ChangerId_Val").val(changerId);
+            $("#EAL_UserId_Val").val(trueId);
+            $("#ChangeAccessLevel_Form").submit();
+        }
+    }
+    else {
+        $("#EAL_AccessLevel_Val").val(0);
+        $("#EAL_ChangerId_Val").val(0);
+    }
+});
 
 $(document).on("click", ".select-to-restore-the-discussion", function (event) {
     let trueId = getTrueId(event.target.id);
@@ -1357,6 +1892,12 @@ $(document).on("click", ".btn-open-inside-box", function (event) {
         }, 150);
     }
 });
+$(document).on("click", ".btn-close-inside-box", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        insideBoxClose(false, trueId);
+    }
+});
 $(document).on("click", ".btn-slide-to-right", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
@@ -1447,6 +1988,22 @@ $(document).on("keydown", ".strong-input", function (event) {
     else if (event.which == 189 && isShiftKeyed) return true;
     else if (event.which >= 97 && event.which <= 122) return true;
     else return false;
+});
+
+$(document).on("click", ".btn-execute-cmd", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        let command = $(this).attr("data-bs-html");
+        if (command != "" || command != undefined) {
+            $("#SendDiscussionMessage_Text_Val").val(command);
+            $("#SendLiveDiscussionMessage_Text_Val").val(command);
+            $("#SendChatMessage_Text_Val").val(command);
+
+            $("#SendDiscussionMessage_Text_Val").change();
+            $("#SendLiveDiscussionMessage_Text_Val").change();
+            $("#SendChatMessage_Text_Val").change();
+        }
+    }
 });
 
 $(document).on("click", ".copy-to-clipboard", function (event) {
@@ -1749,6 +2306,62 @@ $(document).on("click", ".btn-hide", function (event) {
         else hide(trueId, null);
     }
 });
+
+$(document).on("keyup", ".send-message-form-control", function () {
+    let value = $(this).val();
+    if (value[0] == "/") $("#SendDiscussionMessage_SbmtBtn").attr("disabled", true);
+});
+$(document).on("change", ".send-message-form-control", function (event) {
+    let trueId = event.target.id;
+    if (trueId != null) {
+        let value = $(this).val();
+        if (value[0] == "/") {
+            let currentCommand;
+            if (value.includes(" ")) currentCommand = (value.substring(0, value.indexOf(" "))).toLowerCase();
+            else currentCommand = (value.substring(0, value.length)).toLowerCase();
+
+            $("#CreatedAdditionalCommands_Box").fadeOut(350);
+            $("#AdditionalCommands_Box").fadeOut(350);
+
+            $("#CurrentCommand_Lbl").text(currentCommand);
+            commandLineOptions(currentCommand);
+
+            if (parseInt($("#CommandLine_Box").css("margin-bottom")) > -1200) {
+                insideBoxClose(false, "CommandLine_Box");
+                setTimeout(function () {
+                    insideBoxOpen("CommandLine_Box", true);
+                }, 750);
+            }
+            else {
+                insideBoxOpen("CommandLine_Box", true);
+            }
+        }
+    }
+});
+
+function commandLineOptions(command) {
+    $(".command-box").fadeOut(300);
+    switch (command) {
+        case "/info":
+            $("#CommandsInfo_Box").fadeIn(300);
+            $("#CreateCommand_Box").fadeOut(300);
+            break;
+        case "/create":
+            $("#CreateCommand_Box").fadeIn(300);
+            $("#CommandsInfo_Box").fadeOut(300);
+            break;
+        case "/get":
+            $("#GetDiscussionCommands_Form").submit();
+            break;
+        case "/get_commands":
+            $("#GetDiscussionCommands_Form").submit();
+            break;
+        default:
+            $("#CommandsInfo_Box").fadeIn(300);
+            $("#CreateCommand_Box").fadeOut(300);
+            break;
+    }
+}
 
 function hide(element, openAnotherElement) {
     if (openAnotherElement == null) {
@@ -2112,29 +2725,44 @@ function slideToRight(element) {
     }, 350);
 }
 
-function insideBoxOpen(element) {
+function insideBoxOpen(element, doNotCloseChatBox) {
     $("#" + element).fadeIn(0);
+    $("#" + element).css("z-index", "0");
     setTimeout(function () {
-        $("#" + element).css("margin-bottom", "8px");
+        if (!doNotCloseChatBox) $("#" + element).css("margin-bottom", "8px");
+        else {
+            let chatBoxHeight = $("#SendMessage_Box").innerHeight();
+            $("#" + element).css("margin-bottom", parseInt(chatBoxHeight) + 4 + "px");
+        }
+        setTimeout(function () {
+            $("#" + element).css("z-index", "1001");
+        }, 225);
     }, 350);
 }
 function insideBoxClose(closeAll, element) {
     if (!closeAll) {
-        $("#" + element).css("margin-bottom", "24px");
+        $("#" + element).css("z-index", "0");
+        if (parseInt($("#" + element).css("margin-bottom")) >= 24) {
+            $("#" + element).css("margin-bottom", parseInt($("#" + element).css("margin-bottom")) + 20 + "px");
+        }
+        else $("#" + element).css("margin-bottom", "24px");
         setTimeout(function () {
             $("#" + element).css("margin-bottom", "-1200px");
         }, 400);
         setTimeout(function () {
             $("#" + element).fadeOut(300);
+            $("#" + element).css("z-index", "1001");
         }, 750);
     }
     else {
         $(".messages-container").css("margin-bottom", "24px");
+        $(".messages-container").css("z-index", "0");
         setTimeout(function () {
             $(".messages-container").css("margin-bottom", "-1200px");
         }, 400);
         setTimeout(function () {
             $(".messages-container").fadeOut(300);
+            $(".messages-container").css("z-index", "1001");
         }, 750);
     }
 }

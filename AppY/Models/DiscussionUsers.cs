@@ -10,9 +10,11 @@ namespace AppY.Models
         [ForeignKey("User")]
         public int? UserId { get; set; }
         [ForeignKey("Discussion")]
-        public int? DiscussionId {get;set;}
+        public int? DiscussionId { get; set; }
+        public int AccessLevel { get; set; }
         public bool IsMuted { get; set; }
         public bool IsPinned { get; set; }
+        public bool IsBlocked { get; set; }
         public User? User { get; set; }
         public Discussion? Discussion { get; set;}
         [NotMapped]

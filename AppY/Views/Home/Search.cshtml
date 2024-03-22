@@ -1,9 +1,26 @@
 ﻿@model User
 @{
     ViewData["Title"] = "Search";
+
+    User? UserInfo = ViewBag.UserInfo;
 }
 
 <div class="main-container shadow-standard" id="Preloaded_Container">
+    <div class="d-none">
+        @if(User.Identity.IsAuthenticated)
+        {
+            <form method="get" asp-controller="Discussion" asp-action="GetShortInfo" id="GetDiscussionShortInfo_Form">
+                <input type="hidden" name="Id" id="GSI_Id_Val" value="0" />
+                <input type="hidden" name="UserId" value="@UserInfo.Id" />
+            </form>
+        }
+        else
+        {
+            <form method="get" asp-controller="Discussion" asp-action="GetShortInfo" id="GetDiscussionShortInfo_Form">
+                <input type="hidden" name="Id" id="GSI_Id_Val" value="0" />
+            </form>
+        }
+    </div>
     <div class="header-container p-2 text-center" id="Preloaded_Container-Header">
         <h5 class="h5 text-truncate p-1" id="HeaderText_Lbl">Search</h5>
     </div>
@@ -17,7 +34,7 @@
                 </div>
             </form>
         </div>
-        <div class="bordered-container mt-2 p-2" id="FoundResults_Box">
+        <div class="box-container bg-light mt-2 p-2" id="FoundResults_Box">           
             <div class="box-container text-center">
                 <p class="card-text text-muted"> <i class="fa-solid fa-magnifying-glass"></i> Search for some discussions or chats to appear them here</p>
             </div>

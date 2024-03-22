@@ -10,6 +10,7 @@ namespace AppY.Interfaces
         public Task<User?> GetAverageUserInfoAsync(string? Shortname);
         public Task<User?> GetUserSuperShortInfoAsync(int Id);
         public Task<User?> GetUserSuperShortInfoAsync(string? Shortname);
+        public Task<int> GetCurrentUserAccessLevelAsync(int Id, int UserId);
         public Task<bool> EditUserInfoAsync(EditUserInfo_ViewModel Model);
         public Task<bool> EditAvatarDesignAsync(EditAvatarColors Model);
         public Task<string?> SetProfilePhotoAsync(int Id, IFormFile File);

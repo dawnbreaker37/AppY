@@ -16,7 +16,7 @@
                 @if (User.Identity.IsAuthenticated)
                 {
                     <div class="box-container float-end">
-                        <button type="button" class="btn btn-standard me-1 float-end btn-open-container" id="CreateDiscussion_Container-Open"> <i class="fa-regular fa-square-plus btn-open-container" id="CreateDiscussion_Container-Open"></i> </button>
+                        <a asp-controller="Home" asp-action="Create" class="btn btn-standard me-1 float-end"> <i class="fa-regular fa-square-plus"></i> </a>
                         <button type="button" class="btn btn-standard me-1 float-end"> <i class="fa-regular fa-comments"></i> </button>
                     </div>
                 }
@@ -72,43 +72,6 @@
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
-    </div>
-
-    <div class="main-container shadow-standard" id="CreateDiscussion_Container">
-        <div class="header-container p-2 text-center" id="CreateDiscussion_Container-Header">
-            <button type="button" class="btn btn-close rounded-circle float-end ms-1" id="CreateDiscussion_Container-Close" aria-label="close"></button>
-            <h5 class="h5 text-truncate p-1">Create Discussion</h5>
-        </div>
-        <div class="box-container p-2 pt-1 mt-1" id="Prealoded_Container-Box">
-            <div class="box-container">
-                <form method="post" asp-controller="Discussion" asp-action="Create" id="CreateDiscussion_Form">
-                    <div class="form-floating">
-                        <input type="text" name="Name" id="CD_Name_Val" autocomplete="off" class="form-control shadow-none" maxlength="100" placeholder="Discussion name" />
-                        <label for="CD_Name_Val" class="fw-500">Name</label>
-                    </div>
-                    <div class="ms-1">
-                        <small class="card-text text-muted">Can be changed</small>
-                    </div>
-                    <div class="form-check form-switch mt-3">
-                        <input class="form-check-input" name="IsPrivate" type="checkbox" id="CD_IsPrivate_Val" />
-                        <label class="form-check-label fw-500" for="CD_IsPrivate_Val">Private Discussion</label>
-                    </div>
-                    <div class="ms-1">
-                        <small class="card-text text-muted">Other users may only enter by special password (requires to be entered only on first enter)</small>
-                    </div>
-                    <div class="box-container mt-3">
-                        <div class="row">
-                            <div class="col">
-                                <button type="submit" class="btn btn-primary bg-primary btn-standard-asset w-100">Create</button>
-                            </div>
-                            <div class="col">
-                                <button type="button" class="btn btn-light btn-standard-asset w-100">Live Discussion</button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
     </div>
 
     <div class="alert-container mx-auto p-2 shadow-sm" id="Alert_Container">

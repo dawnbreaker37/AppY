@@ -14,5 +14,7 @@ namespace AppY.Data
         public DbSet<Discussion> Discussions { get; set; }
         public DbSet<DiscussionUsers> DiscussionUsers { get; set; }
         public DbSet<DiscussionMessage> DiscussionMessages { get; set; }
+        public DbSet<DiscussionMessageReply> DiscussionMessageReplies { get; set; }
+        public DbSet<CommandTool> Commands { get; set; }
     }
 }

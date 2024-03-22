@@ -1,4 +1,6 @@
-﻿namespace AppY.ViewModels
+﻿using AppY.Models;
+
+namespace AppY.ViewModels
 {
     public class DiscussionShortInfo
     {
@@ -11,5 +13,9 @@
         public int? DiscussionId { get; set; }
         public bool IsMuted { get; set; }
         public bool IsPinned { get; set; }
+        public bool IsDeleted { get; set; }
+        public string? LastMessageText { get; set; }
+        public bool LastMessageIsChecked { get; set; }
+        public DateTime LastMessageSentAt { get; set; }
     }
 }

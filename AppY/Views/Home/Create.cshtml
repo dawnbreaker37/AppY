@@ -1,0 +1,47 @@
+﻿@model Discussion
+@{
+    ViewData["Title"] = "Create Chats and Discussions";
+}
+
+<div class="main-sidebar" id="Main_SideBar">
+    <div class="d-none">
+    </div>
+</div>
+
+<div class="main-container shadow-standard" id="Preloaded_Container">
+    <div class="header-container p-2 text-center" id="Preloaded_Container-Header">
+        <button type="button" class="btn btn-close rounded-circle float-end ms-1" id="Preloaded_Container-Close" aria-label="close"></button>
+        <h5 class="h5 text-truncate p-1">Create Discussion</h5>
+    </div>
+    <div class="box-container p-2 pt-1 mt-1" id="Prealoded_Container-Box">
+        <div class="box-container">
+            <form method="post" asp-controller="Discussion" asp-action="Create" id="CreateDiscussion_Form">
+                <div class="form-floating">
+                    <input type="text" name="Name" id="CD_Name_Val" autocomplete="off" class="form-control shadow-none" maxlength="100" placeholder="Discussion name" />
+                    <label for="CD_Name_Val" class="fw-500">Name</label>
+                </div>
+                <div class="ms-1">
+                    <small class="card-text text-muted">Can be changed</small>
+                </div>
+                <div class="form-check form-switch mt-3">
+                    <input class="form-check-input checkbox-select" name="IsPrivate" type="checkbox" id="CD_IsPrivate_Val" value="false" />
+                    <label class="form-check-label fw-500" for="CD_IsPrivate_Val">Private Discussion</label>
+                </div>
+                <div class="ms-1">
+                    <small class="card-text text-muted">Other users may only enter by special password (requires to be entered only on first enter)</small>
+                </div>
+                <div class="box-container mt-3">
+                    <div class="row">
+                        <div class="col">
+                            <button type="submit" class="btn btn-primary bg-primary btn-standard-asset w-100">Create</button>
+                        </div>
+                        <div class="col">
+                            <button type="button" class="btn btn-light btn-standard-asset w-100">Live Discussion</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

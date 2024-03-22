@@ -18,6 +18,7 @@ namespace AppY.Models
         public int DiscussionId { get; set; }
         public User? User { get; set; }
         public Discussion? Discussion { get; set; }
+        public List<DiscussionMessageReply>? DiscussionMessageReplies { get; set; }
         [NotMapped]
         public string? UserPseudoname { get; set; }
         [NotMapped]

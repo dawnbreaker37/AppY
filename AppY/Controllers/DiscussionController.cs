@@ -56,6 +56,14 @@ namespace AppY.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> GetShortInfo(int Id, int UserId)
+        {
+            Discussion? Info = await _discussion.GetDiscussionShortInfoAsync(Id, UserId);
+            if (Info != null) return Json(new { success = true, result = Info });
+            else return Json(new { success = false, alert = "We're sorry, but we haven't found any information about discussion" });
+        }
+
+        [HttpGet]
         public async Task<IActionResult> GetDeletedDiscussions(int Id)
         {
             IQueryable<DiscussionShortInfo>? DeletedDiscussions_Preview = _discussion.GetUserDeletedDiscussions(Id);
@@ -91,7 +99,7 @@ namespace AppY.Controllers
         {
             if(Id != 0 && User.Identity.IsAuthenticated)
             {
-                List<DiscussionMessage>? Messages = null;
+                List<IGrouping<DateTime, DiscussionMessage>>? Messages = null;
                 string? Str_UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 bool Result = Int32.TryParse(Str_UserId, out int UserId);
                 if (Result)
@@ -103,12 +111,14 @@ namespace AppY.Controllers
                         if (DiscussionInfo != null)
                         {
                             User? CreatorInfo;
-                            bool IsThisDiscussionMuted = await _discussion.IsThisDiscussionMutedAsync(Id, UserId);
+                            bool IsThisDiscussionMuted = false;
+                            bool AccessValue = await _discussion.HasThisUserAccessToThisDiscussionAsync(UserId, Id);
+                            if(AccessValue) IsThisDiscussionMuted = await _discussion.IsThisDiscussionMutedAsync(Id, UserId);
                             //bool IsThisDiscussionMuted = UserInfo.MutedDiscussions != null ? UserInfo.MutedDiscussions.Any(d => d.DiscussionId == Id) : false;
                             int MessagesCount = await _messages.SentMessagesCountAsync(Id);
                             if (MessagesCount > 0)
                             {
-                                IQueryable<DiscussionMessage>? Result_Preview = _messages.GetMessages(Id, UserId, 0, 35);
+                                IQueryable<IGrouping<DateTime, DiscussionMessage>>? Result_Preview = _messages.GetMessages(Id, UserId, 0, 35);
                                 if (Result_Preview != null) Messages = await Result_Preview.ToListAsync();
                             }
 
@@ -118,6 +128,7 @@ namespace AppY.Controllers
                             await _messages.MarkAsReadAllMessagesAsync(Id, UserId);
 
                             ViewBag.UserInfo = UserInfo;
+                            ViewBag.AccessValue = AccessValue;
                             ViewBag.CreatorInfo = CreatorInfo;
                             ViewBag.Discussion = DiscussionInfo;
                             ViewBag.MembersCount = await _discussion.GetMembersCountAsync(Id);
@@ -142,28 +153,153 @@ namespace AppY.Controllers
             if (MembersInfo_Preview != null)
             {
                 List<DiscussionUsers>? Result = await MembersInfo_Preview.ToListAsync();
-                if (Result != null) return Json(new { success = true, result = Result, count = Result.Count });
+                if (Result != null)
+                {
+                    int CurrentUserAccessLevel = 0;
+                    int CurrentUserId = 0;
+                    if (Request.Cookies.ContainsKey("CurrentUserId"))
+                    {
+                        string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                        if (CurrentUserId_Str != null)
+                        {
+                            bool TryToParse = Int32.TryParse(CurrentUserId_Str, out CurrentUserId);
+                            if(TryToParse) CurrentUserAccessLevel = await _user.GetCurrentUserAccessLevelAsync(Id, CurrentUserId);
+                        }
+                    }
+                    return Json(new { success = true, currentUserId = CurrentUserId, currentUserAccessLevel = CurrentUserAccessLevel, result = Result, count = Result.Count });
+                }
                 else return Json(new { success = true, count = 0 });
             }
             else return Json(new { success = false, alert = "Unable to get any information about the members of this discussion. Please, try again later" });
         }
 
         [HttpPost]
+        public async Task<IActionResult> ChangeAccessLevel(int Id, int ChangerId, int UserId, int AccessLevel)
+        {
+            int Result = await _discussion.ChangeAccessLevel(Id, ChangerId, UserId, AccessLevel);
+            if (Result >= 0) return Json(new { success = true, result = Result, userId = UserId, changerId = ChangerId });
+            else return Json(new { success = false, alert = "We're sorry, but you cannot change access level for this user now. Please, try again later" });
+        }
+
+        [HttpPost]
         public async Task<IActionResult> AddMember(int Id, int AdderId, int UserId)
         {
-            Console.WriteLine(Id + ", " + AdderId + ", " + UserId);
             int Result = await _discussion.AddMemberAsync(Id, AdderId, UserId);
-            if (Result > 0) return Json(new { success = true, id = Result, alert = "User added to discussion" });
+            if (Result > 0)
+            {
+                int AdderAccessLevel = await _user.GetCurrentUserAccessLevelAsync(Id, AdderId);
+                return Json(new { success = true, id = Result, adderAccessLevel = AdderAccessLevel, alert = "User added to discussion" });
+            }
             else if (Result == 0) return Json(new { success = false, error = Result, alert = "An unexpected error occured. Please, try again later" });
             else if (Result == -128) return Json(new { success = false, error = Result, alert = "You can't add yourself to a discussion" });
-            else return Json(new { success = false, error = Result, alert = "This user already is in this discussion" });
+            else return Json(new { success = false, error = Result, alert = "This user's already in discussion" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Join(int Id)
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                if(Request.Cookies.ContainsKey("CurrentUserId"))
+                {
+                    string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                    bool TryToParse = Int32.TryParse(CurrentUserId_Str, out int UserId);
+                    if (TryToParse)
+                    {
+                        int Result = await _discussion.JoinAsync(Id, UserId);
+                        if (Result > 0) return Json(new { success = true, alert = "You've been successfully joined to the discussion" });
+                        else return Json(new { success = false, alert = "We're sorry, but you cannot join to this discussion" });
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "Unable to join to this discussion. Please, try again later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Leave(int Id)
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                if (Request.Cookies.ContainsKey("CurrentUserId"))
+                {
+                    string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                    bool TryToParse = Int32.TryParse(CurrentUserId_Str, out int UserId);
+                    if (TryToParse)
+                    {
+                        int Result = await _discussion.LeaveAsync(Id, UserId);
+                        if (Result > 0) return Json(new { success = true, alert = "You've been successfully quitted this discussion" });
+                        else return Json(new { success = false, alert = "We're sorry, but you cannot quit this discussion now. Please, try to quit it again a bit later" });
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "Unable to quit you from this discussion. Please, try again later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BlockUser(int Id, int UserId)
+        {
+            if (Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                if (!String.IsNullOrWhiteSpace(CurrentUserId_Str))
+                {
+                    bool TryToParse = Int32.TryParse(CurrentUserId_Str, out int BlockerId);
+                    if (TryToParse)
+                    {
+                        int Result = await _discussion.BlockUserAsync(Id, BlockerId, UserId);
+                        if (Result > 0) return Json(new { success = true, alert = "User has been blocked successfully", result = UserId });
+                        else return Json(new { success = false, alert = "You've no access to block that user" });
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "We're sorry, but an unexpected error occured so you cannot block that user now. Please, try again later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UnblockUser(int Id, int UserId)
+        {
+            if (Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                if (!String.IsNullOrWhiteSpace(CurrentUserId_Str))
+                {
+                    bool TryToParse = Int32.TryParse(CurrentUserId_Str, out int BlockerId);
+                    if (TryToParse)
+                    {
+                        int Result = await _discussion.UnblockUserAsync(Id, BlockerId, UserId);
+                        if (Result > 0) return Json(new { success = true, alert = "User has been unblocked successfully", result = UserId });
+                        else return Json(new { success = false, alert = "You've no access to unblock that user" });
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "We're sorry, but an unexpected error occured, so you cannot unblock that user now. Please, try to unblock later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteUser(int Id, int UserId)
+        {
+            if(Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                if(!String.IsNullOrWhiteSpace(CurrentUserId_Str))
+                {
+                    bool TryToParse = Int32.TryParse(CurrentUserId_Str, out int DeleterId);
+                    if (TryToParse)
+                    {
+                        int Result = await _discussion.DeleteUserAsync(Id, DeleterId, UserId);
+                        if (Result > 0) return Json(new { success = true, result = UserId });
+                        else return Json(new { success = false, alert = "You've no access to delete that user" });
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "We're sorry, but an unexpected error has occured. Please, try this action again a bit later" });
         }
 
         [HttpPost]
         public async Task<IActionResult> Mute(int Id, int UserId)
         {
             int Result = await _discussion.MuteAsync(Id, UserId);
-            if (Result > 0) return Json(new { success = true, alert = "Notifications from this discussion are muted" });
+            if (Result > 0) return Json(new { success = true, result = Result, alert = "Notifications from this discussion are muted" });
             else return Json(new { success = false, alert = "Sorry, but an unexpected error occured. Please, try to mute this discussion later" });
         }
 
@@ -171,8 +307,24 @@ namespace AppY.Controllers
         public async Task<IActionResult> Unmute(int Id, int UserId)
         {
             int Result = await _discussion.UnmuteAsync(Id, UserId);
-            if (Result > 0) return Json(new { success = true, alert = "Notifications from this discussion are unmuted" });
+            if (Result > 0) return Json(new { success = true, result = Result, alert = "Notifications from this discussion are unmuted" });
             else return Json(new { success = false, alert = "Sorry, but an unexpected error occured. Please, try to unmute this discussion later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Pin(int Id, int UserId)
+        {
+            int Result = await _discussion.PinAsync(Id, UserId);
+            if (Result > 0) return Json(new { success = true, result = Result, alert = "Discussion has been pinned" });
+            else return Json(new { success = false, alert = "Unable to pin that discussion" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Unpin(int Id, int UserId)
+        {
+            int Result = await _discussion.UnpinAsync(Id, UserId);
+            if (Result > 0) return Json(new { success = true, result = Result, alert = "Discussion has been unpinned" });
+            else return Json(new { success = false, alert = "Unable to unpin that discussion. Please, try again later" });
         }
 
         [HttpPost]
@@ -189,6 +341,18 @@ namespace AppY.Controllers
             int Result = await _discussion.RestoreDiscussionAsync(Id, UserId);
             if (Result > 0) return Json(new { success = true, id = Id, alert = "You've successfully restored the discussion" });
             else return Json(new { success = false, alert = "We're sorry, but you cannot restore this discussion" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Find(string? Keyword)
+        {
+            IQueryable<DiscussionShortInfo>? Result_Preview = _discussion.Find(Keyword); 
+            if(Result_Preview != null)
+            {
+                List<DiscussionShortInfo>? Result = await Result_Preview.ToListAsync();
+                if (Result != null) return Json(new { success = true, result = Result, count = Result.Count });
+            }
+            return Json(new { success = false, count = 0, alert = "We're sorry, but we haven't found any discussion" });
         }
     }
 }

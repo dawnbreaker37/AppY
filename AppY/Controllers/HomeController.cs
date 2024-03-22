@@ -52,6 +52,32 @@ namespace AppY.Controllers
             return View();
         }
 
+        public async Task<IActionResult> Create()
+        {
+            if(User.Identity.IsAuthenticated)
+            {
+                if(Request.Cookies.ContainsKey("CurrentUserId"))
+                {
+                    string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                    if(!String.IsNullOrWhiteSpace(CurrentUserId_Str))
+                    {
+                        bool TryToParse = Int32.TryParse(CurrentUserId_Str, out int UserId);
+                        if(TryToParse)
+                        {
+                            User? UserInfo = await _user.GetMainUserInfoAsync(UserId);
+                            if(UserInfo != null)
+                            {
+                                ViewBag.UserInfo = UserInfo;
+
+                                return View();
+                            }
+                        }
+                    }
+                }
+            }
+            return RedirectToAction("Index", "Home");
+        }
+
         public IActionResult Toolbox()
         {
             return View();

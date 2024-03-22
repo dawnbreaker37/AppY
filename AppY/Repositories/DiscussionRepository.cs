@@ -11,10 +11,12 @@ namespace AppY.Repositories
     {
         private readonly Context _context;
         private readonly INotification _notification;
-        public DiscussionRepository(Context context, INotification notification) : base(context)
+        private readonly IUser _user;
+        public DiscussionRepository(Context context, INotification notification, IUser user) : base(context)
         {
             _context = context;
             _notification = notification;
+            _user = user;
         }
 
         public async Task<int> CreateDiscussionAsync(Discussion_ViewModel Model)
@@ -45,6 +47,7 @@ namespace AppY.Repositories
                     DiscussionId = discussion.Id,
                     UserId = Model.UserId,
                     JoinedAt = DateTime.Now,
+                    AccessLevel = 2,
                     IsDeleted = false
                 };
 
@@ -132,7 +135,13 @@ namespace AppY.Repositories
 
         public IQueryable<DiscussionUsers>? GetMembersInfo(int Id)
         {
-            if (Id != 0) return _context.DiscussionUsers.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).Select(d => new DiscussionUsers { JoinedAt = d.JoinedAt, UserId = d.UserId, UserName = d.User!.PseudoName }).OrderByDescending(d => d.JoinedAt);
+            if (Id != 0) return _context.DiscussionUsers.AsNoTracking().Where(d => d.DiscussionId == Id && (!d.IsDeleted || d.IsDeleted && d.IsBlocked)).Select(d => new DiscussionUsers { JoinedAt = d.JoinedAt, UserId = d.UserId, UserName = d.User!.PseudoName, AccessLevel = d.AccessLevel, IsBlocked = d.IsBlocked }).OrderByDescending(d => d.JoinedAt).OrderBy(d => d.IsBlocked);
+            else return null;
+        }
+        //Edit//
+        public IQueryable<DiscussionShortInfo?>? GetUserMessagesSortedByDiscussions(int Id)
+        {
+            if (Id != 0) return _context.DiscussionUsers.AsNoTracking().Where(d => d.UserId == Id && !d.IsDeleted).Select(d => d.Discussion != null ? new DiscussionShortInfo { DiscussionId = d.DiscussionId, DiscussionName = d.Discussion != null ? d.Discussion!.Name : null, LastMessageText = d.Discussion!.DiscussionMessages != null ? d.Discussion.DiscussionMessages.OrderByDescending(d => d.SentAt).FirstOrDefault().Text : null } : null);
             else return null;
         }
 
@@ -216,6 +225,7 @@ namespace AppY.Repositories
                             DiscussionId = Id,
                             UserId = UserId,
                             IsDeleted = false,
+                            AccessLevel = 0,
                             JoinedAt = DateTime.Now
                         };
                         await _context.AddAsync(discussionUsers);
@@ -226,6 +236,172 @@ namespace AppY.Repositories
                 }
             }
             else return -128;
+            return 0;
+        }
+
+        public async Task<int> JoinAsync(int Id, int UserId)
+        {
+            if(Id != 0 && UserId != 0)
+            {
+                DiscussionUsers? HasThisUserAnAccount = await _context.DiscussionUsers.FirstOrDefaultAsync(d => d.UserId == UserId && d.DiscussionId == Id);
+                if(HasThisUserAnAccount is not null)
+                {
+                    HasThisUserAnAccount.IsDeleted = false;
+                    await _context.SaveChangesAsync();
+
+                    return Id;
+                }
+                else
+                {
+                    DiscussionUsers discussionUsers = new DiscussionUsers
+                    {
+                        DiscussionId = Id,
+                        UserId = UserId,
+                        IsDeleted = false,
+                        AccessLevel = 0,
+                        JoinedAt = DateTime.Now
+                    };
+                    await _context.AddAsync(discussionUsers);
+                    await _context.SaveChangesAsync();
+
+                    return Id;
+                }
+            }
+            return 0;
+        }
+
+        public async Task<int> LeaveAsync(int Id, int UserId)
+        {
+            if(Id != 0 && UserId != 0)
+            {
+                int Result = await _context.DiscussionUsers.AsNoTracking().Where(d => d.DiscussionId == Id && d.UserId == UserId && !d.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true));
+                if (Result > 0) return Id;
+            }
+            return 0;
+        }
+
+        public async Task<int> DeleteUserAsync(int Id, int DeleterId, int UserId)
+        {
+            if(Id != 0 && DeleterId != 0 && UserId != 0)
+            {
+                bool IsTheDeleterInTheDiscussion = await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.UserId == DeleterId && d.DiscussionId == Id && !d.IsDeleted);
+                if(IsTheDeleterInTheDiscussion)
+                {
+                    bool IsTheUserInTheDiscussion = await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.UserId == UserId && d.DiscussionId == Id && !d.IsDeleted);
+                    if(IsTheUserInTheDiscussion)
+                    {
+                        int DeleterAccessLevel = await _user.GetCurrentUserAccessLevelAsync(Id, DeleterId);
+                        int UserAccessLevel = await _user.GetCurrentUserAccessLevelAsync(Id, UserId);
+                        if(DeleterAccessLevel > UserAccessLevel)
+                        {
+                            int Result = await _context.DiscussionUsers.Where(d => d.UserId == UserId && d.DiscussionId == Id).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true));
+                            if (Result > 0) return UserId;
+                        }
+                    }
+                }
+            }
+            return 0;
+        }
+
+        public IQueryable<DiscussionShortInfo>? Find(string? Keyword)
+        {
+            if (!String.IsNullOrWhiteSpace(Keyword))
+            {
+                return _context.Discussions.AsNoTracking().Where(d => !d.IsDeleted && !d.IsPrivate && d.Name.ToLower().Contains(Keyword.ToLower())).Select(d => new DiscussionShortInfo { Id = d.Id, DiscussionName = d.Name, CreatedAt = d.CreatedAt }).OrderByDescending(d => d.CreatedAt).Take(125);
+            }
+            else return null;
+        }
+
+        public async Task<Discussion?> GetDiscussionShortInfoAsync(int Id, int UserId)
+        {
+            if (Id != 0)
+            {
+                return await _context.Discussions.AsNoTracking().Select(d => new Discussion { Id = d.Id, Name = d.Name, Description = d.Description, IsPrivate = d.IsPrivate, IsDeleted = d.IsDeleted, Shortlink = d.Shortlink }).FirstOrDefaultAsync(d => d.Id == Id && !d.IsDeleted);
+            }
+            else return null;
+        }
+
+        public async Task<bool> HasThisUserAccessToThisDiscussionAsync(int UserId, int DiscussionId)
+        {
+            if (UserId != 0 && DiscussionId != 0) return await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.UserId == UserId && d.DiscussionId == DiscussionId && !d.IsDeleted);
+            else return false;
+        }
+
+        public async Task<int> PinAsync(int Id, int UserId)
+        {
+            if (Id != 0 && UserId != 0)
+            {
+                int Result = await _context.DiscussionUsers.AsNoTracking().Where(d => d.UserId == UserId && d.DiscussionId == Id && !d.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsPinned, true));
+                if (Result > 0) return Id;
+            }
+            return 0;
+        }
+
+        public async Task<int> UnpinAsync(int Id, int UserId)
+        {
+            if (Id != 0 && UserId != 0)
+            {
+                int Result = await _context.DiscussionUsers.AsNoTracking().Where(d => d.UserId == UserId && d.DiscussionId == Id && !d.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsPinned, false));
+                if (Result > 0) return Id;
+            }
+            return 0;
+        }
+
+        public async Task<int> ChangeAccessLevel(int Id, int ChangerId, int UserId, int AccessLevel)
+        {
+            //* each member can change the access level of a lower member
+            //0 - standard user
+            //1 - admin
+            //2 - owner, so he/she may do everything (delete the discussion or other members also)
+            if(Id != 0 && UserId != 0 && ChangerId != 0 && AccessLevel >= 0 && AccessLevel < 2)
+            {
+                int ChangerInformation = await _context.DiscussionUsers.AsNoTracking().Where(d => d.DiscussionId == Id && d.UserId == ChangerId && !d.IsDeleted).Select(d => d.AccessLevel).FirstOrDefaultAsync();
+                DiscussionUsers? UserInformation = await _context.DiscussionUsers.FirstOrDefaultAsync(d => d.DiscussionId == Id && d.UserId == UserId && !d.IsDeleted);
+                if((UserInformation != null) && (UserInformation.AccessLevel < ChangerInformation) && (AccessLevel <= ChangerInformation))
+                {
+                    UserInformation.AccessLevel = AccessLevel;
+                    await _context.SaveChangesAsync();
+
+                    return AccessLevel;
+                }
+            }
+            return -1;
+        }
+
+        public async Task<int> BlockUserAsync(int Id, int BlockerId, int UserId)
+        {
+            if (Id != 0 && BlockerId != 0 && UserId != 0)
+            {
+                bool IsTheBlockerFromTheDiscussion = await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.UserId == BlockerId && d.DiscussionId == Id && !d.IsDeleted);
+                if (IsTheBlockerFromTheDiscussion)
+                {
+                    int BlockerAccessLevel = await _user.GetCurrentUserAccessLevelAsync(Id, BlockerId);
+                    int UserAccessLevel = await _user.GetCurrentUserAccessLevelAsync(Id, UserId);
+                    if (BlockerAccessLevel > UserAccessLevel)
+                    {
+                        int Result = await _context.DiscussionUsers.AsNoTracking().Where(d => d.UserId == UserId && d.DiscussionId == Id).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsBlocked, true).SetProperty(d => d.IsDeleted, true));
+                        if (Result > 0) return UserId;
+                    }
+                }
+            }
+            return 0;
+        }
+
+        public async Task<int> UnblockUserAsync(int Id, int UnblockerId, int UserId)
+        {
+            if(Id != 0 && UnblockerId != 0 && UserId != 0)
+            {
+                bool IsUnblockerInTheDiscussion = await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.DiscussionId == Id && d.UserId == UnblockerId && !d.IsDeleted);
+                if(IsUnblockerInTheDiscussion)
+                {
+                    int UnblockerAccessLevel = await _user.GetCurrentUserAccessLevelAsync(Id, UnblockerId);
+                    if(UnblockerAccessLevel > 0)
+                    {
+                        int Result = await _context.DiscussionUsers.AsNoTracking().Where(d => d.DiscussionId == Id && d.UserId == UserId).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsBlocked, false));
+                        if (Result > 0) return UserId;
+                    }
+                }
+            }
             return 0;
         }
     }

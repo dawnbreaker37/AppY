@@ -5,9 +5,11 @@
     User? UserInfo = ViewBag.UserInfo;
     User? CreatorInfo = ViewBag.CreatorInfo;
     Discussion? DiscussionInfo = ViewBag.Discussion;
+    List<IGrouping<DateTime, DiscussionMessage>>? Messages = ViewBag.Messages;
     string? DiscussionAvatar = ViewBag.DiscussionAvatar;
     int MessagesCount = ViewBag.MessagesCount;
     bool IsMuted = ViewBag.IsThisDiscussionMuted;
+    bool AccessValue = ViewBag.AccessValue;
 }
 
 <div class="main-sidebar" id="Main_SideBar">
@@ -29,6 +31,18 @@
         <form method="post" asp-controller="DiscussionMessage" asp-action="Delete" id="DeleteDiscussionMessage_Form">
             <input type="hidden" name="Id" id="DDM_Id_Val" value="0" />
             <input type="hidden" name="DiscussionId" value="@DiscussionInfo.Id" />
+        </form>
+        <form method="post" asp-controller="Discussion" asp-action="BlockUser" id="BlockTheUserOutFromTheDiscussion_Form">
+            <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+            <input type="hidden" name="UserId" id="BU_UserId_Val" value="0" />
+        </form>
+        <form method="post" asp-controller="Discussion" asp-action="UnblockUser" id="UnblockTheUserOutFromTheDiscussion_Form">
+            <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+            <input type="hidden" name="UserId" id="UBU_UserId_Val" value="0" />
+        </form>
+        <form method="post" asp-controller="Discussion" asp-action="DeleteUser" id="DeleteUserFromDiscussion_Form">
+            <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+            <input type="hidden" name="UserId" id="DUFD_Id_Val" value="0" />
         </form>
     </div>
 
@@ -155,13 +169,16 @@
     <div class="box-container p-2" style="display: none; margin-left: -1200px;" id="Preloaded_Container_ShowBox">
         <div class="box-container text-center">
             <button type="button" class="btn btn-light btn-standard-asset btn-sm float-start me-1 discussion-header-return" id="Preloaded_Container_ShowBox-Return">Back</button>
-            @if (ViewBag.MembersCount < 1200)
+            @if(AccessValue) 
             {
-                <button type="button" class="btn btn-light btn-standard-asset btn-sm float-end ms-1 btn-slide-to-right" id="AddMember_Container-Open"> <i class="fa-solid fa-user-plus"></i> Add Member</button>
-            }
-            else
-            {
-                <button type="button" class="btn btn-light btn-standard-asset btn-sm float-end ms-1" id="AddMember_Container-Open" style="display: none;" disabled> <i class="fa-solid fa-user-plus"></i> Add Member</button>
+                if (ViewBag.MembersCount < 1200)
+                {
+                    <button type="button" class="btn btn-light btn-standard-asset btn-sm float-end ms-1 btn-slide-to-right" id="AddMember_Container-Open"> <i class="fa-solid fa-user-plus"></i> Add Member</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-light btn-standard-asset btn-sm float-end ms-1" id="AddMember_Container-Open" style="display: none;" disabled> <i class="fa-solid fa-user-plus"></i> Add Member</button>
+                }
             }
             @if (DiscussionInfo.AvatarUrl == null)
             {
@@ -178,68 +195,89 @@
             <div></div>
             <small class="card-text text-muted" id="DiscussionShortlink_Lbl">@@@DiscussionInfo.Shortlink</small>
         </div>
-        <div class="box-container mt-3">
-            <div class="row">
-                <div class="col">
-                    <div>
-                        <form method="get" asp-controller="Discussion" asp-action="GetMembersInfo" id="GetMembersInfo_Form">
-                            <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
-                            <button type="submit" class="btn btn-standard-asset btn-light w-100" id="GetMembersInfo_SbmtBtn"> <i class="fa-solid fa-users"></i> <br />Members</button>
-                        </form>
+        @if (AccessValue)
+        {
+            <div class="box-container mt-3">
+                <div class="row">
+                    <div class="col">
+                        <div>
+                            <form method="get" asp-controller="Discussion" asp-action="GetMembersInfo" id="GetMembersInfo_Form">
+                                <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                                <button type="submit" class="btn btn-standard-asset btn-light w-100" id="GetMembersInfo_SbmtBtn"> <i class="fa-solid fa-users"></i> <br />Members</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col">
+                        @if (IsMuted)
+                        {
+                            <div id="UnmuteTheDiscussion_Box">
+                                <form method="post" asp-controller="Discussion" asp-action="Unmute" id="UnmuteTheDiscussion_Form">
+                                    <div class="d-none">
+                                        <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                                        <input type="hidden" name="UserId" value="@UserInfo.Id" />
+                                    </div>
+                                    <button type="submit" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell" style="--fa-animation-duration: 2.3s;"></i> <br />Unmute</button>
+                                </form>
+                            </div>
+                            <div id="MuteTheDiscussion_Box" style="display: none;">
+                                <form method="post" asp-controller="Discussion" asp-action="Mute" id="MuteTheDiscussion_Form">
+                                    <div class="d-none">
+                                        <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                                        <input type="hidden" name="UserId" value="@UserInfo.Id" />
+                                    </div>
+                                    <button type="submit" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell-slash"></i> <br />Mute</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <div id="UnmuteTheDiscussion_Box" style="display: none;">
+                                <form method="post" asp-controller="Discussion" asp-action="Unmute" id="UnmuteTheDiscussion_Form">
+                                    <div class="d-none">
+                                        <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                                        <input type="hidden" name="UserId" value="@UserInfo.Id" />
+                                    </div>
+                                    <button type="submit" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell" style="--fa-animation-duration: 2.3s;"></i> <br />Unmute</button>
+                                </form>
+                            </div>
+                            <div id="MuteTheDiscussion_Box">
+                                <form method="post" asp-controller="Discussion" asp-action="Mute" id="MuteTheDiscussion_Form">
+                                    <div class="d-none">
+                                        <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                                        <input type="hidden" name="UserId" value="@UserInfo.Id" />
+                                    </div>
+                                    <button type="submit" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell-slash"></i> <br />Mute</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard-asset btn-light w-100" data-bs-toggle="collapse" data-bs-target="#EditDiscussionInfo_Box" aria-expanded="false" aria-controls="EditDiscussionInfo_Box"> <i class="fa-regular fa-pen-to-square"></i> <br />Edit</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard-asset btn-light w-100 btn-slide-to-right" id="DiscussionAdditionalInfo_Container-Open"> <i class="fa-solid fa-ellipsis"></i> <br />More</button>
                     </div>
                 </div>
-                <div class="col">
-                    @if(IsMuted)
-                    {
-                        <div id="UnmuteTheDiscussion_Box">
-                            <form method="post" asp-controller="Discussion" asp-action="Unmute" id="UnmuteTheDiscussion_Form">
-                                <div class="d-none">
-                                    <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
-                                    <input type="hidden" name="UserId" value="@UserInfo.Id" />
-                                </div>
-                                <button type="submit" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell" style="--fa-animation-duration: 2.3s;"></i> <br />Unmute</button>
+            </div>
+        }
+        else
+        {
+            <div class="box-container mt-3">
+                <div class="row">
+                    <div class="col">
+                        <div>
+                            <form method="post" asp-controller="Discussion" asp-action="Join" id="JoinToDiscussion_Form">
+                                <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                                <button type="submit" class="btn btn-standard-asset btn-light w-100" id="JoinToDiscussion_SbmtBtn"> <i class="fa-solid fa-arrow-right-to-bracket"></i> <br/>Join</button>
                             </form>
                         </div>
-                        <div id="MuteTheDiscussion_Box" style="display: none;">
-                            <form method="post" asp-controller="Discussion" asp-action="Mute" id="MuteTheDiscussion_Form">
-                                <div class="d-none">
-                                    <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
-                                    <input type="hidden" name="UserId" value="@UserInfo.Id" />
-                                </div>
-                                <button type="submit" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell-slash"></i> <br />Mute</button>
-                            </form>
-                        </div>
-                    }
-                    else
-                    {
-                        <div id="UnmuteTheDiscussion_Box" style="display: none;">
-                            <form method="post" asp-controller="Discussion" asp-action="Unmute" id="UnmuteTheDiscussion_Form">
-                                <div class="d-none">
-                                    <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
-                                    <input type="hidden" name="UserId" value="@UserInfo.Id" />
-                                </div>
-                                <button type="submit" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell" style="--fa-animation-duration: 2.3s;"></i> <br />Unmute</button>
-                            </form>
-                        </div>
-                        <div id="MuteTheDiscussion_Box">
-                            <form method="post" asp-controller="Discussion" asp-action="Mute" id="MuteTheDiscussion_Form">
-                                <div class="d-none">
-                                    <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
-                                    <input type="hidden" name="UserId" value="@UserInfo.Id" />
-                                </div>
-                                <button type="submit" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell-slash"></i> <br />Mute</button>
-                            </form>
-                        </div>
-                    }
-                </div>
-                <div class="col">
-                    <button type="button" class="btn btn-standard-asset btn-light w-100" data-bs-toggle="collapse" data-bs-target="#EditDiscussionInfo_Box" aria-expanded="false" aria-controls="EditDiscussionInfo_Box"> <i class="fa-regular fa-pen-to-square"></i> <br />Edit</button>
-                </div>
-                <div class="col">
-                    <button type="button" class="btn btn-standard-asset btn-light w-100 btn-slide-to-right" id="DiscussionAdditionalInfo_Container-Open"> <i class="fa-solid fa-ellipsis"></i> <br />More</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard-asset btn-light w-100 btn-slide-to-right" id="DiscussionAdditionalInfo_Container-Open"> <i class="fa-solid fa-ellipsis"></i> <br />More</button>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
         <div class="box-container mt-2">
             <div class="bordered-container p-2">
                 <small class="card-text text-muted fw-500">Description</small>
@@ -294,6 +332,14 @@
         </div>
         <div class="bordered-container p-2 mt-2" style="display: none; margin-left: -1200px;" id="MembersInfoMain_Container">
             <h6 class="h6" id="MembersCount_Lbl"></h6>
+            <div class="d-none">
+                <form method="post" asp-controller="Discussion" asp-action="ChangeAccessLevel" id="ChangeAccessLevel_Form">
+                    <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                    <input type="hidden" name="UserId" id="EAL_UserId_Val" value="0" />
+                    <input type="hidden" name="ChangerId" id="EAL_ChangerId_Val" value="0" />
+                    <input type="hidden" name="AccessLevel" id="EAL_AccessLevel_Val" value="0" />
+                </form>
+            </div>
             <div class="mt-1" id="MembersInfo_Container">
 
             </div>
@@ -309,14 +355,17 @@
                 <div class="border-top mt-2 p-2 pb-0">
                     <small class="card-text text-muted fw-500">Members Count</small>
                     <div></div>
-                    <small class="card-text" id="AdditionalInfo_DiscussionMembersCount_Lbl">@ViewBag.MembersCount/1200 members</small>
+                    <small class="card-text" id="AdditionalInfo_DiscussionMembersCount_Lbl">@ViewBag.MembersCount of 1200 members</small>
                 </div>
                 @if(DiscussionInfo.IsPrivate)
                 {
                     <div class="border-top mt-2 p-2 pb-0">
-                        <small class="card-text text-muted fw-500">Private Discussion: Passoword</small>
+                        <small class="card-text text-muted fw-500">Private Discussion: Password</small>
                         <div></div>
-                        <small class="card-text" id="AdditionalInfo_DiscussionPasswordInfo_Lbl">@DiscussionInfo.Password</small>
+                        <small class="card-text text-muted">Other members must enter this password to join to your discussion</small>
+                        <div class="mt-2">
+                            <small class="card-text" id="AdditionalInfo_DiscussionPasswordInfo_Lbl">@DiscussionInfo.Password</small>
+                        </div>
                     </div>
                 }
                 <div class="border-top mt-2 p-2 pb-0">
@@ -337,18 +386,30 @@
                                 <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
                                 <input type="hidden" name="UserId" value="@UserInfo.Id" />
                                 <input type="hidden" name="DiscussionName" value="@DiscussionInfo.Name" />
-                                <button type="submit" class="btn btn-danger btn-standard-asset btn-sm w-100"> <i class="fa-regular fa-square-minus"></i> Delete Discussion</button>
+                                <button type="submit" class="btn btn-danger btn-standard-asset btn-sm w-100" id="DeleteTheDiscussion_SbmtBtn"> <i class="fa-regular fa-square-minus"></i> Delete Discussion</button>
                             </form>
                         </div>
                     }
                     else
                     {
-                        <div class="box-container">
-                            <form method="post" asp-controller="Discussion" asp-action="Leave" id="LeaveTheDiscussion_Form">
-                                <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
-                                <button type="submit" class="btn btn-standard w-100 btn-sm"> <i class="fa-regular fa-square-minus"></i> Leave Discussion</button>
-                            </form>
-                        </div>
+                        @if (AccessValue)
+                        {
+                            <div class="box-container">
+                                <form method="post" asp-controller="Discussion" asp-action="Leave" id="LeaveTheDiscussion_Form">
+                                    <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                                    <button type="submit" class="btn btn-standard w-100 btn-sm" id="LeaveTheDiscussion_SbmtBtn"> <i class="fa-regular fa-square-minus"></i> Leave Discussion</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="box-container">
+                                <form method="post" asp-controller="Discussion" asp-action="Leave" id="LeaveTheDiscussion_Form">
+                                    <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                                    <button type="submit" class="btn btn-standard w-100 btn-sm" id="LeaveTheDiscussion_SbmtBtn" disabled> <i class="fa-regular fa-square-minus"></i> Leave Discussion</button>
+                                </form>
+                            </div>
+                        }
                     }
                 </div>
             </div>
@@ -399,7 +460,7 @@
             <small class="card-text text-muted ms-1" id="DiscussionStatusBar_Lbl"><span class="card-text text-muted" id="IsMutedHeader_Span" style="display: none;"></span><span class="status-slider" id="StatusBar_Lbl-0">@ViewBag.MembersCount.ToString("N0") member(s)</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">@MessagesCount messages</span></small>
         }
     </div>
-    <div class="box-container p-2 pt-1 mt-1 discussion-box" id="Prealoded_Container-Box">
+    <div class="box-container p-2 pt-1 mt-1 discussion-box" id="Preloaded_Container-Box">
         <div class="box-container" id="Messages_Container_Box">
             <div class="box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto" style="display: none;" id="NoSentMessages_Box">
                 <h1 class="h1"> <i class="fa-regular fa-comment-dots"></i> </h1>
@@ -419,65 +480,59 @@
             }
             else
             {
-                @foreach(DiscussionMessage message in ViewBag.Messages)
-                {
-                    if(message.UserId == UserInfo.Id)
+                <div>
+                    @foreach (var Key in Messages)
                     {
-                        <div class="current-user-message-main-box discussion-options p-2" id="@message.Id-DiscussionMsgBox">
-                            <div class="cur-user-msg-box p-2 mt-1 discussion-options" id="@message.Id-DiscussionNotMainMsgBox">
-                                <p class="card-text white-space-on discussion-options message-label" id="@message.Id-DiscussionOptionMsgText_Lbl">@message.Text</p>
-                            </div>
+                        <div class="grouping-box mx-auto text-center">
+                            <small class="card-text text-muted">@Key.Key.ToString("d/MM, dddd")</small>
                         </div>
-                        <div class="cur-user-msg-stats-box discussion-options" id="@message.Id-DiscussionMsgStatsBox">
-                            @if (message.IsChecked)
+                        @foreach(DiscussionMessage message in Key) 
+                        {
+                            @if (message.UserId == UserInfo.Id)
                             {
-                                <small class="card-text text-muted"> <span class="text-primary"><i class="fa-solid fa-check-double"></i></span> @message.SentAt.ToShortTimeString()</small>
+                                <div class="message-box discussion-options" id="@message.Id-DiscussionMsgBox">
+                                    <div class="cur-user-msg-box discussion-options" id="@message.Id-DiscussionMsgNmBox">
+                                        <div class="cur-user-styled-msg-box p-2 discussion-options" id="@message.Id-DiscussionMsgStyledBox">
+                                            <p class="card-text white-space-on discussion-options" id="@message.Id-DiscussionOptionMsgText_Lbl">@message.Text</p>
+                                        </div>
+                                        <div class="discussion-options float-end me-1" id="@message.Id-DiscussionMsgStatsBox">
+                                            @if (message.IsChecked)
+                                            {
+                                                <small class="card-text text-primary"> <i class="fa-solid fa-check-double"></i> </small>
+                                            }
+                                            else
+                                            {
+                                                <small class="card-text text-muted discussion-options" id="@message.Id-DiscussionMsgDateNTimeInfo_Lbl"> <i class="fa-solid fa-check"></i> </small>
+                                            }
+                                            <small class="card-text text-muted">@message.SentAt.ToShortTimeString()</small>
+                                            @if(message.IsEdited)
+                                            {
+                                                <small class="card-text text-muted">edited</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
                             }
                             else
                             {
-                                <small class="card-text text-muted"> <span><i class="fa-solid fa-check"></i></span> @message.SentAt.ToShortTimeString()</small>
+                                <div class="message-box">
+                                    <div class="other-user-msg-box">
+                                        <div class="other-user-styled-msg-box p-2">
+                                            <p class="card-text white-space-on">@message.Text</p>
+                                        </div>
+                                        <div class="ms-1">
+                                            <small class="card-text text-muted">@message.SentAt.ToShortTimeString()</small>
+                                            @if (message.IsEdited)
+                                            {
+                                                <small class="card-text text-muted">edited</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
                             }
-                            @if(message.IsAutoDeletable)
-                            {
-                                <small class="card-text text-muted" id="@message.Id-DiscussionMessage_IsEdited"> <i class="fa-solid fa-clock-rotate-left"></i> </small>
-                            }
-                            @if (message.IsEdited)
-                            {
-                                <small class="card-text text-muted" id="@message.Id-DiscussionMessage_IsEdited">edited</small>
-                            }
-                            else
-                            {
-                                <small class="card-text text-muted" style="display: none;" id="@message.Id-DiscussionMessage_IsEdited">edited</small>
-                            }
-                        </div>
+                        }
                     }
-                    else
-                    {
-                        <div class="other-user-main-message-box p-2 mark-as-read-discussion-message" id="@message.Id-OtherUserDiscussionMsgOption">
-                            <div class="ms-1">
-                                <small class="card-text text-muted">@message.UserPseudoname</small>
-                            </div>
-                            <div class="other-user-msg-box p-2 mt-1">
-                                <p class="card-text white-space-on message-label" id="@message.Id-DiscussionOptionMsgText_Lbl">@message.Text</p>
-                            </div>
-                        </div>
-                        <div class="other-user-msg-stats-box">
-                            <small class="card-text text-muted">@message.SentAt.ToShortTimeString()</small>
-                            @if (message.IsAutoDeletable)
-                            {
-                                <small class="card-text text-muted" id="@message.Id-DiscussionMessage_IsEdited"> <i class="fa-solid fa-clock-rotate-left"></i> </small>
-                            }
-                            @if (message.IsEdited)
-                            {
-                                <small class="card-text text-muted" id="@message.Id-DiscussionMessage_IsEdited">edited</small>
-                            }
-                            else
-                            {
-                                <small class="card-text text-muted" style="display: none;" id="@message.Id-DiscussionMessage_IsEdited">edited</small>
-                            }
-                        </div>
-                    }
-                }
+                </div>
             }
 
             <div class="messages-container bordered-container overflow-hidden p-2" style="display: none; margin-bottom: -1200px; background-color: transparent;" id="EditDiscussionMessage_Box">
@@ -501,7 +556,7 @@
                                 </div>
                                 <div class="box-container mt-1">
                                     <button type="submit" class="btn btn-standard-asset btn-light text-primary btn-sm me-1"> <i class="fa-solid fa-check-double"></i> Save Edit</button>
-                                    <button type="submit" class="btn btn-standard-asset btn-light text-primary btn-sm"> <i class="fa-solid fa-text-width"></i> Text Editor</button>
+                                    <button type="button" class="btn btn-standard-asset btn-light text-primary btn-sm"> <i class="fa-solid fa-text-width"></i> Text Editor</button>
                                 </div>
                             </form>
                         </div>
@@ -538,43 +593,154 @@
                 </div>
             </div>
 
-            <div class="messages-container send-message-container overflow-hidden ps-1 pe-1" id="SendMessage_Box">
-                <div class="collapse" id="TextEditor_Collapse">
-                    <div class="box-container p-2 w-100">
-                        <div class="box-container bg-light d-inline-block w-100">
-                            <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="0-TextEditorStyle" data-bs-paste-to="SendDiscussionMessage_Text_Val"> <i class="fa-solid fa-bold"></i> </button>
-                            <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="1-TextEditorStyle" data-bs-paste-to="SendDiscussionMessage_Text_Val"> <i class="fa-solid fa-italic" id="1-TextEditorStyle"></i> </button>
-                            <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="2-TextEditorStyle" data-bs-paste-to="SendDiscussionMessage_Text_Val"> <i class="fa-solid fa-underline" id="2-TextEditorStyle"></i> </button>
-                            <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="3-TextEditorStyle" data-bs-paste-to="SendDiscussionMessage_Text_Val"> <i class="fa-solid fa-font" id="3-TextEditorStyle"></i> </button>
-                            <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="4-SetStyle"> <i class="fa-solid fa-palette"></i> </button>
-                            <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="5-SetStyle"> <i class="fa-solid fa-link"></i> </button>
-                            <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="6-SetStyle"> <i class="fa-regular fa-message"></i> </button>
-                            <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="7-SetStyle"> <i class="fa-regular fa-note-sticky"></i> </button>
-                            <button type="button" class="btn btn-sm btn-standard me-1 mt-1"> <i class="fa-regular fa-copy"></i> </button>
+            <div class="messages-container bordered-container overflow-hidden p-2 shadow-sm" style="display: none; margin-bottom: -1200px; background-color: transparent;" id="CommandLine_Box">
+                <div class="box-container">
+                    <div class="d-none">
+                        <form method="get" asp-controller="Command" asp-action="GetDiscussionCommands" id="GetDiscussionCommands_Form">
+                            <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                        </form>
+                    </div>
+                    <button type="button" class="btn btn-close-inside-box shadow-none btn-standard btn-sm float-end ms-1" id="CommandLine_Box-Close" aria-label="close">Close</button>
+                    <span class="h5 text-truncate">Command Line</span>
+                    <div></div>
+                    <small class="card-text text-muted" id="CurrentCommand_Lbl">/current_command</small>
+                    <div class="bordered-container p-2 mt-2" style="display: none;" id="CreateCommand_Box">
+                        <h6 class="h6">Create a Command</h6>
+                        <div class="border-top pt-1 mt-2"></div>
+                        <div class="box-container">
+                            <form method="post" asp-controller="Command" asp-action="CreateDiscussionCommand" id="CreateDiscussionCommand_Form">
+                                <div class="d-none">
+                                    <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                                </div>
+                                <div>
+                                    <label class="form-label fw-500 info-popover ms-1" style="border-bottom: 2px solid orange;" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="right" data-bs-custom-class="tooltip-asset-one shadow-sm" data-bs-content="Enter a callname for your command (up to 40 chars). Notice, that your command cannot be one of these: /info, /get, /get_commands, /create, /edit or /edit_@@command_callName. Enter command name without slash and any other symbol (but you may still use the underscore in your command's name)">Callname</label>
+                                    <input type="text" class="form-control strong-input" id="CDC_Command" name="Command" placeholder="Enter command's callname" maxlength="40" />
+                                </div>
+                                <div class="mt-3">
+                                    <label class="form-label fw-500 info-popover ms-1">Description</label>
+                                    <textarea class="form-control" rows="3" id="CDC_Description" name="Description" placeholder="Enter command's description" maxlength="240"></textarea>
+                                </div>
+                                <div class="ms-1">
+                                    <small class="card-text text-muted">Min. length: <span class="fw-500">4</span> chars, max length: <span class="fw-500">240</span> chars</small>
+                                </div>
+                                <div class="mt-3">
+                                    <label class="form-label fw-500 info-popover ms-1" style="border-bottom: 2px solid orange;" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="right" data-bs-custom-class="tooltip-asset-one shadow-sm" data-bs-content="Enter your script by using our API. The documentation about it is at our toolbox page">Script</label>
+                                    <textarea class="form-control" rows="4" id="CDC_Code" name="Code" placeholder="Enter command's script" maxlength="4000"></textarea>
+                                </div>
+                                <div class="mt-2">
+                                    <button type="submit" class="btn btn-standard-asset btn-primary btn-sm w-100">Add Command</button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="mt-2">
-                            <button type="button" class="btn btn-standard btn-sm auto-delete-on" id="SendMessage_IsAutoDeletable-TurnOnOrOff"> <i class="fa-solid fa-clock-rotate-left"></i> Auto-Deletable Message</button>
-                            <div class="ms-1">
-                                <small class="card-text text-muted">Message will be deleted immediately after marking as read</small>
+                    </div>
+
+                    <div class="bordered-container p-2 mt-2" style="display: none;" id="CommandsInfo_Box">
+                        <h6 class="h6">Main Commands</h6>
+                        <div class="border-top pt-1 mt-2"></div>
+                        <div class="box-container">
+                            <div>
+                                <small class="card-text text-muted"><span class="fw-500">/info</span> - opens command line box with the brief commands infotable</small>
+                            </div>
+                            <div>
+                                <small class="card-text text-muted"><span class="fw-500">/create</span>, <span class="fw-500">/create_command</span> - opens command line box with prepared tools to create a new command</small>
+                            </div>
+                            <div>
+                                <small class="card-text text-muted"><span class="fw-500">/edit_@@command_name_without_slash</span> - opens command line box with selected command that's prepared to be edited. Command example: /edit_clearDiscussion</small>
+                            </div>
+                            <div>
+                                <small class="card-text text-muted"><span class="fw-500">/get</span>, <span class="fw-500">/get_commands</span> - gets all available commands for this current discussion or chat</small>
+                            </div>
+                        </div>
+                        <div class="box-container mt-2" style="display: none;" id="AdditionalCommands_Box">
+                            <h6 class="h6">Created Commands</h6>
+                            <div class="border-top mt-2 pt-1" id="CreatedAdditionalCommands_Box">
+
                             </div>
                         </div>
                     </div>
                 </div>
-                <div>
-                    <form method="post" asp-controller="DiscussionMessage" asp-action="SendMessage" id="SendDiscussionMessage_Form">
-                        <div class="d-none">
-                            <input type="hidden" name="DiscussionId" value="@DiscussionInfo.Id" />
-                            <input type="hidden" name="UserId" value="@UserInfo.Id" />
-                            <input type="hidden" id="SendMessage_IsAutoDeletable" name="IsAutoDeletable" value="false" />
-                        </div>
-                        <textarea name="Text" id="SendDiscussionMessage_Text_Val" class="message-form-control mt-2 overflow-hidden form-control-check-input" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendDiscussionMessage_SbmtBtn"></textarea>
-                        <div class="ms-1 float-end mt-2 me-2">
-                            <button type="button" class="btn btn-message-example btn-sm me-2 mt-2" data-bs-toggle="collapse" data-bs-target="#TextEditor_Collapse" aria-expanded="false" aria-controls="TextEditor_Collapse"> <i class="fa-solid fa-plus"></i> </button>
-                            <button type="submit" class="btn btn-message-example btn-sm bg-primary text-light mt-2" id="SendDiscussionMessage_SbmtBtn" disabled>Send</button>
-                        </div>
-                    </form>
-                </div>
             </div>
+
+            @if (AccessValue)
+            {
+                <div class="messages-container send-message-container overflow-hidden ps-1 pe-1" id="SendMessage_Box">
+                    <div class="collapse" id="TextEditor_Collapse">
+                        <div class="box-container p-2 w-100">
+                            <div class="box-container bg-light d-inline-block w-100">
+                                <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="0-TextEditorStyle" data-bs-paste-to="SendDiscussionMessage_Text_Val"> <i class="fa-solid fa-bold"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="1-TextEditorStyle" data-bs-paste-to="SendDiscussionMessage_Text_Val"> <i class="fa-solid fa-italic" id="1-TextEditorStyle"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="2-TextEditorStyle" data-bs-paste-to="SendDiscussionMessage_Text_Val"> <i class="fa-solid fa-underline" id="2-TextEditorStyle"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="3-TextEditorStyle" data-bs-paste-to="SendDiscussionMessage_Text_Val"> <i class="fa-solid fa-font" id="3-TextEditorStyle"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="4-SetStyle"> <i class="fa-solid fa-palette"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="5-SetStyle"> <i class="fa-solid fa-link"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="6-SetStyle"> <i class="fa-regular fa-message"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="7-SetStyle"> <i class="fa-regular fa-note-sticky"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard me-1 mt-1"> <i class="fa-regular fa-copy"></i> </button>
+                            </div>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-standard btn-sm auto-delete-on" id="SendMessage_IsAutoDeletable-TurnOnOrOff"> <i class="fa-solid fa-clock-rotate-left"></i> Auto-Deletable Message</button>
+                                <div class="ms-1">
+                                    <small class="card-text text-muted">Message will be deleted immediately after marking as read</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <form method="post" asp-controller="DiscussionMessage" asp-action="SendMessage" id="SendDiscussionMessage_Form">
+                            <div class="d-none">
+                                <input type="hidden" name="DiscussionId" value="@DiscussionInfo.Id" />
+                                <input type="hidden" name="UserId" value="@UserInfo.Id" />
+                                <input type="hidden" id="SendMessage_IsAutoDeletable" name="IsAutoDeletable" value="false" />
+                            </div>
+                            <textarea name="Text" id="SendDiscussionMessage_Text_Val" class="message-form-control mt-2 send-message-form-control overflow-hidden form-control-check-input" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendDiscussionMessage_SbmtBtn"></textarea>
+                            <div class="ms-1 float-end mt-2 me-2">
+                                <button type="button" class="btn btn-message-example btn-sm me-2 mt-2 open-animated-collapse shadow-none" data-bs-toggle="collapse" data-bs-target="#TextEditor_Collapse" aria-expanded="false" aria-controls="TextEditor_Collapse"> <i class="fa-solid fa-plus"></i> </button>
+                                <button type="submit" class="btn btn-message-example btn-sm bg-primary text-light mt-2 shadow-none" id="SendDiscussionMessage_SbmtBtn" disabled>Send</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>                
+            }
+            else
+            {
+                <div class="messages-container send-message-container overflow-hidden ps-1 pe-1" style="bottom: -1200px; display: none;" id="SendMessage_Box">
+                    <div class="collapse" id="TextEditor_Collapse">
+                        <div class="box-container p-2 w-100">
+                            <div class="box-container bg-light d-inline-block w-100">
+                                <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="0-TextEditorStyle" data-bs-paste-to="SendDiscussionMessage_Text_Val"> <i class="fa-solid fa-bold"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="1-TextEditorStyle" data-bs-paste-to="SendDiscussionMessage_Text_Val"> <i class="fa-solid fa-italic" id="1-TextEditorStyle"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="2-TextEditorStyle" data-bs-paste-to="SendDiscussionMessage_Text_Val"> <i class="fa-solid fa-underline" id="2-TextEditorStyle"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1" id="3-TextEditorStyle" data-bs-paste-to="SendDiscussionMessage_Text_Val"> <i class="fa-solid fa-font" id="3-TextEditorStyle"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="4-SetStyle"> <i class="fa-solid fa-palette"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="5-SetStyle"> <i class="fa-solid fa-link"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="6-SetStyle"> <i class="fa-regular fa-message"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="7-SetStyle"> <i class="fa-regular fa-note-sticky"></i> </button>
+                                <button type="button" class="btn btn-sm btn-standard me-1 mt-1"> <i class="fa-regular fa-copy"></i> </button>
+                            </div>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-standard btn-sm auto-delete-on" id="SendMessage_IsAutoDeletable-TurnOnOrOff"> <i class="fa-solid fa-clock-rotate-left"></i> Auto-Deletable Message</button>
+                                <div class="ms-1">
+                                    <small class="card-text text-muted">Message deletes immediately after being marked as read</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <form method="post" asp-controller="DiscussionMessage" asp-action="SendMessage" id="SendDiscussionMessage_Form">
+                            <div class="d-none">
+                                <input type="hidden" name="DiscussionId" value="@DiscussionInfo.Id" />
+                                <input type="hidden" name="UserId" value="@UserInfo.Id" />
+                                <input type="hidden" id="SendMessage_IsAutoDeletable" name="IsAutoDeletable" value="false" />
+                            </div>
+                            <textarea name="Text" id="SendDiscussionMessage_Text_Val" class="message-form-control mt-2 overflow-hidden form-control-check-input" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendDiscussionMessage_SbmtBtn" disabled readonly></textarea>
+                            <div class="ms-1 float-end mt-2 me-2">
+                                <button type="button" class="btn btn-message-example btn-sm me-2 mt-2" data-bs-toggle="collapse" data-bs-target="#TextEditor_Collapse" aria-expanded="false" aria-controls="TextEditor_Collapse"> <i class="fa-solid fa-plus"></i> </button>
+                                <button type="submit" class="btn btn-message-example btn-sm bg-primary text-light mt-2" id="SendDiscussionMessage_SbmtBtn" disabled>Send</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>

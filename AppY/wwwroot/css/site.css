@@ -29,50 +29,48 @@ body {
     text-shadow: 0 0 8px #000;
 }
 
-.current-user-message-main-box {
-    width: auto;
-    max-width: 55%;
-    margin-top: 20px;
-    left: 100%;
-    transform: translateX(83%);
+.grouping-box {
+    z-index: 1000;
+    position: relative;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    padding: 3px;
+    cursor: pointer;
+    border: 1px solid #f0f0f0;
+    background-color: transparent;
+    backdrop-filter: blur(9px);
+    width: 18%;
+    border-radius: 34px;
+    transition: all ease 0.3s;
+}
+.message-box {
+    width: 100%;
+    display: inline-block;
+    margin-top: 8px;
     transition: all ease 0.3s;
 }
 .cur-user-msg-box {
-    width: 100%;
-    cursor: pointer;
-    color: #fdfdfd;
-    background-color: #0d6efd;
-    border-radius: 34px;
-    transition: all ease 0.3s;
-}
-.cur-user-msg-stats-box {
-    background-color: transparent;
-    max-width: 55%;
-    margin-right: 11px;
+    position: relative;
     float: right;
-    clear: both;
-    transition: all ease 0.3s;
+    cursor: pointer;
+    max-width: 67%;
 }
-
-.other-users-message-main-box {
-    margin-top: 20px;
-    max-width: 45%;
-    float: left;
+.cur-user-styled-msg-box {
+    border-radius: 16px;
+    background-color: #0d6efd;
+    color: #fdfdfd;
     transition: all ease 0.3s;
 }
 .other-user-msg-box {
-    max-width: 45%;
-    width: auto;
+    position: relative;
+    float: left;
     cursor: pointer;
-    color: black;
-    background-color: #f0f0f0;
-    border-radius: 34px;
-    transition: all ease 0.3s;
+    max-width: 67%;
 }
-.other-user-msg-stats-box {
-    background-color: transparent;
-    max-width: 45%;
-    margin-left: 12px;
+.other-user-styled-msg-box {
+    border-radius: 16px;
+    background-color: #f0f0f0;
+    color: black;
     transition: all ease 0.3s;
 }
 
@@ -100,6 +98,15 @@ body {
     backdrop-filter: blur(9px);
 }
 
+.open-animated-collapse:focus {
+    animation-name: plus-change-animation;
+    animation-duration: 1.9s;
+    animation-iteration-count: 1;
+}
+
+.z-index-the-ancient-one {
+    z-index: 1001;
+}
 .image-picture-none-container {
     width: 95px;
     height: 95px;
@@ -564,9 +571,27 @@ body {
     box-shadow: rgba(0, 0, 0, 0.1) 1px -2px 2px;
 }
 
+@keyframes plus-change-animation {
+    0% {
+        transform: rotate(0);
+    }
+    33% {
+        transform: rotate(900deg);
+    }
+    66% {
+        transform: rotate(620deg);
+    }
+    100% {
+        transform: rotate(720deg);
+    }
+}
+
 @media screen and (max-width: 768px) {
     .alert-container {
         width: 90%;
+    }
+    .grouping-box {
+        width: 35%;
     }
     .messages-box-separator {
         margin-top: 140px;

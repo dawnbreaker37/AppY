@@ -22,6 +22,22 @@
             <input type="hidden" name="UserId" value="@UserInfo.Id" />
             <input type="hidden" name="Id" id="RestoreTheDiscussion_DiscussionId_Val" value="0" />
         </form>
+        <form method="post" asp-controller="Discussion" asp-action="Mute" id="MuteTheDiscussion_Form">
+            <input type="hidden" id="MuteTheDiscussion_Id_Val" name="Id" value="0" />
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
+        <form method="post" asp-controller="Discussion" asp-action="Unmute" id="UnmuteTheDiscussion_Form">
+            <input type="hidden" name="Id" id="UnmuteTheDiscussion_Id_Val" value="0" />
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
+        <form method="post" asp-controller="Discussion" asp-action="Pin" id="PinTheDiscussion_Form">
+            <input type="hidden" id="PinTheDiscussion_Id_Val" name="Id" value="0" />
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
+        <form method="post" asp-controller="Discussion" asp-action="Unpin" id="UnpinTheDiscussion_Form">
+            <input type="hidden" name="Id" id="UnpinTheDiscussion_Id_Val" value="0" />
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
     </div>
 
     <div class="smallside-box-container shadow-standard" id="SecuritySettings_Container">

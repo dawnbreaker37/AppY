@@ -169,5 +169,11 @@ namespace AppY.Repositories
             }
             else return null;
         }
+
+        public async Task<int> GetCurrentUserAccessLevelAsync(int Id, int UserId)
+        {
+            if (Id != 0) return await _context.DiscussionUsers.Where(d => d.UserId == UserId && d.DiscussionId == Id && !d.IsDeleted).Select(d => d.AccessLevel).FirstOrDefaultAsync();
+            else return 0;
+        }
     }
 }

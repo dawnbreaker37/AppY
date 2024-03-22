@@ -16,10 +16,14 @@ namespace AppY.Models
         public DateTime? RemovedAt { get; set; }
         public bool IsPrivate { get; set; }
         public int CreatorId { get; set; }
+        public int LastMessageId { get; set; }
         public string? Password { get; set; }
         public List<User>? Users { get; set; }
         public List<DiscussionMessage>? DiscussionMessages { get; set; }
+        public List<CommandTool>? Commands { get; set; }
         [NotMapped]
         public string? CreatorName { get; set; }
+        [NotMapped]
+        public bool IsAlreadyInDiscussion { get; set; }
     }
 }

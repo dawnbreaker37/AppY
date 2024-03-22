@@ -52,11 +52,11 @@ namespace AppY.Repositories
             else return null;
         }
 
-        public override IQueryable<DiscussionMessage>? GetMessages(int Id, int UserId, int SkipCount, int LoadCount)
+        public override IQueryable<IGrouping<DateTime, DiscussionMessage>>? GetMessages(int Id, int UserId, int SkipCount, int LoadCount)
         {
             if (Id != 0 && UserId != 0)
             {
-                return _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).Select(d => new DiscussionMessage { Id = d.Id, IsEdited = d.IsEdited, SentAt = d.SentAt, Text = d.Text, IsChecked = d.UserId == UserId ? d.IsChecked : false, IsAutoDeletable = d.IsAutoDeletable, UserId = d.UserId, UserPseudoname = d.UserId == UserId ? null : d.User!.PseudoName }).OrderBy(d => d.SentAt).Skip(SkipCount).Take(LoadCount);
+                return _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).OrderByDescending(d => d.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(d => d.SentAt.Date);
             }
             else return null;
         }
@@ -105,11 +105,12 @@ namespace AppY.Repositories
                         IsEdited = false,
                         IsPinned = Model.IsPinned,
                         IsAutoDeletable = Model.IsAutoDeletable,
-                        SentAt = Model.SentAt,
+                        SentAt = Model.SentAt,                       
                         Text = Model.Text,
                     };
                     await _context.AddAsync(discussionMessage);
                     await _context.SaveChangesAsync();
+                    await _context.Discussions.AsNoTracking().Where(d => d.Id == Model.DiscussionId).ExecuteUpdateAsync(d => d.SetProperty(d => d.LastMessageId, discussionMessage.Id));
 
                     return discussionMessage.Id;
                 }

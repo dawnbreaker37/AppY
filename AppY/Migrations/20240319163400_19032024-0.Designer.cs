@@ -4,6 +4,7 @@ using AppY.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,48 +12,18 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppY.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20240319163400_19032024-0")]
+    partial class _190320240
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.3")
+                .HasAnnotation("ProductVersion", "8.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("AppY.Models.CommandTool", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CommandCall")
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(240)
-                        .HasColumnType("nvarchar(240)");
-
-                    b.Property<int>("DiscussionId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DiscussionId");
-
-                    b.ToTable("Commands");
-                });
 
             modelBuilder.Entity("AppY.Models.Discussion", b =>
                 {
@@ -148,45 +119,6 @@ namespace AppY.Migrations
                     b.ToTable("DiscussionMessages");
                 });
 
-            modelBuilder.Entity("AppY.Models.DiscussionMessageReply", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsEdited")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("MessageId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ReactionId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Text")
-                        .HasMaxLength(2400)
-                        .HasColumnType("nvarchar(2400)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MessageId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("DiscussionMessageReplies");
-                });
-
             modelBuilder.Entity("AppY.Models.DiscussionUsers", b =>
                 {
                     b.Property<int>("Id")
@@ -200,9 +132,6 @@ namespace AppY.Migrations
 
                     b.Property<int?>("DiscussionId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsBlocked")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -546,17 +475,6 @@ namespace AppY.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("AppY.Models.CommandTool", b =>
-                {
-                    b.HasOne("AppY.Models.Discussion", "Discussion")
-                        .WithMany("Commands")
-                        .HasForeignKey("DiscussionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Discussion");
-                });
-
             modelBuilder.Entity("AppY.Models.DiscussionMessage", b =>
                 {
                     b.HasOne("AppY.Models.Discussion", "Discussion")
@@ -572,23 +490,6 @@ namespace AppY.Migrations
                         .IsRequired();
 
                     b.Navigation("Discussion");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("AppY.Models.DiscussionMessageReply", b =>
-                {
-                    b.HasOne("AppY.Models.DiscussionMessage", "DiscussionMessage")
-                        .WithMany("DiscussionMessageReplies")
-                        .HasForeignKey("MessageId");
-
-                    b.HasOne("AppY.Models.User", "User")
-                        .WithMany("DiscussionMessagesReplies")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DiscussionMessage");
 
                     b.Navigation("User");
                 });
@@ -695,14 +596,7 @@ namespace AppY.Migrations
 
             modelBuilder.Entity("AppY.Models.Discussion", b =>
                 {
-                    b.Navigation("Commands");
-
                     b.Navigation("DiscussionMessages");
-                });
-
-            modelBuilder.Entity("AppY.Models.DiscussionMessage", b =>
-                {
-                    b.Navigation("DiscussionMessageReplies");
                 });
 
             modelBuilder.Entity("AppY.Models.NotificationCategory", b =>
@@ -713,8 +607,6 @@ namespace AppY.Migrations
             modelBuilder.Entity("AppY.Models.User", b =>
                 {
                     b.Navigation("DiscussionMessages");
-
-                    b.Navigation("DiscussionMessagesReplies");
 
                     b.Navigation("Notifications");
                 });
