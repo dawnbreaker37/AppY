@@ -95,6 +95,13 @@ namespace AppY.Controllers
             else return Json(new { success = false, alert = "We're sorry, but something's wrong with your entered datas. Please, check them and then try to edit again" });
         }
 
+        public async Task<IActionResult> DiscussionInfo(string Id)
+        {
+            int ResultId = await _discussion.GetDiscussionIdByShortlinkAsync(Id);
+            if (ResultId > 0) return RedirectToAction("Discuss", "Discussion", ResultId);
+            else return RedirectToAction("Index", "Home");
+        }
+
         public async Task<IActionResult> Discuss(int Id)
         {
             if(Id != 0 && User.Identity.IsAuthenticated)
@@ -116,10 +123,20 @@ namespace AppY.Controllers
                             if(AccessValue) IsThisDiscussionMuted = await _discussion.IsThisDiscussionMutedAsync(Id, UserId);
                             //bool IsThisDiscussionMuted = UserInfo.MutedDiscussions != null ? UserInfo.MutedDiscussions.Any(d => d.DiscussionId == Id) : false;
                             int MessagesCount = await _messages.SentMessagesCountAsync(Id);
-                            if (MessagesCount > 0)
+                            if (MessagesCount > 0 && ((!DiscussionInfo.IsPrivate) || (DiscussionInfo.IsPrivate && AccessValue)))
                             {
                                 IQueryable<IGrouping<DateTime, DiscussionMessage>>? Result_Preview = _messages.GetMessages(Id, UserId, 0, 35);
-                                if (Result_Preview != null) Messages = await Result_Preview.ToListAsync();
+                                if (Result_Preview != null)
+                                {
+                                    Messages = await Result_Preview.ToListAsync();
+                                    //foreach(var Item in Messages)
+                                    //{
+                                    //    foreach (DiscussionMessage discussionMessage in Item)
+                                    //    {
+                                    //        if (discussionMessage.RepliedMessageId != null && discussionMessage.RepliesMsgShortText == null) discussionMessage.RepliesMsgShortText = "Deleted message";
+                                    //    }
+                                    //}
+                                }
                             }
 
                             if (DiscussionInfo.CreatorId != UserInfo.Id) CreatorInfo = await _user.GetUserSuperShortInfoAsync(DiscussionInfo.CreatorId);
@@ -213,6 +230,30 @@ namespace AppY.Controllers
                 }
             }
             return Json(new { success = false, alert = "Unable to join to this discussion. Please, try again later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> JoinToPrivate(int Id, string? Password)
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                if(Request.Cookies.ContainsKey("CurrentUserId"))
+                {
+                    string? UserId_Str = Request.Cookies["CurrentUserId"];
+                    if(!String.IsNullOrWhiteSpace(UserId_Str))
+                    {
+                        bool TryToParse = Int32.TryParse(UserId_Str, out int UserId);
+                        if(TryToParse)
+                        {
+                            int Result = await _discussion.JoinToPrivateAsync(Id, UserId, Password);
+                            if (Result > 0) return Json(new { success = true, alert = "You've joined successfully" });
+                            else if (Result == -256) return Json(new { success = false, alert = "Sorry, but you're already in this discussion" });
+                            else if (Result == -128) return Json(new { success = false, alert = "Wrong password for this discussion" });
+                        }
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "We're sorry, but an unexpected error has occured. Try again a bit later, please" });
         }
 
         [HttpPost]

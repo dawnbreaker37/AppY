@@ -21,9 +21,30 @@ body {
   margin-bottom: 60px;
 }
 
+/*.send-message-container:hover,
+.send-message-container:active {
+    opacity: 0;
+}
+.send-message-container:focus{
+    opacity: 1;
+}*/
+
+.cur-user-reply-container {
+    border-radius: 0;
+    padding-left: 4px;
+    border-left: 2px solid white;
+    transition: all ease 0.3s;
+}
+.other-user-reply-container {
+    border-radius: 0;
+    padding-left: 4px;
+    border-left: 2px solid black;
+    transition: all ease 0.3s;
+}
+
 .blurred-lines {
     -webkit-user-select: none;
-    -ms-user-select: none; 
+    -ms-user-select: none;
     user-select: none;
     color: transparent;
     text-shadow: 0 0 8px #000;

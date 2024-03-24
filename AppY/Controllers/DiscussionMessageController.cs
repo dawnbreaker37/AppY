@@ -45,10 +45,22 @@ namespace AppY.Controllers
             if(ModelState.IsValid && User.Identity.IsAuthenticated)
             {              
                 int Result = await _messages.SendMessageAsync(Model);
-                if (Result != 0) return Json(new { success = true, result = Model });
+                if (Result != 0) return Json(new { success = true, trueId = Result, result = Model });
             }
             return Json(new { success = false, alert = "An error unexpected so it's unable to send a message" });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> SendReply(SendMessage Model)
+        {
+            if (ModelState.IsValid && User.Identity.IsAuthenticated)
+            {
+                int Result = await _messages.ReplyToMessageAsync(Model);
+                if (Result != 0) return Json(new { success = true, trueId = Result, result = Model });
+                else if (Result == -128) return Json(new { success = false, alert = "We're sorry, but you haven't got access to send a reply" });
+            }
+            return Json(new { success = false, alert = "We're sorry, but an unexpected error has occured. Please, try to reply later" });
+        }  
 
         [HttpGet]
         public async Task<IActionResult> GetMessageInfo(int Id, int UserId)

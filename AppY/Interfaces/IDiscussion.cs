@@ -12,6 +12,8 @@ namespace AppY.Interfaces
         public Task<int> RestoreDiscussionAsync(int Id, int UserId);
         public Task<int> AddMemberAsync(int Id, int AdderId, int UserId);
         public Task<int> JoinAsync(int Id, int UserId);
+        public Task<int> JoinToPrivateAsync(int Id, int UserId, string? Password);
+        public Task<bool> CheckDiscussionPasswordAsync(int Id, string? Password);
         public Task<int> LeaveAsync(int Id, int UserId);
         public Task<int> DeleteUserAsync(int Id, int DeleterId, int UserId);
         public Task<bool> EditDiscussionAsync(Discussion_ViewModel Model);
@@ -27,7 +29,9 @@ namespace AppY.Interfaces
         public IQueryable<DiscussionShortInfo>? GetUserDeletedDiscussions(int Id);
         public IQueryable<DiscussionUsers>? GetMembersInfo(int Id);
         public IQueryable<DiscussionShortInfo>? Find(string? Keyword);
+        public Task<int> GetDiscussionIdByShortlinkAsync(string Shortlink);
         public Task<Discussion?> GetDiscussionInfoAsync(int Id);
+        public Task<Discussion?> GetDiscussionInfoAsync(string Id);
         public Task<Discussion?> GetDiscussionShortInfoAsync(int Id, int UserId);
         public Task<int> GetMembersCountAsync(int Id);
         public Task<int> GetDeletedDiscussionsCountAsync(int Id);

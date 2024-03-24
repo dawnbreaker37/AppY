@@ -4,6 +4,7 @@ using AppY.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppY.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20240323152329_23032024-1-re")]
+    partial class _230320241re
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -127,6 +130,9 @@ namespace AppY.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsPinned")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsReply")
                         .HasColumnType("bit");
 
                     b.Property<int?>("RepliedMessageId")
@@ -293,45 +299,6 @@ namespace AppY.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Notifications");
-                });
-
-            modelBuilder.Entity("AppY.Models.ScheduledMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ChatId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DiscussionId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsAutoDeletable")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("LiveDiscussionId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("ScheduledTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Text")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ScheduledMessages");
                 });
 
             modelBuilder.Entity("AppY.Models.User", b =>
@@ -666,17 +633,6 @@ namespace AppY.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AppY.Models.ScheduledMessage", b =>
-                {
-                    b.HasOne("AppY.Models.User", "User")
-                        .WithMany("ScheduledMessages")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("DiscussionUser", b =>
                 {
                     b.HasOne("AppY.Models.Discussion", null)
@@ -765,8 +721,6 @@ namespace AppY.Migrations
                     b.Navigation("DiscussionMessages");
 
                     b.Navigation("Notifications");
-
-                    b.Navigation("ScheduledMessages");
                 });
 #pragma warning restore 612, 618
         }

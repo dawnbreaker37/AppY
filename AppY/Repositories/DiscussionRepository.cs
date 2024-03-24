@@ -127,6 +127,18 @@ namespace AppY.Repositories
             else return null;
         }
 
+        public async Task<Discussion?> GetDiscussionInfoAsync(string Id)
+        {
+            if (!String.IsNullOrWhiteSpace(Id)) return await _context.Discussions.AsNoTracking().Select(d => new Discussion { Id = d.Id, Name = d.Name, Description = d.Description, AvatarUrl = d.AvatarUrl, Shortlink = d.Shortlink, CreatedAt = d.CreatedAt, IsPrivate = d.IsPrivate, Password = !d.IsPrivate ? null : d.Password, CreatorId = d.CreatorId, IsDeleted = d.IsDeleted }).FirstOrDefaultAsync(d => d.Shortlink != null && d.Shortlink.ToLower() == Id.ToLower() && !d.IsDeleted);
+            else return null;
+        }
+
+        public async Task<int> GetDiscussionIdByShortlinkAsync(string Shortlink)
+        {
+            if (!String.IsNullOrWhiteSpace(Shortlink)) return await _context.Discussions.AsNoTracking().Where(d => d.Shortlink != null && d.Shortlink.ToLower() == Shortlink.ToLower() && !d.IsDeleted).Select(d => d.Id).FirstOrDefaultAsync();
+            else return 0;
+        }
+
         public async Task<int> GetMembersCountAsync(int Id)
         {
             if (Id != 0) return await _context.DiscussionUsers.AsNoTracking().CountAsync(d => d.DiscussionId == Id && !d.IsDeleted);
@@ -243,7 +255,7 @@ namespace AppY.Repositories
         {
             if(Id != 0 && UserId != 0)
             {
-                DiscussionUsers? HasThisUserAnAccount = await _context.DiscussionUsers.FirstOrDefaultAsync(d => d.UserId == UserId && d.DiscussionId == Id);
+                DiscussionUsers? HasThisUserAnAccount = await _context.DiscussionUsers.FirstOrDefaultAsync(d => d.UserId == UserId && d.DiscussionId == Id && !d.IsBlocked);
                 if(HasThisUserAnAccount is not null)
                 {
                     HasThisUserAnAccount.IsDeleted = false;
@@ -268,6 +280,64 @@ namespace AppY.Repositories
                 }
             }
             return 0;
+        }
+
+        public async Task<int> JoinToPrivateAsync(int Id, int UserId, string? Password)
+        {
+            if(Id != 0 && UserId != 0 && !String.IsNullOrWhiteSpace(Password))
+            {
+                DiscussionUsers? IsUserWasInThisDiscussion = await _context.DiscussionUsers.FirstOrDefaultAsync(d => d.DiscussionId == Id && d.UserId == UserId && !d.IsBlocked);
+                if (IsUserWasInThisDiscussion is not null)
+                {
+                    if (IsUserWasInThisDiscussion.IsDeleted)
+                    {
+                        bool CheckPassword = await CheckDiscussionPasswordAsync(Id, Password);
+                        if (CheckPassword)
+                        {
+                            IsUserWasInThisDiscussion.IsDeleted = false;
+                            await _context.SaveChangesAsync();
+
+                            return UserId;
+                        }
+                        else return -128;
+                    }
+                    else return -256;
+                }
+                else
+                {
+                    bool CheckPassword = await CheckDiscussionPasswordAsync(Id, Password);
+                    if (CheckPassword)
+                    {
+                        DiscussionUsers discussionUsers = new DiscussionUsers
+                        {
+                            DiscussionId = Id,
+                            UserId = UserId,
+                            IsDeleted = false,
+                            AccessLevel = 0,
+                            IsBlocked = false,
+                            IsMuted = false,
+                            IsPinned = false,
+                            JoinedAt = DateTime.Now
+                        };
+                        await _context.AddAsync(discussionUsers);
+                        await _context.SaveChangesAsync();
+
+                        return UserId;
+                    }
+                    else return -128;
+                }
+            }
+            return 0;
+        }
+
+        public async Task<bool> CheckDiscussionPasswordAsync(int Id, string? Password)
+        {
+            if (Id != 0 && !String.IsNullOrWhiteSpace(Password))
+            {
+                bool Result = await _context.Discussions.AsNoTracking().AnyAsync(d => d.Id == Id && !d.IsDeleted && d.Password == Password);
+                return Result;
+            }
+            else return false;
         }
 
         public async Task<int> LeaveAsync(int Id, int UserId)

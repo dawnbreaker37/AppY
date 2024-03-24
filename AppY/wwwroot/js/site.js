@@ -16,6 +16,7 @@ window.onload = function () {
         $(".unpictured-container-label-sm").html($("#AvatarSticker_Hdn_Val").val());
     }
 
+    insideBoxOpen("PreloadedInside_Box", true);
     statusSlider("StatusBar_Lbl", 1);
     replaceAllTheTextInMessages();
 
@@ -1130,7 +1131,6 @@ $("#ChangeAccessLevel_Form").on("submit", function (event) {
     });
 });
 
-
 $("#AddMemberToDiscussion_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -1157,12 +1157,57 @@ $("#JoinToDiscussion_Form").on("submit", function (event) {
 
     $.post(url, data, function (response) {
         if (response.success) {
-            insideBoxOpen("SendMessage_Box");
+            insideBoxClose(false, "SendMessage_Box");
+            setTimeout(function () {
+                setTimeout(function () {
+                    $("#SendMessage_SecondInside_Box").fadeOut(300);
+                    $("#SendMessage_FirstInside_Box").fadeIn(300);
+                });
+            }, 450);
+            setTimeout(function () {
+                insideBoxClose(false, "PreloadedInside_Box");
+            }, 600);
+            setTimeout(function () {
+                insideBoxOpen("SendMessage_Box", false);
+            }, 900);
             $("#JoinToDiscussion_SbmtBtn").html(' <i class="fa-regular fa-circle-check"></i> <br/>Joined');
             $("#JoinToDiscussion_SbmtBtn").attr("disabled", true);
             $("#SendDiscussionMessage_Text_Val").attr("readonly", false);
             $("#SendDiscussionMessage_Text_Val").attr("disabled", false);
             $("#LeaveTheDiscussion_SbmtBtn").attr("disabled", false);
+            alert('<i class="fa-solid fa-right-to-bracket text-primary"></i>', response.alert, "Done", null, 0, null, null, null, 4.5);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake text-danger" style="--fa-animation-duration: 2.3s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 4.25);
+        }
+    });
+});
+$("#JoinToPrivateDiscussion_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            insideBoxClose(false, "SendMessage_Box");
+            setTimeout(function () {
+                setTimeout(function () {
+                    $("#SendMessage_SecondInside_Box").fadeOut(300);
+                    $("#SendMessage_FirstInside_Box").fadeIn(300);
+                });
+            }, 450);
+            setTimeout(function () {
+                insideBoxClose(false, "PreloadedInside_Box");
+            }, 600);
+            setTimeout(function () {
+                insideBoxOpen("SendMessage_Box", false);
+            }, 900);
+            $("#JoinToDiscussion_SbmtBtn").html(' <i class="fa-regular fa-circle-check"></i> <br/>Joined');
+            $("#JoinToDiscussion_SbmtBtn").attr("disabled", true);
+            $("#SendDiscussionMessage_Text_Val").attr("readonly", false);
+            $("#SendDiscussionMessage_Text_Val").attr("disabled", false);
+            $("#LeaveTheDiscussion_SbmtBtn").attr("disabled", false);
+
             alert('<i class="fa-solid fa-right-to-bracket text-primary"></i>', response.alert, "Done", null, 0, null, null, null, 4.5);
         }
         else {
@@ -1177,7 +1222,18 @@ $("#LeaveTheDiscussion_Form").on("submit", function (event) {
 
     $.post(url, data, function (response) {
         if (response.success) {
-            insideBoxClose("SendMessage_Box");
+            insideBoxClose(false, "SendMessage_Box");
+            setTimeout(function () {
+                $("#SendMessage_SecondInside_Box").fadeIn(300);
+                $("#SendMessage_FirstInside_Box").fadeOut(300);
+            }, 450);
+            setTimeout(function () {
+                insideBoxOpen("SendMessage_Box", false);
+            }, 750);
+            setTimeout(function () {
+                insideBoxOpen("PreloadedInside_Box", true);
+            }, 1200);
+
             $("#JoinToDiscussion_SbmtBtn").html(' <i class="fa-solid fa-right-to-bracket"></i> <br/>Join');
             $("#JoinToDiscussion_SbmtBtn").attr("disabled", false);
             $("#SendDiscussionMessage_Text_Val").attr("readonly", true);
@@ -1220,6 +1276,7 @@ $("#EditDiscussion_Form").on("submit", function (event) {
             $("#AdditionalInfo_DiscussionName_Lbl").text(response.result.name);
             $("#DiscussionShortlink_Lbl").html("@" + response.result.shortlink);
             $("#ShortlinkAdditional_Lbl").html("@<span class='user-select-all'>" + response.result.shortlink + "</span>");
+            $("#DiscussionLinkAbout_Val-Copy").text("/Discussion/DiscussionInfo/" + response.result.shortlink);
             if (response.result.description != null) {
                 $("#DiscussionDescription_Lbl").html(response.result.description);
             }
@@ -1314,7 +1371,10 @@ $("#UnpinTheDiscussion_Form").on("submit", function (event) {
 });
 
 $("#SendDiscussionMessage_Form").on("submit", function (event) {
+    let finalCut = replaceAllUsersInText($("#SendDiscussionMessage_Text_Val").val());
+    if (finalCut != null) $("#SendDiscussionMessage_Text_Val").val(finalCut);
     event.preventDefault();
+
     let url = $(this).attr("action");
     let data = $(this).serialize();
 
@@ -1363,10 +1423,36 @@ $("#SendDiscussionMessage_Form").on("submit", function (event) {
             }, 800);
         }
         else {
-            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
+            alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
         }
     });
 });
+
+$("#SendDiscussionReply_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#SendDiscussionReply_SbmtBtn").attr("disabled", true);
+            $("#SR_Text_Val").val("");
+            $("#SR_MessageId_Val").val(0);
+            insideBoxClose(false, "ReplyToDiscussionMessage_Box");
+            setTimeout(function () {
+                insideBoxOpen("SendMessage_Box", false);
+            }, 750);
+            setTimeout(function () {
+                $("#SendDiscussionReply_SbmtBtn").attr("disabled", false);
+            }, 1800);
+        }
+        else {
+            $("#SR_Text_Val").val("");
+            alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
+        }
+    });
+});
+
 $("#GetMessageInfo_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -1399,7 +1485,8 @@ $("#GetMessageInfo_Form").on("submit", function (event) {
                 $("#EditDiscussionMsg_Col").fadeOut(0);
                 $("#DeleteDiscussionMsg_Col").fadeOut(0);
             }
-
+            $("#SR_MessageId_Val").val(response.id);
+            $("#SR_MessageText_Val").val(response.result.text.substring(0, 40));
             $(".messages-container").css("margin-bottom", "-1200px");
             $(".messages-container").fadeOut(100);
             insideBoxOpen("DiscussionOptions_Box");
@@ -1407,6 +1494,7 @@ $("#GetMessageInfo_Form").on("submit", function (event) {
             setTimeout(function () {
                 $("#DiscussionOptionMessageText_Lbl").html(response.result.text);
                 $("#EditMessage_Text_Lbl").html(response.result.text);
+                $("#ReplyingMessage_Text_Lbl").html(response.result.text);
                 textDecoder($("#DiscussionOptionMessageText_Lbl").html(), "DiscussionOptionMessageText_Lbl");
                 textDecoder($("#DiscussionOptionMessageText_Lbl").html(), "EditMessage_Text_Lbl");
                 $("#EM_NewText_Val").val(response.result.text);
@@ -1431,6 +1519,7 @@ $("#EditMessage_Form").on("submit", function (event) {
             insideBoxOpen("SendMessage_Box");
             $("#" + response.id + "-DiscussionMessage_IsEdited").fadeIn(350);
             $("#" + response.id + "-DiscussionOptionMsgText_Lbl").html(response.text);
+            $("#" + response.id + "-DiscussionMsgReplyText").html(response.text);
         }
         else {
             alert('<i class="fa-solid fa-ban text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
@@ -1468,6 +1557,7 @@ $("#DeleteDiscussionMessage_Form").on("submit", function (event) {
             else {
                 $("#StatusBar_Lbl-1").text(currentCount + " sent messages");
                 $("#" + response.id + "-DiscussionMsgBox").fadeOut(350);
+                $("#" + response.id + "-DiscussionMsgReplyText").text("Deleted message");
             }
             insideBoxClose(false, "DiscussionOptions_Box");
             insideBoxOpen("SendMessage_Box");
@@ -1651,6 +1741,60 @@ $("#ChangeToSingleUseType_Btn").on("click", function () {
     }, 450);
 });
 
+$("#ScheduleTheMessage_Btn").on("click", function () {
+    let text = $("#SendDiscussionMessage_Text_Val").val();
+    let userId = $("#SendMessage_UserId_Val").val();
+    let discussionId = $("#SendMessage_DiscussionId_Val").val();
+    let isAutoDeletable = $("#SendMessage_IsAutoDeletable").val();
+
+    $("#ScheduledMsg_Text").html(text);
+    $("#ScheduledMsg_IsAutoDeletable").text(isAutoDeletable == null ? "Non-autodeletable" : "Autodeletable");
+
+    animatedOpen(false, "ScheduleTheMessage_Container", true, true);
+});
+
+$("#ScheduledMessage_AddDays").on("change", function () {
+    let currentDate = new Date();
+    let addedDays = parseInt($("#ScheduledMessage_AddDays").val());
+    let addedMinutes = parseInt($("#ScheduledMessage_AddDays").val());
+    let addedHours = parseInt($("#ScheduledMessage_AddHours").val());
+
+    addedMinutes += addedDays * 24 * 60;
+    let neededMilliseconds = addedMinutes * 60000;
+/*    addedMinutes += addedHours * 60;*/
+    console.log(neededMilliseconds);
+    let newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getTime() + neededMilliseconds);
+    console.log(newDate.getDate());
+    //console.log(newDate.getDate() + "/" + parseInt(newDate.getMonth()) + "/" + newDate.getFullYear() + ", " + newDate.getHours() + ":" + newDate.getMinutes());
+});
+$("#ScheduledMessage_AddHours").on("change", function () {
+    let currentDate = new Date();
+    let addedDays = $("#ScheduledMessage_AddDays").val();
+    let addedMinutes = $("#ScheduledMessage_AddDays").val();
+    let addedHours = $("#ScheduledMessage_AddHours").val();
+
+    addedMinutes += addedDays * 24 * 60;
+    addedMinutes += addedHours * 60;
+
+    let newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getMinutes() + addedMinutes);
+    console.log(newDate.getDate());
+});
+$("#ScheduledMessage_AddMinutes").on("change", function () {
+    let currentDate = new Date();
+    let addedDays = $("#ScheduledMessage_AddDays").val();
+    let addedMinutes = $("#ScheduledMessage_AddDays").val();
+    let addedHours = $("#ScheduledMessage_AddHours").val();
+
+    addedMinutes += addedDays * 24 * 60;
+    addedMinutes += addedHours * 60;
+
+    let newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getMinutes() + addedMinutes);
+    console.log(newDate.getDate());
+});
+
 $(document).on("click", ".btn-get-discussion-info", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
@@ -1658,6 +1802,27 @@ $(document).on("click", ".btn-get-discussion-info", function (event) {
         $("#GetDiscussionShortInfo_Form").submit();
     }
     else $("#GSI_Id_Val").val(0);
+});
+
+$(document).on("click", ".reply-to-discussion-message", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if ($("#" + event.target.id).hasClass("reply-element")) {
+        trueId = parseInt($("#" + event.target.id).attr("data-bs-msg-id"));
+    }
+
+    if (trueId != null && trueId > 0) {
+        $("#SR_MessageId_Val").val(trueId);
+        $("#SR_MessageText_Val").val($("#" + trueId + "-ReplyToDiscussionMessage").html().substring(0, 40));
+        $("#ReplyingMessage_Text_Lbl").text($("#" + trueId + "-ReplyToDiscussionMessage").html().substring(0, 40));
+        insideBoxClose(true, "messages-container");
+        setTimeout(function () {
+            insideBoxOpen("ReplyToDiscussionMessage_Box", false);
+        }, 750);
+    }
+    else {
+        $("#SR_MessageId_Val").val(0);
+        $("#SR_MessageText_Val").val(null);
+    }
 });
 
 $(document).on("click", ".btn-block-the-user-out-from-the-discussion", function (event) {
@@ -1727,7 +1892,11 @@ $(document).on("click", ".relocate-to-discussion", function (event) {
 
 $(document).on("click", ".discussion-options", function (event) {
     let trueId = getTrueId(event.target.id);
-    if (trueId != null) {
+    if ($("#" + event.target.id).hasClass("reply-element")) {
+        trueId = parseInt($("#" + event.target.id).attr("data-bs-msg-id"));
+    }
+
+    if (trueId != null && trueId > 0) {
         $("#GMI_Id_Val").val(trueId);
         $("#GetMessageInfo_Form").submit();
     }
@@ -2010,7 +2179,7 @@ $(document).on("click", ".copy-to-clipboard", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
         navigator.clipboard.writeText($("#" + trueId).html());
-        alert('<i class="fa-regular fa-copy text-neon-purple"></i>', "Text has been successfully copied to clipboard", "Done", null, 0, null, null, null, 3.5);
+        alert('<i class="fa-regular fa-copy text-neon-purple"></i>', "Copied to clipboard successfully", "Done", null, 0, null, null, null, 3.5);
         insideBoxClose(true, null);
         setTimeout(function () {
             insideBoxOpen("SendMessage_Box");
@@ -2273,31 +2442,6 @@ $(document).on("click", ".discussion-header-return", function (event) {
     }
 });
 
-function getTrueId(name) {
-    let trueId = name.substring(0, name.lastIndexOf("-"));
-    if (trueId != null || trueId != undefined) return trueId;
-    else return null;
-}
-
-function openSidebar() {
-    if (fullWidth < 768) {
-        $(".btn-fixed-close-sidebar").fadeIn(300);
-        $("#Main_SideBar").fadeIn(250);
-        $("#Main_SideBar").css("left", 0);
-    }
-}
-
-function closeSidebar() {
-    if (fullWidth < 768) {
-        animatedClose(true, "smallside-box-container ", true, true);
-        $(".btn-fixed-close-sidebar").fadeOut(300);
-        setTimeout(function () {
-            $("#Main_SideBar").fadeOut(350);
-            $("#Main_SideBar").css("left", "-1200px");
-        }, 550);
-    }
-}
-
 $(document).on("click", ".btn-hide", function (event) {
     let trueId = getTrueId(event.target.id);
     let secondId = $("#" + event.target.id).attr("data-bs-title");
@@ -2338,6 +2482,31 @@ $(document).on("change", ".send-message-form-control", function (event) {
         }
     }
 });
+
+function getTrueId(name) {
+    let trueId = name.substring(0, name.lastIndexOf("-"));
+    if (trueId != null || trueId != undefined) return trueId;
+    else return null;
+}
+
+function openSidebar() {
+    if (fullWidth < 768) {
+        $(".btn-fixed-close-sidebar").fadeIn(300);
+        $("#Main_SideBar").fadeIn(250);
+        $("#Main_SideBar").css("left", 0);
+    }
+}
+
+function closeSidebar() {
+    if (fullWidth < 768) {
+        animatedClose(true, "smallside-box-container ", true, true);
+        $(".btn-fixed-close-sidebar").fadeOut(300);
+        setTimeout(function () {
+            $("#Main_SideBar").fadeOut(350);
+            $("#Main_SideBar").css("left", "-1200px");
+        }, 550);
+    }
+}
 
 function commandLineOptions(command) {
     $(".command-box").fadeOut(300);
