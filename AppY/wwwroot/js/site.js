@@ -1372,7 +1372,11 @@ $("#UnpinTheDiscussion_Form").on("submit", function (event) {
 
 $("#SendDiscussionMessage_Form").on("submit", function (event) {
     let finalCut = replaceAllUsersInText($("#SendDiscussionMessage_Text_Val").val());
-    if (finalCut != null) $("#SendDiscussionMessage_Text_Val").val(finalCut);
+    let linksCut = replaceAllLinksInText($("#SendDiscussionMessage_Text_Val").val());
+    if (finalCut != null) {
+        $("#SendDiscussionMessage_Text_Val").val(finalCut);
+        if (linksCut != null) $("#SendDiscussionMessage_Text_Val").val(linksCut);
+    }
     event.preventDefault();
 
     let url = $(this).attr("action");
@@ -2410,6 +2414,9 @@ $(document).on("click", ".text-decoder", function (event) {
         let pasteTo = $("#" + event.target.id).attr("data-paste-to");
         $("#" + trueId).val(setBackAllUsersInText($("#" + trueId).val()));
         $("#" + trueId).val(replaceAllUsersInText($("#" + trueId).val()));
+        //$("#" + trueId).val(setBackAllUsersInText($("#" + trueId).val()));
+        $("#" + trueId).val(replaceAllLinksInText($("#" + trueId).val()));
+        console.log(replaceAllLinksInText($("#" + trueId).val()));
         textDecoder($("#" + trueId).val(), pasteTo);
     }
 });
@@ -2790,6 +2797,7 @@ function textDecoder(text, setIn) {
     text = text.replaceAll("*]", "</span>");
     text = text.replaceAll("[*", "<span class='user-via-shortname'>");
     text = text.replaceAll("!]", "</button>");
+    text = text.replaceAll("$!", "</a>");
 
     $("#" + setIn).html(text);
 }
@@ -2808,6 +2816,25 @@ function setBackAllUsersInText(text) {
     text = text.replaceAll("*]", "");
 
     return text;
+}
+
+function replaceAllLinksInText(text) {
+    let linksArray = [];
+    let currentIndex = 0;
+
+    for (let i = 0; i < text.length; i++) {
+        if (text.substring(currentIndex, text.length).includes("https")) {
+            currentIndex = text.indexOf("https", currentIndex);
+            let endIndex = text.indexOf(" ", currentIndex);
+            let link = text.substring(currentIndex, endIndex);
+            console.log(link);
+
+            linksArray.push(link);
+        }
+    }
+
+    if (linksArray.length > 0) return linksArray;
+    else return null;
 }
 
 function replaceAllUsersInText(text) {
