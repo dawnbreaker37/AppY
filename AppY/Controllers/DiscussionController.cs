@@ -55,6 +55,30 @@ namespace AppY.Controllers
             return Json(new { success = false, count = 0 });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> SetAvatar(int Id, int UserId, IFormFile Image)
+        {
+            string? Result = await _discussion.SetDiscussionAvatarAsync(Id, UserId, Image);
+            if (Result is not null) return Json(new { success = true, result = Result });
+            else return Json(new { success = false, alert = "We're sorry, but something went wrong. Please, try to set an avatar for this discussion later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SetStatus(int Id, int UserId, string? Status)
+        {
+            string? Result = await _discussion.SetDiscussionStatusAsync(Id, UserId, Status);
+            if (Result is not null) return Json(new { success = true, result = Result });
+            else return Json(new { success = false, alert = "No access to edit the status" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteAvatar(int Id, int UserId)
+        {
+            bool Result = await _discussion.DeleteDiscussionAvatarAsync(Id, UserId);
+            if (Result) return Json(new { success = true });
+            else return Json(new { success = false, alert = "We're sorry, but something had gone wrong. Please, try to delete discussion's avatar later" });
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetShortInfo(int Id, int UserId)
         {
@@ -141,6 +165,7 @@ namespace AppY.Controllers
 
                             if (DiscussionInfo.CreatorId != UserInfo.Id) CreatorInfo = await _user.GetUserSuperShortInfoAsync(DiscussionInfo.CreatorId);
                             else CreatorInfo = new User { PseudoName = UserInfo.PseudoName, ShortName = UserInfo.ShortName };
+                            DiscussionInfo.Status = DiscussionInfo.Status == null ? "Tap to edit the status" : DiscussionInfo.Status;
 
                             await _messages.MarkAsReadAllMessagesAsync(Id, UserId);
 

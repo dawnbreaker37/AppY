@@ -157,7 +157,7 @@ namespace AppY.Repositories
 
         public async Task<User?> GetUserSuperShortInfoAsync(string? Shortname)
         {
-            if (!String.IsNullOrWhiteSpace(Shortname)) return await _context.Users.AsNoTracking().Select(u => new User { PseudoName = u.PseudoName, ShortName = u.ShortName }).FirstOrDefaultAsync(u => u.ShortName.ToLower() == Shortname.ToLower());
+            if (!String.IsNullOrWhiteSpace(Shortname)) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, PseudoName = u.PseudoName, ShortName = u.ShortName }).FirstOrDefaultAsync(u => u.ShortName != null && u.ShortName.ToLower().Equals(Shortname.ToLower()));
             else return null;
         }
 

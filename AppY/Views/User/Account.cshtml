@@ -355,7 +355,7 @@
                 <small class="card-text text-muted" id="SelectedFileInfo_Lbl">No Info</small>
             </div>
             <div class="box-container mt-2 p-1">
-                <form method="post" asp-controller="User" asp-action="SetProfilePhoto" id="SetProfilePhoto_Form">
+                <form method="post" asp-controller="User" asp-action="SetProfilePhoto" enctype="multipart/form-data" id="SetProfilePhoto_Form">
                     <div class="d-none">
                         <input type="hidden" name="Id" id="SetProfilePhoto_Id_Val" value="@UserInfo.Id" />
                     </div>

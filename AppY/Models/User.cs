@@ -25,8 +25,11 @@ namespace AppY.Models
         public bool IsDisabled { get; set; }
         public List<NotificationModel>? Notifications { get; set; }
         public List<Discussion>? Discussions { get; set; }
+        public List<Chat>? Chats { get; set; }
         public List<DiscussionMessage>? DiscussionMessages { get; set; }
         public List<ScheduledMessage>? ScheduledMessages { get; set; }
+        public List<DiscussionUsers>? DiscussionUsers { get; set; }
+        public List<ChatUsers>? ChatUsers { get; set; }
         [NotMapped]
         public string? UnpicturedAvatarInfo { get; set; }
     }

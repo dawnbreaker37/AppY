@@ -7,6 +7,8 @@ namespace AppY.Models
     {
         [MaxLength(100)]
         public string? Name { get; set; }
+        [MaxLength(180)]
+        public string? Status { get; set; }
         [MaxLength(20)]
         public string? Shortlink { get; set; }
         public string? AvatarUrl { get; set; }
@@ -21,6 +23,7 @@ namespace AppY.Models
         public List<User>? Users { get; set; }
         public List<DiscussionMessage>? DiscussionMessages { get; set; }
         public List<CommandTool>? Commands { get; set; }
+
         [NotMapped]
         public string? CreatorName { get; set; }
         [NotMapped]

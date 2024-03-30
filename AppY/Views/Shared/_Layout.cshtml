@@ -16,10 +16,11 @@
                 @if (User.Identity.IsAuthenticated)
                 {
                     <div class="box-container float-end">
-                        <a asp-controller="Home" asp-action="Create" class="btn btn-standard me-1 float-end"> <i class="fa-regular fa-square-plus"></i> </a>
-                        <button type="button" class="btn btn-standard me-1 float-end"> <i class="fa-regular fa-comments"></i> </button>
+                        <a asp-controller="Home" asp-action="Create" class="btn btn-standard me-1"> <i class="fa-regular fa-square-plus"></i> </a>
+                        <button type="button" class="btn btn-standard me-1"> <i class="fa-regular fa-comments"></i> </button>
                     </div>
                 }
+                <button type="button" class="btn btn-standard me-1 open-main-bot-navbar" id="FifthMain_Btn" data-bs-html="Preloaded_BotOffNavbar" style="display: none;"> <i class="fa-regular fa-keyboard"></i> </button>
             </div>
         </nav>
 
@@ -37,7 +38,6 @@
                     {
                         <div class="col" id="ForthBtns_Box">
                             <a asp-controller="Account" asp-action="Create" class="btn btn-navbar w-100" id="ForthMain_Btn"> <i class="fa-solid fa-arrow-right-to-bracket text-muted"></i> <br /><small>Sign</small>
-
                         </a>
                             <button type="button" class="btn btn-navbar w-100" style="display: none;" id="ForthReserve_Btn"></button>
                         </div>

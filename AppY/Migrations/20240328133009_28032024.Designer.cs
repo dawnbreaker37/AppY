@@ -4,6 +4,7 @@ using AppY.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppY.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20240328133009_28032024")]
+    partial class _28032024
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,9 +36,6 @@ namespace AppY.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("CreatorId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -43,44 +43,14 @@ namespace AppY.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("nvarchar(120)");
 
-                    b.HasKey("Id");
-
-                    b.ToTable("Chats");
-                });
-
-            modelBuilder.Entity("AppY.Models.ChatUsers", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ChatId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsBlocked")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsPinned")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("JoinedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChatId");
-
                     b.HasIndex("UserId");
 
-                    b.ToTable("ChatUsers");
+                    b.ToTable("Chat");
                 });
 
             modelBuilder.Entity("AppY.Models.CommandTool", b =>
@@ -504,21 +474,6 @@ namespace AppY.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("ChatUser", b =>
-                {
-                    b.Property<int>("ChatsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UsersId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ChatsId", "UsersId");
-
-                    b.HasIndex("UsersId");
-
-                    b.ToTable("ChatUser");
-                });
-
             modelBuilder.Entity("DiscussionUser", b =>
                 {
                     b.Property<int>("DiscussionsId")
@@ -667,21 +622,13 @@ namespace AppY.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("AppY.Models.ChatUsers", b =>
+            modelBuilder.Entity("AppY.Models.Chat", b =>
                 {
-                    b.HasOne("AppY.Models.Chat", "Chat")
-                        .WithMany("ChatUsers")
-                        .HasForeignKey("ChatId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("AppY.Models.User", "User")
-                        .WithMany("ChatUsers")
+                        .WithMany("Chats")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Chat");
 
                     b.Navigation("User");
                 });
@@ -738,7 +685,7 @@ namespace AppY.Migrations
                         .HasForeignKey("DiscussionId");
 
                     b.HasOne("AppY.Models.User", "User")
-                        .WithMany("DiscussionUsers")
+                        .WithMany()
                         .HasForeignKey("UserId");
 
                     b.Navigation("Discussion");
@@ -774,21 +721,6 @@ namespace AppY.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("ChatUser", b =>
-                {
-                    b.HasOne("AppY.Models.Chat", null)
-                        .WithMany()
-                        .HasForeignKey("ChatsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppY.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("UsersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("DiscussionUser", b =>
@@ -857,11 +789,6 @@ namespace AppY.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AppY.Models.Chat", b =>
-                {
-                    b.Navigation("ChatUsers");
-                });
-
             modelBuilder.Entity("AppY.Models.Discussion", b =>
                 {
                     b.Navigation("Commands");
@@ -881,11 +808,9 @@ namespace AppY.Migrations
 
             modelBuilder.Entity("AppY.Models.User", b =>
                 {
-                    b.Navigation("ChatUsers");
+                    b.Navigation("Chats");
 
                     b.Navigation("DiscussionMessages");
-
-                    b.Navigation("DiscussionUsers");
 
                     b.Navigation("Notifications");
 

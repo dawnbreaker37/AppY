@@ -17,6 +17,9 @@ namespace AppY.Interfaces
         public Task<int> LeaveAsync(int Id, int UserId);
         public Task<int> DeleteUserAsync(int Id, int DeleterId, int UserId);
         public Task<bool> EditDiscussionAsync(Discussion_ViewModel Model);
+        public Task<string?> SetDiscussionStatusAsync(int Id, int UserId, string? Status);
+        public Task<string?> SetDiscussionAvatarAsync(int Id, int UserId, IFormFile Image);
+        public Task<bool> DeleteDiscussionAvatarAsync(int Id, int UserId);
         public Task<int> MuteAsync(int Id, int UserId);
         public Task<int> UnmuteAsync(int Id, int UserId);
         public Task<int> PinAsync(int Id, int UserId);

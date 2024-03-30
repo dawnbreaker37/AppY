@@ -5,9 +5,9 @@ let alertTimeout;
 let letters = /^[A-Za-z]+$/;
 
 window.onload = function () {
+    let currentUrl = document.location.href;
     fullHeight = parseInt(window.innerHeight);
     fullWidth = parseInt(window.innerWidth);
-    botOffNavbarH = parseInt($("#MainBotOffNavbar").innerHeight());
     displayCorrect(fullWidth);
     additionalBtnSelector(fullWidth);
 
@@ -16,9 +16,15 @@ window.onload = function () {
         $(".unpictured-container-label-sm").html($("#AvatarSticker_Hdn_Val").val());
     }
 
-    insideBoxOpen("PreloadedInside_Box", true);
-    statusSlider("StatusBar_Lbl", 1);
-    replaceAllTheTextInMessages();
+    if (currentUrl.toLowerCase().includes("/discuss")) {
+        botNavbarClose(true, null);
+        setTimeout(function () {
+            insideBoxOpen("PreloadedInside_Box", true);
+            botNavbarOpen("Preloaded_BotOffNavbar");
+        }, 300);
+        statusSlider("StatusBar_Lbl", 2);
+        replaceAllTheTextInMessages();
+    }
 
     if (fullWidth >= 768) {
         animatedOpen(false, "SmallsidePreloaded_Container", true, false);
@@ -418,6 +424,18 @@ $("#ConfirmPassword").on("keyup", function () {
     else {
         $("#SignUp_Form-SbmtBtn").attr("disabled", true);
     }
+});
+
+$("#FindUserByShortname_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+        }
+        else alert('<i class="fa-solid fa-user-slash"></i>', response.alert, "Got It", null, 0, null, null, null, 3.25);
+    });
 });
 
 $("#GetNotificationInfo_Form").on("submit", function (event) {
@@ -1167,9 +1185,6 @@ $("#JoinToDiscussion_Form").on("submit", function (event) {
             setTimeout(function () {
                 insideBoxClose(false, "PreloadedInside_Box");
             }, 600);
-            setTimeout(function () {
-                insideBoxOpen("SendMessage_Box", false);
-            }, 900);
             $("#JoinToDiscussion_SbmtBtn").html(' <i class="fa-regular fa-circle-check"></i> <br/>Joined');
             $("#JoinToDiscussion_SbmtBtn").attr("disabled", true);
             $("#SendDiscussionMessage_Text_Val").attr("readonly", false);
@@ -1189,7 +1204,6 @@ $("#JoinToPrivateDiscussion_Form").on("submit", function (event) {
 
     $.post(url, data, function (response) {
         if (response.success) {
-            insideBoxClose(false, "SendMessage_Box");
             setTimeout(function () {
                 setTimeout(function () {
                     $("#SendMessage_SecondInside_Box").fadeOut(300);
@@ -1199,9 +1213,6 @@ $("#JoinToPrivateDiscussion_Form").on("submit", function (event) {
             setTimeout(function () {
                 insideBoxClose(false, "PreloadedInside_Box");
             }, 600);
-            setTimeout(function () {
-                insideBoxOpen("SendMessage_Box", false);
-            }, 900);
             $("#JoinToDiscussion_SbmtBtn").html(' <i class="fa-regular fa-circle-check"></i> <br/>Joined');
             $("#JoinToDiscussion_SbmtBtn").attr("disabled", true);
             $("#SendDiscussionMessage_Text_Val").attr("readonly", false);
@@ -1228,11 +1239,8 @@ $("#LeaveTheDiscussion_Form").on("submit", function (event) {
                 $("#SendMessage_FirstInside_Box").fadeOut(300);
             }, 450);
             setTimeout(function () {
-                insideBoxOpen("SendMessage_Box", false);
-            }, 750);
-            setTimeout(function () {
                 insideBoxOpen("PreloadedInside_Box", true);
-            }, 1200);
+            }, 750);
 
             $("#JoinToDiscussion_SbmtBtn").html(' <i class="fa-solid fa-right-to-bracket"></i> <br/>Join');
             $("#JoinToDiscussion_SbmtBtn").attr("disabled", false);
@@ -1274,6 +1282,8 @@ $("#EditDiscussion_Form").on("submit", function (event) {
             $("#Preloaded_Container_ShowBox-Open").text(response.result.name);
             $("#DiscussionName_Lbl").text(response.result.name);
             $("#AdditionalInfo_DiscussionName_Lbl").text(response.result.name);
+            $("#AdditionalInfo_DiscussionShortlink_Lbl").text("@" + response.result.shortlink);
+            $("#DiscussionLinkAbout_Span").text("/discussion/discuss" + response.result.shortlink);
             $("#DiscussionShortlink_Lbl").html("@" + response.result.shortlink);
             $("#ShortlinkAdditional_Lbl").html("@<span class='user-select-all'>" + response.result.shortlink + "</span>");
             $("#DiscussionLinkAbout_Val-Copy").text("/Discussion/DiscussionInfo/" + response.result.shortlink);
@@ -1289,6 +1299,85 @@ $("#EditDiscussion_Form").on("submit", function (event) {
         }
     });
 });
+
+$("#SetDiscussionStatus_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            botNavbarClose(false, "StatusEdit_BotOffNavbar");
+            setTimeout(function () {
+                botNavbarOpen("Preloaded_BotOffNavbar");
+            }, 125);
+            $("#FifthMain_Btn").fadeOut(300);
+            $("#StatusBar_Lbl-2").html(response.result);
+            setTimeout(function () {
+                $("#SetStatus_Val").val("");
+                $("#SetTheStatusSbmt_Btn").attr("disabled", true);
+            }, 350);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-warning" style="--fa-animation-duration: 1.2s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+        }
+    });
+});
+
+$("#SetDiscussionAvatar_Form").on("submit", function (event) {
+    event.preventDefault();
+
+    let imageUrl = $("#SelectaFile_Val").get(0).files;
+    let formData = new FormData();
+    formData.append("id", $("#SDA_Id_Val").val());
+    formData.append("userid", $("#SDA_UserId_Val").val());
+    formData.append("image", imageUrl[0]);
+
+    $.ajax({
+        type: "POST",
+        url: $(this).attr("action"),
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function (response) {
+            if (response.success) {
+                animatedClose(false, "SetAvatar_Container", true, true);
+                setTimeout(function () {
+                    $("#UploadedFileName_Lbl").text(response.result);
+                    $("#DeleteCurrentAvatar_Box").fadeIn(0);
+                }, 350);
+                $("#DiscussionAvatar_Img").attr("src", "/DiscussionAvatars/" + response.result);
+                $("#UnpicturedAvatar_Box").fadeOut(0);
+                $("#PicturedAvatar_Box").fadeIn(300);
+                $("#DeleteDiscussionAvatar_SbmtBtn").attr("disabled", false);
+            }
+            else alert('<i class="fa-regular fa-circle-xmark text-warning fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+        }
+    });
+});
+$("#DeleteDiscussionAvatar_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let firstLetterOfName = $("#DiscussionName_Lbl").text().substring(0, 1);
+            animatedClose(false, "SetAvatar_Container", true, true);
+            setTimeout(function () {
+                $("#UploadedFileName_Lbl").text("Upload Your Image");
+                $("#DeleteCurrentAvatar_Box").fadeOut(0);
+            }, 350);
+            $("#UnpicturedAvatar_Lbl").text(firstLetterOfName);
+            $("#DiscussionAvatar_Img").attr("src", "#");
+            $("#PicturedAvatar_Box").fadeOut(0);
+            $("#UnpicturedAvatar_Box").fadeIn(0);
+            $("#DeleteDiscussionAvatar_SbmtBtn").attr("disabled", true);
+        }
+        else alert('<i class="fa-regular fa-circle-xmark text-warning fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+    });
+});
+
 $("#MuteTheDiscussion_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -1370,58 +1459,95 @@ $("#UnpinTheDiscussion_Form").on("submit", function (event) {
     });
 });
 
-$("#SendDiscussionMessage_Form").on("submit", function (event) {
+//DiscussionMessages//
+
+$(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
     let finalCut = replaceAllUsersInText($("#SendDiscussionMessage_Text_Val").val());
-    let linksCut = replaceAllLinksInText($("#SendDiscussionMessage_Text_Val").val());
+    //let linksCut = replaceAllLinksInText($("#SendDiscussionMessage_Text_Val").val());
     if (finalCut != null) {
         $("#SendDiscussionMessage_Text_Val").val(finalCut);
-        if (linksCut != null) $("#SendDiscussionMessage_Text_Val").val(linksCut);
+        //if (linksCut != null) $("#SendDiscussionMessage_Text_Val").val(linksCut);
     }
     event.preventDefault();
-
     let url = $(this).attr("action");
     let data = $(this).serialize();
 
     $.post(url, data, function (response) {
         if (response.success) {
-            $("#SendDiscussionMessage_Text_Val").val(null);
-            $("#SendDiscussionMessage_SbmtBtn").attr("disabled", true);
-
             let sentMessagesCount = $("#SentMessagesCount_Val").val();
 
-            let nextMsgSeparator = $("<div><br/><br/><br/><br/></div>");
-            let mainMessageBox = $("<div class='current-user-message-main-box float-end p-2'></div>");
-            let textBox = $("<div class='current-user-message-box p-2 mt-1'></div>");
-            let textElement = $("<p class='card-text white-space-on'></p>");
-            let additionalInfoBox = $("<div class='mt-1 me-1 float-end'></div>");
-            let additionalInfoSmall = $("<small class='card-text text-muted'></small>");
-            let isCheckedSpan = $("<span></span>");
-            let dateTimeSpan = $("<span></span>");
+            $("#SendDiscussionMessage_Text_Val").val(null);
+            $("#SendDiscussionMessage_SbmtBtn").attr("disabled", true);
+            if (sentMessagesCount <= 0) $("#Presentation_Box").fadeOut(300);
 
-            textElement.html(response.result.text);
-            isCheckedSpan.html(' <i class="fa-solid fa-check"></i> ');
-            dateTimeSpan.text(dateAndTimeTranslator(response.result.sentAt));
-            additionalInfoSmall.append(isCheckedSpan);
-            additionalInfoSmall.append(dateTimeSpan);
-            textBox.append(textElement);
-            additionalInfoBox.append(additionalInfoSmall);
-            mainMessageBox.append(textElement);
-            mainMessageBox.append(additionalInfoBox);
+            let messageMainBox = $("<div class='message-box discussion-options'></div>");
+            let messageNotMainBox = $("<div class='cur-user-msg-box discussion-options'></div>");
+            let styleBox = $("<div class='cur-user-styled-msg-box p-2 discussion-options'></div>");
+            //let isReplyBox = $("<div class='cur-user-reply-container mb-1 discussion-options reply-element'></div>");
+            //let repliedTo_Icon = $("<small class='card-text fw-500 discussion-options reply-element'> <i class='fa-solid fa-reply'></i> Replied to </small>");
+            //let replyText = $("<p class='card-text white-space-on discussion-options reply-element'></p>");
+            let mainText = $("<p class='card-text white-space-on message-label discussion-options'></p>");
+            let statsBox = $("<div class='discussion-options float-end me-1'></div>");
+            let isChecked = $("<small class='card-text text-primary'></small>");
+            let dateAndTime = $("<small class='card-text text-muted discussion-options'></small>");
+            let isEdited = $("<small class='card-text text-muted' style='display: none;'></small>");
 
+            messageMainBox.attr("id", response.trueId + "-DiscussionMsgBox");
+            messageNotMainBox.attr("id", response.trueId + "-DiscussionMsgNmBox");
+            styleBox.attr("id", response.trueId + "-DiscussionMsgStyledBox");
+            isEdited.attr("id", response.trueId + "-DiscussionMessageIsEdited_Lbl");
+            //if (response.isReply) {
+            //    isReplyBox.attr("id", response.trueId + "-DiscussionMsgReplyBox");
+            //    repliedTo_Icon.attr("id", response.trueId + "-DiscussionMsgReplyIcon");
+            //    replyText.attr("id", response.trueId + "-DiscussionMsgReplyText");
+            //    isReplyBox.attr("data-bs-msg-id", response.result.messageId);
+            //    repliedTo_Icon.attr("data-bs-msg-id", response.result.messageId);
+            //    replyText.attr("data-bs-msg-id", response.result.messageId);
+
+            //    replaceAllUsersInText(response.result.replyText);
+            //    replyText.html(response.result.replyText);
+
+            //    isReplyBox.append(repliedTo_Icon);
+            //    isReplyBox.append(replyText);
+            //    styleBox.append(isReplyBox);
+
+            //    textDecoder(response.result.replyText, response.trueId + "-DiscussionMsgReplyText");
+            //}
+/*            else isReplyBox.addClass("d-none");*/
+
+            mainText.attr("id", response.trueId + "-DiscussionOptionMsgText_Lbl");
+            statsBox.attr("id", response.trueId + "-DiscussionMsgStatsBox");
+            dateAndTime.attr("id", response.trueId + "-DiscussionMsgDateNTimeInfo_Lbl");
+
+            let date = new Date(response.result.sentAt);
+            let hrs = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
+            let mins = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+
+            replaceAllUsersInText(response.result.text);
+            mainText.html(response.result.text);
+            isChecked.html(' <i class="fa-solid fa-check text-muted"></i> ');
+            dateAndTime.text(hrs + ":" + mins);
+
+/*            styleBox.append(isReplyBox);*/
+            styleBox.append(mainText);
+            statsBox.append(isChecked);
+            statsBox.append(dateAndTime);
+            statsBox.append(isEdited);
+            messageNotMainBox.append(styleBox);
+            messageNotMainBox.append(statsBox);
+            messageMainBox.append(messageNotMainBox);
+
+            textDecoder(response.result.text, response.trueId + "-DiscussionOptionMsgText_Lbl");
             if (sentMessagesCount <= 0) {
-                $("#Presentation_Box").fadeOut(350);
-                $("#NoSentMessages_Box").fadeOut(350);
                 setTimeout(function () {
-                    $("#Messages_Container_Box").append(mainMessageBox);
-                    $("#Messages_Container_Box").append(nextMsgSeparator);
-                }, 400);
+                    $("#DiscussionMessages_MainBox").append(messageMainBox);
+                }, 300);
             }
             else {
-                $("#Messages_Container_Box").append(mainMessageBox);
-                $("#Messages_Container_Box").append(nextMsgSeparator);
+                $("#DiscussionMessages_MainBox").append(messageMainBox);
             }
             $("#SentMessagesCount_Val").val(++sentMessagesCount);
-            $("#DiscussionStatusBar_Lbl").text(sentMessagesCount + " messages");
+            $("#StatusBar_Lbl-1").text(sentMessagesCount + " messages");
             setTimeout(function () {
                 $("#SendDiscussionMessage_SbmtBtn").attr("disabled", false);
             }, 800);
@@ -1431,32 +1557,56 @@ $("#SendDiscussionMessage_Form").on("submit", function (event) {
         }
     });
 });
+$(document).on("submit", "#SendDiscussionReply_Form", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
 
-$("#SendDiscussionReply_Form").on("submit", function (event) {
+    $.post(url, data, function (response) {
+        $("#EditingOrReplying_Box").slideUp(350);
+        $("#RM_ReplyId_Val").val(0);
+        $("#RM_ReplyText_Val").val("");
+        if (response.success) {
+            $("#SendDiscussionMessage_Text_Val").val("");
+            $("#SendDiscussionMessage_SbmtBtn").attr("disabled", true);
+            setTimeout(function () {
+                $("#SendDiscussionMessage_SbmtBtn").attr("disabled", false);
+            }, 1800);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
+        }
+    });
+});
+$(document).on("submit", "#EditMessage_Form", function (event) {
+    let messageWithUsers = replaceAllUsersInText($("#SendDiscussionMessage_Text_Val").val());
+    $("#SendDiscussionMessage_Text_Val").val(messageWithUsers);
+
     event.preventDefault();
     let url = $(this).attr("action");
     let data = $(this).serialize();
 
     $.post(url, data, function (response) {
         if (response.success) {
-            $("#SendDiscussionReply_SbmtBtn").attr("disabled", true);
-            $("#SR_Text_Val").val("");
-            $("#SR_MessageId_Val").val(0);
-            insideBoxClose(false, "ReplyToDiscussionMessage_Box");
+            $("#" + response.id + "-DiscussionMessageIsEdited_Lbl").fadeIn(350);
+            $("#EditingOrReplying_Box").slideUp(350);
+            $("#SendDiscussionMessage_SbmtBtn").attr("disabled", true);
+            $("#EM_Id_Val").val(0);
+            $("#SendDiscussionMessage_Text_Val").val("");
+            if (response.text.length >= 40) textDecoder(response.text.substring(0, 40) + "...", response.id + "-DiscussionMsgReplyText");
+            else textDecoder(response.text, response.id + "-DiscussionMsgReplyText");
+            textDecoder(response.text, response.id + "-DiscussionOptionMsgText_Lbl");
             setTimeout(function () {
-                insideBoxOpen("SendMessage_Box", false);
-            }, 750);
-            setTimeout(function () {
-                $("#SendDiscussionReply_SbmtBtn").attr("disabled", false);
-            }, 1800);
+                $("#SendDiscussionMessage_SbmtBtn").attr("disabled", false);
+            }, 1500);
         }
         else {
-            $("#SR_Text_Val").val("");
-            alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
+            alert('<i class="fa-solid fa-ban text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
         }
     });
 });
 
+//Discussion Messages//
 $("#GetMessageInfo_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -1479,54 +1629,43 @@ $("#GetMessageInfo_Form").on("submit", function (event) {
                 $("#DDM_Id_Val").val(response.id);
 
                 if (response.result.daysPassed > 4) {
-                    $("#EditDiscussionMessage_Box-Open").attr("disabled", true);
+                    $("#EditDiscussionMessage_Btn").attr("disabled", true);
                 }
                 else {
-                    $("#EditDiscussionMessage_Box-Open").attr("disabled", false);
+                    $("#EditDiscussionMessage_Btn").attr("disabled", false);
                 }
             }
             else {
                 $("#EditDiscussionMsg_Col").fadeOut(0);
                 $("#DeleteDiscussionMsg_Col").fadeOut(0);
             }
-            $("#SR_MessageId_Val").val(response.id);
-            $("#SR_MessageText_Val").val(response.result.text.substring(0, 40));
-            $(".messages-container").css("margin-bottom", "-1200px");
-            $(".messages-container").fadeOut(100);
-            insideBoxOpen("DiscussionOptions_Box");
+            $("#EM_Id_Val").val(response.id);
+            $("#GDMA_Id_Val").val(response.id);
+            $("#SDMA_MessageId_Val").val(response.id);
+            $("#RM_ReplyId_Val").val(response.id);
+            $("#RM_ReplyText_Val").val(response.result.text.substring(0, 40));
+            $("#GDMA_MsgText_Val").val(response.result.text.substring(0, 40));
 
             setTimeout(function () {
                 $("#DiscussionOptionMessageText_Lbl").html(response.result.text);
-                $("#EditMessage_Text_Lbl").html(response.result.text);
-                $("#ReplyingMessage_Text_Lbl").html(response.result.text);
                 textDecoder($("#DiscussionOptionMessageText_Lbl").html(), "DiscussionOptionMessageText_Lbl");
-                textDecoder($("#DiscussionOptionMessageText_Lbl").html(), "EditMessage_Text_Lbl");
-                $("#EM_NewText_Val").val(response.result.text);
+                textDecoder($("#DiscussionOptionMessageText_Lbl").html(), "EditingOrReplyingMsgText_Lbl");
                 $("#DiscussionOptionAdditionalInfo_Lbl").html(isChecked + " " + dateAndTimeTranslator(response.result.sentAt) + isEdited);
                 $("#CurrentGotDiscussionMsg_Id_Val").val(response.id);
-                $("#EM_Id_Val").val(response.id);
-            }, 150);
+            }, 250);
+
+            if (parseInt($("#DiscussionOptions_Box").css("margin-bottom")) > 0) {
+                insideBoxClose(true, null);
+                setTimeout(function () {
+                    insideBoxOpen("DiscussionOptions_Box");
+                }, 750);
+            }
+            else {
+                insideBoxOpen("DiscussionOptions_Box");
+            }
         }
         else {
             alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.25);
-        }
-    });
-});
-$("#EditMessage_Form").on("submit", function (event) {
-    event.preventDefault();
-    let url = $(this).attr("action");
-    let data = $(this).serialize();
-
-    $.post(url, data, function (response) {
-        if (response.success) {
-            insideBoxClose(false, "EditDiscussionMessage_Box");
-            insideBoxOpen("SendMessage_Box");
-            $("#" + response.id + "-DiscussionMessage_IsEdited").fadeIn(350);
-            $("#" + response.id + "-DiscussionOptionMsgText_Lbl").html(response.text);
-            $("#" + response.id + "-DiscussionMsgReplyText").html(response.text);
-        }
-        else {
-            alert('<i class="fa-solid fa-ban text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
         }
     });
 });
@@ -1556,7 +1695,7 @@ $("#DeleteDiscussionMessage_Form").on("submit", function (event) {
                 $("#" + response.id + "-DiscussionMsgBox").fadeOut(350);
                 setTimeout(function () {
                     insideBoxOpen("NoSentMessages_Box");
-                }, 400);
+                }, 300);
             }
             else {
                 $("#StatusBar_Lbl-1").text(currentCount + " sent messages");
@@ -1564,13 +1703,317 @@ $("#DeleteDiscussionMessage_Form").on("submit", function (event) {
                 $("#" + response.id + "-DiscussionMsgReplyText").text("Deleted message");
             }
             insideBoxClose(false, "DiscussionOptions_Box");
-            insideBoxOpen("SendMessage_Box");
             $("#SentMessagesCount_Val").val(currentCount);
         }
         else {
             alert('<i class="fa-solid fa-ban text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
         }
     });
+});
+
+//Discussion Answers//
+$(document).on("submit", "#SendDiscussionMessageAnswer_Form", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let answersCount = parseInt($("#AnswersCount_Val").val());
+
+            let messageMainBox = $("<div class='message-box style='display: none;'></div>");
+            let messageNotMainBox = $("<div class='cur-user-msg-box'></div>");
+            let styleBox = $("<div class='cur-user-styled-msg-box p-2'></div>");
+            let mainText = $("<p class='card-text white-space-on message-label answer-options'></p>");
+            let statsBox = $("<div class='answer-options float-end me-1'></div>");
+            let dateAndTime = $("<small class='card-text text-muted'></small>");
+            let isEdited = $("<small class='card-text text-muted' style='display: none;'></small>");
+
+            messageMainBox.attr("id", response.id + "-AnswerMain_Box");
+            messageNotMainBox.attr("id", response.id + "-AnswerNotMain_Box");
+            styleBox.attr("id", response.id + "-AnswerStyle_Box");
+            statsBox.attr("id", response.id + "-AnswerStats_Box");
+            mainText.attr("id", response.id + "-AnswerMainText_Lbl");
+            dateAndTime.attr("id", response.id + "-AnswerDateAndTime_Lbl");
+            isEdited.attr("id", response.id + "-IsEdited_Lbl");
+
+            mainText.html(response.result.text);
+            dateAndTime.text(dateAndTimeConverter(response.result.createdAt));
+
+            styleBox.append(mainText);
+            statsBox.append(dateAndTime);
+            statsBox.append(isEdited);
+            messageNotMainBox.append(styleBox);
+            messageNotMainBox.append(statsBox);
+            messageMainBox.append(messageNotMainBox);
+
+            if (answersCount <= 0) {
+                $("#AnswersInfo_Box").empty();
+                setTimeout(function () {
+                    $("#AnswersInfo_Box").append(messageMainBox);
+                    setTimeout(function () {
+                        messageMainBox.slideDown(225);
+                    }, 100);
+                }, 75);
+            }
+            else {
+                $("#AnswersInfo_Box").append(messageMainBox);
+                setTimeout(function () {
+                    messageMainBox.slideDown(225);
+                }, 75);
+            }
+            answersCount++;
+            $("#AnswersCount_Val").val(answersCount);
+            if (answersCount == 1) $("#AnswersCount_Lbl").text("one answer");
+            else $("#AnswersCount_Lbl").text(answersCount + " answers");
+        }
+        else alert(' <i class="fa-solid fa-comment-slash fa-shake text-warning" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 1;"></i> ', response.alert, "Close", null, 0, null, null, null, 3.25);
+    });
+});//status-slider
+$(document).on("submit", "#EditDiscussionMessageAnswer_Form", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        $(".send-answer-variety").attr("action", "/Answer/SendDiscussionMessageAnswer");
+        $(".send-answer-variety").attr("id", "SendDiscussionMessageAnswer_Form");
+        $("#SDMA_Id_Val").val(0);
+        $("#SDMA_Text_Val").val("");
+        $(".cancel-answer-options").fadeOut(250);
+        $("#SDMASbmt_Btn").text("Send");
+
+        if (response.success) {
+            $("#" + response.result + "-AnswerMainText_Lbl").text(response.text);
+            $("#" + response.result + "-IsEdited_Lbl").text(", edited");
+            $("#" + response.result + "-IsEdited_Lbl").fadeIn(300);
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake text-warning" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+    });
+});
+$("#DeleteDiscussionMessage_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let answersCount = parseInt($("#AnswersCount_Val").val());
+            answersCount--;
+
+            $("#AnswersCount_Val").val(answersCount);
+            if (answersCount <= 0) $("#AnswersCount_Lbl").text("no answers yet");
+            else if (answersCount == 1) $("#AnswersCount_Lbl").text("one answer");
+            else $("#AnswersCount_Lbl").text(answersCount + " answers");
+
+            $("#DDM_Id_Val").val(0);
+            $("#DDM_Box").fadeIn(250);
+            $("#SDMA_Box").fadeOut(250);
+
+            slideToLeft("#" + response.result + "-AnswerMain_Box");
+            setTimeout(function () {
+                $("#" + response.result + "-AnswerMain_Box").fadeOut(75);
+            }, 250);
+        }
+        else alert('<i class="fa-regular fa-trash-can fa-shake text-danger" style="--fa-animation-duration: 1.2s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+    });
+});
+
+$("#GetDiscussionMessageAnswers_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        animatedClose(false, "Answers_Container", true, true);
+        $("#AnswersCount_Val").val(response.count);
+        setTimeout(function () {
+            $("#AnswersInfo_Box").empty();
+        }, 300);
+
+        if (response.message.length >= 40) {
+            textDecoder(response.message + "...", "AnswerMsgText_Lbl");
+        }
+        else textDecoder(response.message, "AnswerMsgText_Lbl");
+        if (parseInt(response.count) <= 0) $("#AnswersCount_Lbl").text("no answers");
+        else if (parseInt(response.count) == 1) $("#AnswersCount_Lbl").text("one answer");
+        else $("#AnswersCount_Lbl").text(response.count + " answers");
+
+        if (response.success) {
+            if (response.count > 0) {
+                alert('<i class="fa-solid fa-computer-mouse fa-beat text-primary" style="--fa-animation-duration: 0.75s; --fa-animation-iteration-count: 2;"></i>', "<span class='fw-500'>Tap once</span> on anwer's text to edit it. <span class='fw-500'>Tap twice</span> on text to delete the whole answer", "Got It", null, 0, null, null, null, 5);
+                setTimeout(function () {
+                    $.each(response.result, function (index) {
+                        if (response.result[index].userId == response.currentUserId) {
+                            let messageMainBox = $("<div class='message-box'></div>");
+                            let messageNotMainBox = $("<div class='cur-user-msg-box'></div>");
+                            let styleBox = $("<div class='cur-user-styled-msg-box p-2'></div>");
+                            let mainText = $("<p class='card-text white-space-on answer-options'></p>");
+                            let statsBox = $("<div class='discussion-options float-end me-1'></div>");
+                            let dateAndTime = $("<small class='card-text text-muted'></small>");
+                            let isEdited = $("<small class='card-text text-muted' style='display: none;'>, edited</small>");
+
+                            messageMainBox.attr("id", response.result[index].id + "-AnswerMain_Box");
+                            messageNotMainBox.attr("id", response.result.id + "-AnswerNotMain_Box");
+                            styleBox.attr("id", response.result[index].id + "-AnswerStyle_Box");
+                            statsBox.attr("id", response.result[index].id + "-AnswerStats_Box");
+                            mainText.attr("id", response.result[index].id + "-AnswerMainText_Lbl");
+                            dateAndTime.attr("id", response.result[index].id + "-AnswerDateAndTime_Lbl");
+                            isEdited.attr("id", response.result[index].id + "-IsEdited_Lbl");
+
+                            if (response.result[index].isEdited) isEdited.fadeIn(0);
+
+                            mainText.html(response.result[index].text, response.result[index].id + "-AnswerMainText_Lbl");
+                            dateAndTime.text(dateAndTimeTranslator(response.result[index].createdAt));
+
+                            styleBox.append(mainText);
+                            statsBox.append(dateAndTime);
+                            statsBox.append(isEdited);
+                            messageNotMainBox.append(styleBox);
+                            messageNotMainBox.append(statsBox);
+                            messageMainBox.append(messageNotMainBox);
+
+                            $("#AnswersInfo_Box").append(messageMainBox);
+                        }
+                        else {
+                            let messageMainBox = $("<div class='message-box'></div>");
+                            let messageNotMainBox = $("<div class='other-user-msg-box'></div>");
+                            let styleBox = $("<div class='other-user-styled-msg-box p-2'></div>");
+                            let mainText = $("<p class='card-text white-space-on'></p>");
+                            let statsBox = $("<div class='ms-1'></div>");
+                            let dateAndTime = $("<small class='card-text text-muted'></small>");
+                            let isEdited = $("<small class='card-text text-muted' style='display: none;'></small>");
+
+                            messageMainBox.attr("id", response.result[index].id + "-AnswerMain_Box");
+                            messageNotMainBox.attr("id", response.result.id + "-AnswerNotMain_Box");
+                            styleBox.attr("id", response.result[index].id + "-AnswerStyle_Box");
+                            statsBox.attr("id", response.result[index].id + "-AnswerStats_Box");
+                            mainText.attr("id", response.result[index].id + "-AnswerMainText_Lbl");
+                            dateAndTime.attr("id", response.result[index].id + "-AnswerDateAndTime_Lbl");
+                            isEdited.attr("id", response.result[index].id + "-IsEdited_Lbl");
+
+                            mainText.html(response.result[index].text, response.result[index].id + "-AnswerMainText_Lbl");
+                            dateAndTime.text(dateAndTimeTranslator(response.result[index].createdAt));
+
+                            styleBox.append(mainText);
+                            statsBox.append(dateAndTime);
+                            statsBox.append(isEdited);
+                            messageNotMainBox.append(styleBox);
+                            messageNotMainBox.append(statsBox);
+                            messageMainBox.append(messageNotMainBox);
+
+                            $("#AnswersInfo_Box").append(messageMainBox);
+                        }
+                    });
+                }, 400);
+
+                insideBoxClose(true, null);
+                animatedClose(false, "DiscussionInfoTooltips_Container", false, true);
+                setTimeout(function () {
+                    openSidebar();
+                    animatedOpen(false, "Answers_Container", true, false);
+                }, 450);
+            }
+            else {
+                let noAnswersBox = $("<div class='box-container bg-light p-2 text-center'></div>");
+                let noAnswersIcon = $("<span class='h1 text-primary'> <i class='fa-regular fa-message'></i> </span>");
+                let noAnswersText = $("<span class='h5'>No Answers</span>");
+                let noAnswersSeparatorZero = $("<div class='mt-1'></div>");
+                let noAnswersSeparatorOne = $("<div></div>");
+                let noAnswersDescription = $("<small class='card-text text-muted'>this message hasn't got any answer yet</small>");
+
+                noAnswersBox.append(noAnswersIcon);
+                noAnswersBox.append(noAnswersSeparatorZero);
+                noAnswersBox.append(noAnswersText);
+                noAnswersBox.append(noAnswersSeparatorOne);
+                noAnswersBox.append(noAnswersDescription);
+
+                insideBoxClose(true, null);
+                animatedClose(false, "DiscussionInfoTooltips_Container", false, true);
+                setTimeout(function () {
+                    $("#AnswersInfo_Box").append(noAnswersBox);
+                    openSidebar();
+                    animatedOpen(false, "Answers_Container", true, false);
+                }, 450);
+            }
+        }
+        else {
+            let noAnswersBox = $("<div class='box-container bg-light p-2 text-center'></div>");
+            let noAnswersIcon = $("<span class='h1 text-primary'> <i class='fa-regular fa-message'></i> </span>");
+            let noAnswersText = $("<span class='h5'>No Answers</span>");
+            let noAnswersSeparatorZero = $("<div class='mt-1'></div>");
+            let noAnswersSeparatorOne = $("<div></div>");
+            let noAnswersDescription = $("<small class='card-text text-muted'>this message hasn't got any answer yet</small>");
+
+            noAnswersBox.append(noAnswersIcon);
+            noAnswersBox.append(noAnswersSeparatorZero);
+            noAnswersBox.append(noAnswersText);
+            noAnswersBox.append(noAnswersSeparatorOne);
+            noAnswersBox.append(noAnswersDescription);
+
+            insideBoxClose(true, null);
+            animatedClose(false, "DiscussionInfoTooltips_Container", false, true);
+            setTimeout(function () {
+                $("#AnswersInfo_Box").append(noAnswersBox);
+                openSidebar();
+                animatedOpen(false, "Answers_Container", true, false);
+            }, 450);
+        }
+    });
+});
+$(document).on("click", ".answer-options", function (event) {
+    let trueId = getTrueId(event.target.id);
+
+    $("#DDM_Id_Val").val(0);
+    $("#DDM_Box").slideUp(250);
+    $("#SDMA_Box").slideDown(250);
+    if (trueId != null) {
+        $(".send-answer-variety").attr("action", "/Answer/EditDiscussionMessageAnswer");
+        $(".send-answer-variety").attr("id", "EditDiscussionMessageAnswer_Form");
+        $("#SDMA_Id_Val").val(trueId);
+        $(".cancel-answer-options").fadeIn(250);
+        $("#SDMA_Text_Val").val($("#" + trueId + "-AnswerMainText_Lbl").text());
+        $("#SDMASbmt_Btn").text("Save");
+    }
+    else {
+        $(".send-answer-variety").attr("action", "/Answer/SendDiscussionMessageAnswer");
+        $(".send-answer-variety").attr("id", "SendDiscussionMessageAnswer_Form");
+        $("#SDMA_Id_Val").val(0);
+        $("#SDMA_Text_Val").val("");
+        $(".cancel-answer-options").fadeOut(250);
+        $("#SDMASbmt_Btn").text("Send");
+    }
+});
+$(document).on("dblclick", ".answer-options", function (event) {
+    let trueId = getTrueId(event.target.id);
+
+    $(".send-answer-variety").attr("action", "/Answer/SendDiscussionMessageAnswer");
+    $(".send-answer-variety").attr("id", "SendDiscussionMessageAnswer_Form");
+    $("#SDMA_Id_Val").val(0);
+    $("#SDMA_Text_Val").val("");
+    $("#SDMA_Box").slideUp(250);
+    $(".cancel-answer-options").fadeIn(250);
+    if (trueId != null) {
+        $("#DDM_Id_Val").val(trueId);
+        $("#DDM_Box").fadeIn(250);
+    }
+    else {
+        $("#DDM_Id_Val").val(0);
+        $("#DDM_Box").slideUp(250);
+    }
+});
+$(document).on("click", ".cancel-answer-options", function () {
+    $(".cancel-answer-options").fadeOut(300);
+    $(".send-answer-variety").attr("action", "/Answer/SendDiscussionMessageAnswer");
+    $(".send-answer-variety").attr("id", "SendDiscussionMessageAnswer_Form");
+
+    $("#SDMA_Id_Val").val(0);
+    $("#SDMA_Text_Val").val("");
+    $("#SDMASbmt_Btn").text("Send");
+    $("#SDMA_Box").slideDown(250);
+
+    $("#DDM_Id_Val").val(0);
+    $("#DDM_Box").fadeOut(250);
 });
 
 $("#FindUsersToAdd_Form").on("submit", function (event) {
@@ -1745,58 +2188,116 @@ $("#ChangeToSingleUseType_Btn").on("click", function () {
     }, 450);
 });
 
-$("#ScheduleTheMessage_Btn").on("click", function () {
-    let text = $("#SendDiscussionMessage_Text_Val").val();
-    let userId = $("#SendMessage_UserId_Val").val();
-    let discussionId = $("#SendMessage_DiscussionId_Val").val();
-    let isAutoDeletable = $("#SendMessage_IsAutoDeletable").val();
+$("#CancelDiscussionMessageSettings_Btn").on("click", function () {
+    $(".send-message-variety").attr("action", "/DiscussionMessage/Message");
+    $(".send-message-variety").attr("id", "SendDiscussionMessage_Form");
+    $("#RM_ReplyId_Val").val(0);
+    $("#RM_ReplyText_Val").val("");
+    $("#EM_Id_Val").val(0);
+    $("#SendDiscussionMessage_Text_Val").val("");
+    $("#EditingOrReplying_Box").slideUp(350);
+});
+$("#EditDiscussionMessage_Btn").on("click", function () {
+    let uncodedText = textUncoder($("#EditingOrReplyingMsgText_Lbl").html());
 
-    $("#ScheduledMsg_Text").html(text);
-    $("#ScheduledMsg_IsAutoDeletable").text(isAutoDeletable == null ? "Non-autodeletable" : "Autodeletable");
-
-    animatedOpen(false, "ScheduleTheMessage_Container", true, true);
+    $("#EditingOrReplyingMsgStatus_Lbl").text("Edit Message");
+    $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-regular fa-pen-to-square"></i> ');
+    $("#SendDiscussionMessage_Text_Val").val(uncodedText);
+    $(".send-message-variety").attr("action", "/DiscussionMessage/Edit");
+    $(".send-message-variety").attr("id", "EditMessage_Form");
+    $("#EditingOrReplying_Box").slideDown(350);
+});
+$("#ReplyDiscussionMessage_Btn").on("click", function () {
+    $("#EditingOrReplyingMsgStatus_Lbl").text("Reply to");
+    $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-solid fa-reply"></i> ');
+    $(".send-message-variety").attr("action", "/DiscussionMessage/Reply");
+    $(".send-message-variety").attr("id", "SendDiscussionReply_Form");
+    $("#EditingOrReplying_Box").slideDown(350);
 });
 
-$("#ScheduledMessage_AddDays").on("change", function () {
-    let currentDate = new Date();
-    let addedDays = parseInt($("#ScheduledMessage_AddDays").val());
-    let addedMinutes = parseInt($("#ScheduledMessage_AddDays").val());
-    let addedHours = parseInt($("#ScheduledMessage_AddHours").val());
+$("#DI_LoadAdditionalInfo_Btn").on("click", function () {
+    $("#AdditionalInfo_Container").empty();
 
-    addedMinutes += addedDays * 24 * 60;
-    let neededMilliseconds = addedMinutes * 60000;
-/*    addedMinutes += addedHours * 60;*/
-    console.log(neededMilliseconds);
-    let newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getTime() + neededMilliseconds);
-    console.log(newDate.getDate());
-    //console.log(newDate.getDate() + "/" + parseInt(newDate.getMonth()) + "/" + newDate.getFullYear() + ", " + newDate.getHours() + ":" + newDate.getMinutes());
-});
-$("#ScheduledMessage_AddHours").on("change", function () {
-    let currentDate = new Date();
-    let addedDays = $("#ScheduledMessage_AddDays").val();
-    let addedMinutes = $("#ScheduledMessage_AddDays").val();
-    let addedHours = $("#ScheduledMessage_AddHours").val();
+    let name = $("#DiscussionName_Lbl").html();
+    let shortLink = $("#DiscussionShortlink_Lbl").html();
+    let membersCount = $("#StatusBar_Lbl-0").html() + " out of 1200";
+    let createdAt = $("#CreatedAt_Val").val();
+    let isPrivate = $("#IsPrivate_Val").val();
 
-    addedMinutes += addedDays * 24 * 60;
-    addedMinutes += addedHours * 60;
+    let linkContainer = $("<div class='bordered-container p-2 mt-2 text-center'></div>");
+    let linkContainer_Icon = $("<h1 class='h1 text-primary'> <i class='fa-solid fa-link'></i> </h1>");
+    let linkContainer_Header = $("<h5 class='h5'>Discussion Link</h5>");
+    let link_NMContainer = $("<div class='box-container mt-2'></div>");
+    let link_NM_Small = $("<small class='card-text text-muted'>Tap on the button to copy the link</small>");
+    let link_ActualContainer = $("<div class='box-container bg-light p-2 mt-2'></div>");
+    let link_ActualSpan = $("<span class='card-text' id='DiscussionLinkAbout_Span'></span>");
+    let link_ActualCopyBtn = $("<button type='button' class='btn btn-light btn-standard copy-to-clipboard ms-2' id='DiscussionLinkAbout_Span-Copy'> <i class='fa-regular fa-copy text-primary'></i> Copy</button>");
+    link_ActualSpan.html('/discussion/discuss/' + shortLink.substring(1, shortLink.length));
 
-    let newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getMinutes() + addedMinutes);
-    console.log(newDate.getDate());
-});
-$("#ScheduledMessage_AddMinutes").on("change", function () {
-    let currentDate = new Date();
-    let addedDays = $("#ScheduledMessage_AddDays").val();
-    let addedMinutes = $("#ScheduledMessage_AddDays").val();
-    let addedHours = $("#ScheduledMessage_AddHours").val();
+    link_ActualContainer.append(link_ActualSpan);
+    link_ActualContainer.append(link_ActualCopyBtn);
+    link_NMContainer.append(link_NM_Small);
+    link_NMContainer.append(link_ActualContainer);
+    linkContainer.append(linkContainer_Icon);
+    linkContainer.append(linkContainer_Header);
+    linkContainer.append(link_NMContainer);
 
-    addedMinutes += addedDays * 24 * 60;
-    addedMinutes += addedHours * 60;
+    let nameDiv = $("<div class='p-2 pb-0'></div>");
+    let nameTitle = $("<small class='card-text text-muted fw-500'>Name</small>");
+    let nameSeparator = $("<div></div>");
+    let nameLbl = $("<small class='card-text' id='AdditionalInfo_DiscussionName_Lbl'></small>");
 
-    let newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getMinutes() + addedMinutes);
-    console.log(newDate.getDate());
+    let shortlinkDiv = $("<div class='border-top mt-2 p-2 pb-0'></div>");
+    let shortlinkTitle = $("<small class='card-text text-muted fw-500'>Shortlink</small>");
+    let shortlinkSeparator = $("<div></div>");
+    let shortlinkLbl = $("<small class='card-text' id='AdditionalInfo_DiscussionShortlink_Lbl'></small>");
+
+    let membersCountDiv = $("<div class='border-top mt-2 p-2 pb-0'></div>");
+    let membersCountTitle = $("<small class='card-text text-muted fw-500'>Number of Members</small>");
+    let membersCountSeparator = $("<div></div>");
+    let membersCountLbl = $("<small class='card-text' id='AdditionalInfo_DiscussionMembersCount_Lbl'></small>");
+
+    let createdAtDiv = $("<div class='border-top mt-2 p-2 pb-0'></div>");
+    let createdAtTitle = $("<small class='card-text text-muted fw-500'>Created at</small>");
+    let createdAtSeparator = $("<div></div>");
+    let createdAtLbl = $("<small class='card-text' id='AdditionalInfo_DiscussionCreatedAt_Lbl'></small>");
+
+    let isPrivateDiv = $("<div class='border-top mt-2 p-2 pb-0'></div>");
+    let isPrivateTitle = $("<small class='card-text text-muted fw-500'>Privacy</small>");
+    let isPrivateSeparator = $("<div></div>");
+    let isPrivateLbl = $("<small class='card-text'>Created at</small>");
+
+    nameLbl.html(name);
+    shortlinkLbl.html(shortLink);
+    membersCountLbl.html(membersCount);
+    createdAtLbl.html(dateAndTimeConverter(createdAt));
+    if (isPrivate) isPrivateLbl.html("<span class='text-orange'> <i class='fa-solid fa-lock'></i> </span> Private Discussion; secured with password");
+    else isPrivateLbl.html("<span class='text-primary'> <i class='fa-solid fa-lock-open'></i> </span> Free-to-enter discussion");
+
+    nameDiv.append(nameTitle);
+    nameDiv.append(nameSeparator);
+    nameDiv.append(nameLbl);
+    shortlinkDiv.append(shortlinkTitle);
+    shortlinkDiv.append(shortlinkSeparator);
+    shortlinkDiv.append(shortlinkLbl);
+    membersCountDiv.append(membersCountTitle);
+    membersCountDiv.append(membersCountSeparator);
+    membersCountDiv.append(membersCountLbl);
+    createdAtDiv.append(createdAtTitle);
+    createdAtDiv.append(createdAtSeparator);
+    createdAtDiv.append(createdAtLbl);
+    isPrivateDiv.append(isPrivateTitle);
+    isPrivateDiv.append(isPrivateSeparator);
+    isPrivateDiv.append(isPrivateLbl);
+
+    $("#AdditionalInfo_Container").append(linkContainer);
+    $("#AdditionalInfo_Container").append(nameDiv);
+    $("#AdditionalInfo_Container").append(shortlinkDiv);
+    $("#AdditionalInfo_Container").append(membersCountDiv);
+    $("#AdditionalInfo_Container").append(createdAtDiv);
+    $("#AdditionalInfo_Container").append(isPrivateDiv);
+
+    slideToRight("DiscussionAdditionalInfo_Container");
 });
 
 $(document).on("click", ".btn-get-discussion-info", function (event) {
@@ -1815,17 +2316,14 @@ $(document).on("click", ".reply-to-discussion-message", function (event) {
     }
 
     if (trueId != null && trueId > 0) {
-        $("#SR_MessageId_Val").val(trueId);
-        $("#SR_MessageText_Val").val($("#" + trueId + "-ReplyToDiscussionMessage").html().substring(0, 40));
-        $("#ReplyingMessage_Text_Lbl").text($("#" + trueId + "-ReplyToDiscussionMessage").html().substring(0, 40));
-        insideBoxClose(true, "messages-container");
-        setTimeout(function () {
-            insideBoxOpen("ReplyToDiscussionMessage_Box", false);
-        }, 750);
+        $("#ReplyDiscussionMessage_Btn").click();
+        $("#RM_ReplyId_Val").val(trueId);
+        $("#RM_ReplyText_Val").val($("#" + trueId + "-ReplyToDiscussionMessage").html().substring(0, 40));
+        $("#EditingOrReplyingMsgText_Lbl").text($("#" + trueId + "-ReplyToDiscussionMessage").html().substring(0, 40));
     }
     else {
-        $("#SR_MessageId_Val").val(0);
-        $("#SR_MessageText_Val").val(null);
+        $("#RM_ReplyId_Val").val(0);
+        $("#RM_ReplyText_Val").val(null);
     }
 });
 
@@ -2030,7 +2528,6 @@ $(document).on("keyup change", ".form-control-check-input", function () {
     if (currentLength >= minLength) $("#" + neededBtn).attr("disabled", false);
     else $("#" + neededBtn).attr("disabled", true);
 });
-
 $(document).on("click", ".btn-open-container", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
@@ -2062,7 +2559,7 @@ $(document).on("click", ".btn-open-inside-box", function (event) {
         $(".messages-container").fadeOut(300);
         setTimeout(function () {
             insideBoxOpen(trueId);
-        }, 150);
+        }, 175);
     }
 });
 $(document).on("click", ".btn-close-inside-box", function (event) {
@@ -2185,9 +2682,6 @@ $(document).on("click", ".copy-to-clipboard", function (event) {
         navigator.clipboard.writeText($("#" + trueId).html());
         alert('<i class="fa-regular fa-copy text-neon-purple"></i>', "Copied to clipboard successfully", "Done", null, 0, null, null, null, 3.5);
         insideBoxClose(true, null);
-        setTimeout(function () {
-            insideBoxOpen("SendMessage_Box");
-        }, 750);
     }
 });
 
@@ -2247,8 +2741,7 @@ $(document).on("click", ".set-style", function (event) {
                 break;
         }
 
-        if (currentUrl.toLowerCase().includes("/toolbox")) animatedOpen(false, "TextEditorSettings_Container", true, true);
-        else animatedOpen(false, "TextEditorSettings_Container", true, true);
+        animatedOpen(false, "TextEditorSettings_Container", true, true);
     }
 });
 
@@ -2256,9 +2749,6 @@ $(document).on("click", ".delete-message-options", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
         insideBoxClose(false, trueId);
-        insideBoxOpen("SendMessage_Box");
-        insideBoxOpen("SendLiveDiscussionMessage_Box");
-        insideBoxOpen("SendChatMessage_Box");
         setTimeout(function () {
             $(".got-msg-text").html("Message Text");
             $(".got-msg-datetime").html("sent date, time, is checked and edited");
@@ -2412,12 +2902,11 @@ $(document).on("click", ".text-decoder", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
         let pasteTo = $("#" + event.target.id).attr("data-paste-to");
-        $("#" + trueId).val(setBackAllUsersInText($("#" + trueId).val()));
         $("#" + trueId).val(replaceAllUsersInText($("#" + trueId).val()));
-        //$("#" + trueId).val(setBackAllUsersInText($("#" + trueId).val()));
-        $("#" + trueId).val(replaceAllLinksInText($("#" + trueId).val()));
-        console.log(replaceAllLinksInText($("#" + trueId).val()));
+        //$("#" + trueId).val(clearAllLinksInText($("#" + trueId).val()));
+        //$("#" + trueId).val(replaceAllLinksInText($("#" + trueId).val()));
         textDecoder($("#" + trueId).val(), pasteTo);
+        $("#" + trueId).val("");
     }
 });
 $(document).on("click", ".text-editor", function (event) {
@@ -2480,13 +2969,82 @@ $(document).on("change", ".send-message-form-control", function (event) {
             if (parseInt($("#CommandLine_Box").css("margin-bottom")) > -1200) {
                 insideBoxClose(false, "CommandLine_Box");
                 setTimeout(function () {
-                    insideBoxOpen("CommandLine_Box", true);
+                    insideBoxOpen("CommandLine_Box");
                 }, 750);
             }
             else {
-                insideBoxOpen("CommandLine_Box", true);
+                insideBoxOpen("CommandLine_Box");
             }
         }
+    }
+});
+
+$(document).on("click", ".user-via-shortname", function (event) {
+    let trueName = $(this).text().substring(1);
+    $("#FBD_Shortname_Val").val(trueName);
+    $("#FindUserByShortname_Form").submit();
+});
+
+$(document).on("click", ".text-via-link", function (event) {
+    let link = $(this).html();
+    if (link != "" || link != undefined) {
+        window.location.href = link;
+    }
+    else alert('<i class="fa-solid fa-link-slash fa-shake" style="--fa-animation-iteration-count: 1; --fa-animation-duration: 1.25s;"></i>', "Wrong link. We cannot open a page with that link, maybe because it's unsafe or the exact link is not correct", null, null, 0, null, null, null, 3.25);
+});
+
+$(document).on("click", ".btn-set-status", function (event) {
+    botNavbarClose(true, null);
+    setTimeout(function () {
+        botNavbarOpen("StatusEdit_BotOffNavbar", 'Preloaded_BotOffNavbar', '<i class="fa-regular fa-keyboard"></i>');
+    }, 100);
+});
+
+$(document).on("click", ".return-main-bot-navbar", function (event) {
+    botNavbarClose(true, null);
+
+    botOffNavbarH = $("#MainBotOffNavbar").innerHeight();
+    let topNavbarH = $(".top-navbar").innerHeight();
+    let neededH = fullHeight - 24 - botOffNavbarH - topNavbarH;
+    $(".mh-max").css("height", neededH + "px");
+    $(".main-container").css("bottom", botOffNavbarH + 1 + "px");
+    $(".main-container").css("max-height", neededH + 1 + "px");
+    $(".messages-container").css("bottom", botOffNavbarH + 8 + "px");
+
+    $("#FifthMain_Btn").fadeIn(350);
+    setTimeout(function () {
+        botNavbarOpen("MainBotOffNavbar");
+    }, 100);
+});
+$(document).on("click", ".open-bot-off-navbar", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        let reservedBtn = $("#" + event.target.id).attr("data-bs-title");
+        let btnHtml = $("#" + event.target.id).attr("data-bs-html");
+        botNavbarClose(true, null);
+
+        setTimeout(function () {
+            botNavbarOpen(trueId, reservedBtn, btnHtml);
+        }, 125);
+    }
+});
+$(document).on("click", ".open-main-bot-navbar", function () {
+    let trueId = $("#FifthMain_Btn").attr("data-bs-html");
+    if (trueId != null) {
+        botNavbarClose(true, null);
+
+        botOffNavbarH = $("#" + trueId).innerHeight();
+        let topNavbarH = $(".top-navbar").innerHeight();
+        let neededH = fullHeight - 24 - botOffNavbarH - topNavbarH;
+        $(".mh-max").css("height", neededH + "px");
+        $(".main-container").css("bottom", botOffNavbarH + 1 + "px");
+        $(".main-container").css("max-height", neededH + 1 + "px");
+        $(".messages-container").css("bottom", botOffNavbarH + 8 + "px");
+        $("#FifthMain_Btn").fadeOut(350);
+
+        setTimeout(function () {
+            botNavbarOpen(trueId);
+        }, 100);
     }
 });
 
@@ -2553,7 +3111,7 @@ function hide(element, openAnotherElement) {
 
 function headerTransform(element) {
     $("#" + element).css("filter", "none");
-    $(".header-container").slideUp(300);
+    $(".special-container-header").slideUp(300);
     $(".discussion-box").slideUp(300);
     setTimeout(function () {
         $("#" + element).fadeIn(0);
@@ -2567,7 +3125,7 @@ function headerReturn(element) {
         $("#" + element).fadeOut(0);
     }, 250);
     setTimeout(function () {
-        $(".header-container").fadeIn(300);
+        $(".special-container-header").fadeIn(300);
         $(".discussion-box").fadeIn(300);
     }, 300);
 }
@@ -2618,6 +3176,34 @@ function setUrgencyIcon(value) {
     }
 
     return value;
+}
+
+function dateAndTimeConverter(value) {
+    if (value != null) {
+        let monthsArray = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+        let dateAndTime = new Date(value);
+        let currentDate = new Date();
+
+        let day = dateAndTime.getMonth() + 1;
+        let month = dateAndTime.getDate() - 1;
+        let year = dateAndTime.getFullYear();
+
+        let hours = dateAndTime.getHours() < 10 ? "0" + dateAndTime.getHours() : dateAndTime.getHours();
+        let mins = dateAndTime.getMinutes() < 10 ? "0" + dateAndTime.getMinutes() : dateAndTime.getMinutes();
+        if (currentDate.getFullYear() != year) {
+            if (hours == "00" && mins == "00") {
+                return day + " " + monthsArray[month] + " " + year;
+            }
+            else return day + " " + monthsArray[month] + " " + year + ", at " + hours + ":" + mins;
+        }
+        else {
+            if (hours == "00" && mins == "00") {
+                return day + " " + monthsArray[month];
+            }
+            else return day + " " + monthsArray[month] + ", at " + hours + ":" + mins;
+        }
+    }
+    else return null;
 }
 
 function dateAndTimeTranslator(value) {
@@ -2674,7 +3260,7 @@ function textEditor(elementId, preparedText1, preparedText2, pasteTo) {
         part2 = fullText.substring(cursorStartPos, fullText.length);
     }
     else {
-        selectedText = fullText.substring(cursorStartPos, cursorEndPos - 1);
+        selectedText = fullText.substring(cursorStartPos, cursorEndPos);
         part2 = fullText.substring(cursorEndPos, fullText.length);
     }
 
@@ -2685,7 +3271,7 @@ function textEditor(elementId, preparedText1, preparedText2, pasteTo) {
                 cursorStartPos = part1.length + 2;
             }
             else {
-                fullText = part1 + "[[" + selectedText + "]] " + part2;
+                fullText = part1 + "[[" + selectedText + "]]" + part2;
                 cursorStartPos = part1.length + 4 + selectedText.length;
             }
             break;
@@ -2695,7 +3281,7 @@ function textEditor(elementId, preparedText1, preparedText2, pasteTo) {
                 cursorStartPos = part1.length + 2;
             }
             else {
-                fullText = part1 + "[{" + selectedText + "]] " + part2;
+                fullText = part1 + "[{" + selectedText + "]]" + part2;
                 cursorStartPos = part1.length + 4 + selectedText.length;
             }
             break;
@@ -2705,7 +3291,7 @@ function textEditor(elementId, preparedText1, preparedText2, pasteTo) {
                 cursorStartPos = part1.length + 2;
             }
             else {
-                fullText = part1 + "[_" + selectedText + "]] " + part2;
+                fullText = part1 + "[_" + selectedText + "]]" + part2;
                 cursorStartPos = part1.length + 4 + selectedText.length;
             }
             break;
@@ -2715,17 +3301,17 @@ function textEditor(elementId, preparedText1, preparedText2, pasteTo) {
                 cursorStartPos = part1.length + 2;
             }
             else {
-                fullText = part1 + "[$" + selectedText + "]] " + part2;
+                fullText = part1 + "[$" + selectedText + "]]" + part2;
                 cursorStartPos = part1.length + 4 + selectedText.length;
             }
             break;
         case 4:
             if (selectedText == null) {
-                fullText = part1 + "[[ [!='color:" + preparedText1 + "'>" + preparedText2 + "]] " + part2;
+                fullText = part1 + "[[ [!='color:" + preparedText1 + "'>" + preparedText2 + "]]" + part2;
                 cursorStartPos = part1.length + 14 + preparedText1.length + preparedText2.length;
             }
             else {
-                fullText = part1 + "[[ [!='color:" + preparedText1 + "' " + selectedText + "]] " + part2;
+                fullText = part1 + "[[ [!='color:" + preparedText1 + "' " + selectedText + "]]" + part2;
                 cursorStartPos = part1.length + 14 + part2.length;
             }
             break;
@@ -2755,7 +3341,7 @@ function textEditor(elementId, preparedText1, preparedText2, pasteTo) {
                 cursorStartPos = part1.length + 2;
             }
             else {
-                fullText = part1 + "[/" + selectedText + "]] " + part2;
+                fullText = part1 + "[/" + selectedText + "]]" + part2;
                 cursorStartPos = part1.length + 4 + selectedText.length;
             }
             break;
@@ -2773,13 +3359,13 @@ function statusSlider(mainId, maxCount) {
     if (maxCount > 0) {
         let currentCount = 0;
         setInterval(function () {
-            $(".status-slider").fadeOut(350);
+            $(".status-slider").fadeOut(250);
             setTimeout(function () {
-                $("#" + mainId + "-" + currentCount).fadeIn(350);
+                $("#" + mainId + "-" + currentCount).fadeIn(250);
             }, 300);
             currentCount++;
             if (currentCount > maxCount) currentCount = 0;
-        }, 4500);
+        }, 3500);
     }
 }
 
@@ -2795,11 +3381,34 @@ function textDecoder(text, setIn) {
     text = text.replaceAll("[/", "<span class='blurred-lines'>");
     text = text.replaceAll("]]", "</span>");
     text = text.replaceAll("*]", "</span>");
+    text = text.replaceAll("$}", "</span>");
     text = text.replaceAll("[*", "<span class='user-via-shortname'>");
     text = text.replaceAll("!]", "</button>");
     text = text.replaceAll("$!", "</a>");
+    text = text.replaceAll("{$", "<span class='text-via-link'>");
 
     $("#" + setIn).html(text);
+}
+
+function textUncoder(text) {
+    text = text.replaceAll("<span>", "[#");
+    text = text.replace('<span class="fw-500">', "[[");
+    text = text.replaceAll('span class="fst-italic">', "[{");
+    text = text.replaceAll('<span class="text-decoration-underline">', "[_");
+    text = text.replaceAll('<span class="style-font" >', "[$");
+    text = text.replaceAll("<span style", "[!");
+    text = text.replaceAll('<a class="text-decoration-none text-primary" href', "!$");
+    text = text.replaceAll('<span class="card-text info-popover" data-bs-toggle="popover" data-bs-custom-class="tooltip-asset-one shadow-sm p-0" data-bs-placement="top" data-bs-container=vbody" data-bs-content', "!%");
+    text = text.replaceAll('<span class="blurred-lines" >', "[/");
+    text = text.replaceAll("</span>", "]]");
+    text = text.replaceAll("</span>", "*]");
+    text = text.replaceAll("</span>", "$}");
+    text = text.replaceAll('<span class="user-via-shortname">', "[*");
+    text = text.replaceAll("</button>", "!]");
+    text = text.replaceAll("</a>", "$!");
+    text = text.replaceAll('<span class="text-via-linkv">', "{$");
+
+    return text;
 }
 
 function replaceAllTheTextInMessages() {
@@ -2811,39 +3420,50 @@ function replaceAllTheTextInMessages() {
     }
 }
 
-function setBackAllUsersInText(text) {
-    text = text.replaceAll("[*", "");
-    text = text.replaceAll("*]", "");
+function setBackAllUsersInText(element) {
+    let reservedText = $("#" + element).attr("data-bs-html");
+    if (reservedText != undefined) {
+        return reservedText;
+    }
+    else return null;
+}
+
+function clearAllLinksInText(text) {
+    text = text.replaceAll("{$", '');
+    text = text.replaceAll("$}", '');
 
     return text;
 }
 
 function replaceAllLinksInText(text) {
-    let linksArray = [];
-    let currentIndex = 0;
-
-    for (let i = 0; i < text.length; i++) {
-        if (text.substring(currentIndex, text.length).includes("https")) {
-            currentIndex = text.indexOf("https", currentIndex);
-            let endIndex = text.indexOf(" ", currentIndex);
-            let link = text.substring(currentIndex, endIndex);
-            console.log(link);
-
-            linksArray.push(link);
-        }
-    }
-
-    if (linksArray.length > 0) return linksArray;
-    else return null;
+    return null;
 }
 
 function replaceAllUsersInText(text) {
-    let usersArray = [];
     if (text != null) {
+        let separatorsArray = [" ", ",", ".", ":", ";", "?", "!", "#", "$", "%", "^", "&", "*", "(", ")"];
+        let usersArray = [];
+
         for (let i = 0; i < text.length; i++) {
             if (text[i] == "@") {
-                usersArray.push(text.substring(i, text.indexOf(" ", i)));
-            }
+                for (let j = i; j < text.length; j++) {
+                    for (let k = 0; k < separatorsArray.length; k++) {
+                        let userLink;
+                        if (text[j] == separatorsArray[k]) {
+                            let separatorIndex = text.indexOf(separatorsArray[k], j);
+
+                            if (separatorIndex > 0) {
+                                userLink = text.substring(i, separatorIndex);
+                            }
+                            else userLink = text.substring(i, text.length);
+                            usersArray.push(userLink);
+
+                            j = text.length;
+                            break;
+                        }
+                    }
+                }
+            } 
         }
 
         if (usersArray.length > 0) {
@@ -2888,23 +3508,6 @@ function additionalBtnSelector(width) {
 }
 
 function slide(forAll, element) {
-    //if (!forAll) {
-    //    $(".slider-container").css("margin-left", "32px");
-    //    setTimeout(function () {
-    //        $(".slider-container").css("margin-left", "-6000px");
-    //        $(".slider-container").fadeOut(350);
-    //    }, 350);
-    //    setTimeout(function () {
-    //        $("#" + element).fadeIn(0);
-    //    }, 700);
-    //    setTimeout(function () {
-    //        $("#" + element).css("margin-left", "40px");
-    //    }, 750);
-    //    setTimeout(function () {
-    //        $("#" + element).css("margin-left", 0);
-    //    }, 1200);
-    //}
-
     $(".slider-container").css("opacity", "0.0");
     setTimeout(function () {
         $(".slider-container").fadeOut(0);
@@ -2921,21 +3524,41 @@ function slideToRight(element) {
     }, 350);
 }
 
-function insideBoxOpen(element, doNotCloseChatBox) {
+function botNavbarClose(isForAll, element) {
+    if (isForAll) {
+        $(".bot-navbar").css("bottom", "-1200px");
+        $(".bot-navbar").fadeOut(350);
+    }
+    else {
+        $("#" + element).css("bottom", "-1200px");
+        $("#" + element).fadeOut(350);
+    }
+}
+function botNavbarOpen(element, reservedBtn, reservedBtnHtml) {
+    $("#" + element).fadeIn(300);
+    $("#" + element).css("bottom", 0);
+    if (reservedBtn != null) {
+
+        if (reservedBtnHtml != null) $("#FifthMain_Btn").html(reservedBtnHtml);
+        else $("#FifthMain_Btn").html(' <i class="fa-solid fa-angle-left"></i> ');
+
+        $("#FifthMain_Btn").attr("data-bs-html", reservedBtn);
+        $("#FifthMain_Btn").fadeIn(350);
+    }
+}
+
+function insideBoxOpen(element) {
+    $(".messages-container").css("margin-bottom", "-1200px");
+
     $("#" + element).fadeIn(0);
     $("#" + element).css("z-index", "0");
+    $("#" + element).css("margin-bottom", "2px");
     setTimeout(function () {
-        if (!doNotCloseChatBox) $("#" + element).css("margin-bottom", "8px");
-        else {
-            let chatBoxHeight = $("#SendMessage_Box").innerHeight();
-            $("#" + element).css("margin-bottom", parseInt(chatBoxHeight) + 4 + "px");
-        }
-        setTimeout(function () {
-            $("#" + element).css("z-index", "1001");
-        }, 225);
-    }, 350);
+        $("#" + element).css("z-index", "1001");
+    }, 225);
 }
 function insideBoxClose(closeAll, element) {
+    $(".message-box").css("pointer-events", "auto");
     if (!closeAll) {
         $("#" + element).css("z-index", "0");
         if (parseInt($("#" + element).css("margin-bottom")) >= 24) {
@@ -2946,7 +3569,7 @@ function insideBoxClose(closeAll, element) {
             $("#" + element).css("margin-bottom", "-1200px");
         }, 400);
         setTimeout(function () {
-            $("#" + element).fadeOut(300);
+            $("#" + element).fadeOut(0);
             $("#" + element).css("z-index", "1001");
         }, 750);
     }
@@ -2957,7 +3580,7 @@ function insideBoxClose(closeAll, element) {
             $(".messages-container").css("margin-bottom", "-1200px");
         }, 400);
         setTimeout(function () {
-            $(".messages-container").fadeOut(300);
+            $(".messages-container").fadeOut(0);
             $(".messages-container").css("z-index", "1001");
         }, 750);
     }
@@ -3195,8 +3818,15 @@ function alert(icon, text, btn1Text, btn2Text, btn1Action, btn2Action, btn1WhatT
         }, Infinity);
     }
 } 
-
+//set-style
 function displayCorrect(width) {
+    let allBotNavbars = document.getElementsByClassName("bot-navbar");
+    for (let i = 0; i < allBotNavbars.length; i++) {
+        if (parseInt($("#" + allBotNavbars[i].id).css("bottom")) >= 0) {
+            botOffNavbarH = $("#" + allBotNavbars[i].id).innerHeight();
+            break;
+        }
+    }
     let topNavbarH = $(".top-navbar").innerHeight();
     let neededH = fullHeight - 24 - botOffNavbarH - topNavbarH;
     let sideBarStatus = $("#Main_SideBar").css("margin-left");
@@ -3208,7 +3838,7 @@ function displayCorrect(width) {
     $(".messages-container").css("bottom", botOffNavbarH + 12 + "px");
 
     if (sideBarStatus < 0) {
-        $("#MainBotOffNavbar").css("width", "100%");
+        $(".bot-navbar").css("width", "100%");
         $(".main-container").css("width", "100%");
         $(".main-container").css("left", 0);
         $(".top-navbar").css("width", "100%");
@@ -3218,8 +3848,8 @@ function displayCorrect(width) {
     }
     else {
         if (width < 768) {
-            $("#MainBotOffNavbar").css("width", "100%");
-            $("#MainBotOffNavbar").css("left", 0);
+            $(".bot-navbar").css("width", "100%");
+            $(".bot-navbar").css("left", 0);
             $("#Main_SideBar").css("left", "-1200px");
             $("#Main_SideBar").css("width", "100%");
             $("#Main_SideBar").fadeOut(0);
@@ -3240,9 +3870,9 @@ function displayCorrect(width) {
             let leftW = fullWidth - leftBarW - 3;
             let smallSideContainerW = leftBarW - 5;
 
-            $("#MainBotOffNavbar").css("width", leftW + "px");
-            $("#MainBotOffNavbar_Box").css("width", leftW + "px");
-            $("#MainBotOffNavbar").css("left", leftBarW + "px");
+            $(".bot-navbar").css("width", leftW + "px");
+            $(".bot-navbar").css("width", leftW + "px");
+            $(".bot-navbar").css("left", leftBarW + "px");
             $(".top-navbar").css("width", leftW + "px");
             $(".top-navbar").css("left", leftBarW + "px");
 

@@ -12,11 +12,13 @@ namespace AppY.Repositories
         private readonly Context _context;
         private readonly INotification _notification;
         private readonly IUser _user;
-        public DiscussionRepository(Context context, INotification notification, IUser user) : base(context)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        public DiscussionRepository(Context context, INotification notification, IUser user, IWebHostEnvironment webHostEnvironment) : base(context)
         {
             _context = context;
             _notification = notification;
             _user = user;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<int> CreateDiscussionAsync(Discussion_ViewModel Model)
@@ -123,7 +125,7 @@ namespace AppY.Repositories
 
         public async Task<Discussion?> GetDiscussionInfoAsync(int Id)
         {
-            if (Id != 0) return await _context.Discussions.AsNoTracking().Select(d => new Discussion { Id = d.Id, Name = d.Name, Description = d.Description, AvatarUrl = d.AvatarUrl, Shortlink = d.Shortlink, CreatedAt = d.CreatedAt, IsPrivate = d.IsPrivate, Password = !d.IsPrivate ? null : d.Password, CreatorId = d.CreatorId, IsDeleted = d.IsDeleted }).FirstOrDefaultAsync(d => d.Id == Id && !d.IsDeleted);
+            if (Id != 0) return await _context.Discussions.AsNoTracking().Select(d => new Discussion { Id = d.Id, Name = d.Name, Description = d.Description, AvatarUrl = d.AvatarUrl, Shortlink = d.Shortlink, CreatedAt = d.CreatedAt, IsPrivate = d.IsPrivate, Password = !d.IsPrivate ? null : d.Password, CreatorId = d.CreatorId, IsDeleted = d.IsDeleted, Status = d.Status }).FirstOrDefaultAsync(d => d.Id == Id && !d.IsDeleted);
             else return null;
         }
 
@@ -473,6 +475,63 @@ namespace AppY.Repositories
                 }
             }
             return 0;
+        }
+
+        public async Task<string?> SetDiscussionAvatarAsync(int Id, int UserId, IFormFile Image)
+        {
+            if(Id != 0 && UserId != 0 && Image != null)
+            {
+                bool CheckThisUsersAccess = await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.Id == Id && d.UserId == UserId && !d.IsDeleted && d.AccessLevel > 0);
+                if(CheckThisUsersAccess)
+                {
+                    string? FileExtension = Path.GetExtension(Image.FileName);
+                    string? NewFileName = Guid.NewGuid().ToString("D").Substring(2, 12) + FileExtension;
+                    using(FileStream fs = new FileStream(_webHostEnvironment.WebRootPath + "/DiscussionAvatars/" + NewFileName, FileMode.Create))
+                    {
+                        await Image.CopyToAsync(fs);
+                        int Result = await _context.Discussions.AsNoTracking().Where(d => d.Id == Id && !d.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.AvatarUrl, NewFileName));
+                        if (Result > 0) return NewFileName;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public async Task<bool> DeleteDiscussionAvatarAsync(int Id, int UserId)
+        {
+            if(Id != 0 && UserId != 0)
+            {
+                bool CheckAccessAbility = await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.DiscussionId == Id && d.UserId == UserId && !d.IsDeleted && d.AccessLevel > 0);
+                if(CheckAccessAbility)
+                {
+                    string? SomeNullValue = null;
+                    string? AvatarUrl = await _context.Discussions.AsNoTracking().Where(d => d.Id == Id).Select(d => d.AvatarUrl).FirstOrDefaultAsync();
+                    if(AvatarUrl != null)
+                    {
+                        int Result = await _context.Discussions.AsNoTracking().Where(d => d.Id == Id).ExecuteUpdateAsync(d => d.SetProperty(d => d.AvatarUrl, SomeNullValue));
+                        if (Result > 0)
+                        {
+                            File.Delete(_webHostEnvironment.WebRootPath + "/DiscussionAvatars/" + AvatarUrl);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public async Task<string?> SetDiscussionStatusAsync(int Id, int UserId, string? Status)
+        {
+            if(Id > 0 && UserId > 0 && !String.IsNullOrWhiteSpace(Status) && Status.Length <= 180)
+            {
+                bool CheckUsersAccess = await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.UserId == UserId && d.DiscussionId == Id && !d.IsDeleted && !d.IsBlocked && d.AccessLevel > 0);
+                if(CheckUsersAccess)
+                {
+                    int Result = await _context.Discussions.AsNoTracking().Where(d => d.Id == Id).ExecuteUpdateAsync(d => d.SetProperty(d => d.Status, Status));
+                    if (Result > 0) return Status;
+                }
+            }
+            return null;
         }
     }
 }

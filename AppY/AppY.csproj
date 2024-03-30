@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\Avatars\" />
+    <Folder Include="wwwroot\DiscussionAvatars\" />
   </ItemGroup>
 
 </Project>

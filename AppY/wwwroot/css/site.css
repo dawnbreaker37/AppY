@@ -119,6 +119,18 @@ body {
     backdrop-filter: blur(9px);
 }
 
+.text-via-link {
+    opacity: 1;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: all ease 0.3s;
+}
+.text-via-link:hover,
+.text-via-link:active {
+    cursor: pointer;
+    opacity: 0.65;
+}
+
 .open-animated-collapse:focus {
     animation-name: plus-change-animation;
     animation-duration: 1.9s;
@@ -184,10 +196,18 @@ body {
     transition: all ease 0.37s;
 }
 
+.z-index-standard {
+    z-index: 100;
+}
+
+.transition-standard {
+    transition: all ease 0.3s;
+}
+
 .image-container {
     height: 90px;
     width: 90px;
-    object-fit: contain;
+    object-fit: cover;
     border: 1px solid #f0f0f0;
     border-radius: 90px;
     transition: all ease 0.3s;
@@ -195,7 +215,7 @@ body {
 .image-container-md {
     height: 55px;
     width: 55px;
-    object-fit: contain;
+    object-fit: cover;
     border: 1px solid #f0f0f0;
     border-radius: 55px;
     transition: all ease 0.3s;
@@ -203,7 +223,7 @@ body {
 .image-container-sm {
     height: 35px;
     width: 35px;
-    object-fit: contain;
+    object-fit: cover;
     border-radius: 35px;
     transition: all ease 0.3s;
 }
@@ -242,17 +262,18 @@ body {
 }
 
 .user-via-shortname {
+    cursor: pointer;
     border-radius: 34px;
     font-weight: 500;
     cursor: pointer;
     padding: 0 2px 0 2px;
+    opacity: 1;
     background-color: transparent;
-    color: #0d6efd;
     transition: all ease 0.37s;
 }
 .user-via-shortname:hover,
 .user-via-shortname:active {
-    background-color: #f0f0f0;
+    opacity: 0.75;
 }
 
 .btn-bottom-rounded {
@@ -370,7 +391,6 @@ body {
 
 .message-form-control {
     cursor: pointer;
-    width: 65%;
     background-color: #f8f9fa;
     border: 0;
     resize: none;
@@ -543,6 +563,17 @@ body {
 .alert-badge:active {
     background-color: #f8f9fa;
     color: #865be9;
+}
+
+.btn-set-status {
+    cursor: pointer;
+    border-radius: 34px;
+    transition: all ease 0.3s;
+}
+.btn-set-status:hover,
+.btn-set-status:active {
+    padding: 1px 3px;
+    background-color: #f0f0f0;
 }
 
 .btn-navbar {

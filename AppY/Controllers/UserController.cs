@@ -169,5 +169,13 @@ namespace AppY.Controllers
             }
             return Json(new { success = false, alert = "No user found. Try other keywords to find new members for this discussion" });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> FindByShortname(string Shortname)
+        {
+            User? UserSuperShortInfo = await _user.GetUserSuperShortInfoAsync(Shortname);
+            if (UserSuperShortInfo != null) return Json(new { success = true, result = UserSuperShortInfo });
+            else return Json(new { success = false, alert = "We haven't found any user with that kind of shortname" });
+        }
     }
 }

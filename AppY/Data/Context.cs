@@ -17,5 +17,7 @@ namespace AppY.Data
         public DbSet<DiscussionMessageAnswer> DiscussionMessageAnswers { get; set; }
         public DbSet<CommandTool> Commands { get; set; }
         public DbSet<ScheduledMessage> ScheduledMessages { get; set; }
+        public DbSet<Chat> Chats { get; set; }
+        public DbSet<ChatUsers> ChatUsers { get; set; }
     }
 }
