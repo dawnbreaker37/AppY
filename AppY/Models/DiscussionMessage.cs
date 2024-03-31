@@ -10,7 +10,7 @@ namespace AppY.Models
         public bool IsEdited { get; set; }
         public bool IsChecked { get; set; }
         public bool IsPinned { get; set; }
-        public bool IsAutoDeletable { get; set; }
+        public int IsAutoDeletable { get; set; }
         public DateTime SentAt { get; set; }
         public string? RepliesMsgShortText { get; set; }
         public int? RepliedMessageId { get; set; }
@@ -21,6 +21,7 @@ namespace AppY.Models
         public User? User { get; set; }
         public Discussion? Discussion { get; set; }
         public List<DiscussionMessageAnswer>? DiscussionMessageAnswers { get; set; }
+        public List<DiscussionMessageReaction>? DiscussionMessageReactions { get; set; }
         [NotMapped]
         public string? UserPseudoname { get; set; }
         [NotMapped]

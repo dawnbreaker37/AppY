@@ -59,7 +59,7 @@ namespace AppY.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> DeleteDiscussionMessage(int Id)
+        public async Task<IActionResult> DeleteDiscussionMessageAnswer(int Id)
         {
             if (Request.Cookies.ContainsKey("CurrentUserId"))
             {

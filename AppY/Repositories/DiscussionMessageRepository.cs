@@ -78,11 +78,8 @@ namespace AppY.Repositories
             if (DiscussionId != 0 && UserId != 0)
             {
                 int Result = await _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == DiscussionId && d.UserId != UserId && !d.IsChecked).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsChecked, true));
-                if (Result > 0)
-                {
-                    await _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == DiscussionId && d.UserId != UserId && d.IsAutoDeletable && !d.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true));
-                    return DiscussionId;
-                }
+                await _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == DiscussionId && d.UserId != UserId && d.IsAutoDeletable > 0 && DateTime.Now >= d.SentAt.AddMinutes(d.IsAutoDeletable)).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true));
+                if(Result > 0) return DiscussionId;
             }
             return 0;
         }
@@ -92,11 +89,8 @@ namespace AppY.Repositories
             if(MessageId != 0 && UserId != 0)
             {
                 int Result = await _context.DiscussionMessages.AsNoTracking().Where(d => d.Id == MessageId && !d.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsChecked, true));
-                if (Result > 0)
-                {
-                    await _context.DiscussionMessages.AsNoTracking().Where(d => d.Id == MessageId && d.IsAutoDeletable).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true));
-                    return MessageId;
-                }
+                await _context.DiscussionMessages.AsNoTracking().Where(d => d.Id == MessageId && d.IsAutoDeletable > 0 && DateTime.Now >= d.SentAt.AddMinutes(d.IsAutoDeletable)).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true));
+                if (Result > 0) return MessageId;
             }
             return 0;
         }
@@ -146,7 +140,7 @@ namespace AppY.Repositories
                         Text = Model.Text,
                         RepliesMsgShortText = Model.ReplyText,
                         DiscussionId = Model.DiscussionId,
-                        IsAutoDeletable = false,
+                        IsAutoDeletable = 0,
                         IsChecked = false,
                         IsDeleted = false,
                         IsEdited = false,
@@ -186,7 +180,7 @@ namespace AppY.Repositories
                 {
                     Text = Model.Text,
                     UserId = Model.UserId,
-                    IsAutoDeletable = Model.IsAutoDeletable,
+                    IsAutoDeletable = false,
                     IsDeleted = false,
                     ScheduledTime = Model.SentAt.Value,
                     DiscussionId = Model.DiscussionId
@@ -219,7 +213,7 @@ namespace AppY.Repositories
                         {
                             Text = message.Text,
                             DiscussionId = message.DiscussionId,
-                            IsAutoDeletable = message.IsAutoDeletable,
+                            IsAutoDeletable = 0,
                             IsDeleted = false,
                             IsEdited = false,
                             IsChecked = false,

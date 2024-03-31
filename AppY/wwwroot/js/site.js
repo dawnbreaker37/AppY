@@ -8,6 +8,7 @@ window.onload = function () {
     let currentUrl = document.location.href;
     fullHeight = parseInt(window.innerHeight);
     fullWidth = parseInt(window.innerWidth);
+
     displayCorrect(fullWidth);
     additionalBtnSelector(fullWidth);
 
@@ -25,6 +26,9 @@ window.onload = function () {
         statusSlider("StatusBar_Lbl", 2);
         replaceAllTheTextInMessages();
     }
+    else {
+        botNavbarOpen("MainBotOffNavbar", null, null);
+    }
 
     if (fullWidth >= 768) {
         animatedOpen(false, "SmallsidePreloaded_Container", true, false);
@@ -38,13 +42,14 @@ window.onload = function () {
         }
     }
     else {
-        animatedOpen(false, "Preloaded_Container", true, false);
+        setTimeout(function () {
+            animatedOpen(false, "Preloaded_Container", true, false);
+        }, 300);
     }
 }
 window.onresize = function () {
     fullHeight = parseInt(window.innerHeight);
     fullWidth = parseInt(window.innerWidth);
-    botOffNavbarH = parseInt($("#MainBotOffNavbar").innerHeight());
     displayCorrect(fullWidth);
     additionalBtnSelector(fullWidth);
 }
@@ -1479,17 +1484,18 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
             $("#SendDiscussionMessage_Text_Val").val(null);
             $("#SendDiscussionMessage_SbmtBtn").attr("disabled", true);
             if (sentMessagesCount <= 0) $("#Presentation_Box").fadeOut(300);
-
-            let messageMainBox = $("<div class='message-box discussion-options'></div>");
-            let messageNotMainBox = $("<div class='cur-user-msg-box discussion-options'></div>");
-            let styleBox = $("<div class='cur-user-styled-msg-box p-2 discussion-options'></div>");
+            
+            let messageMainBox = $("<div class='message-box'></div>");
+            let messageNotMainBox = $("<div class='cur-user-msg-box'></div>");
+            let styleBox = $("<div class='cur-user-styled-msg-box p-2'></div>");
             //let isReplyBox = $("<div class='cur-user-reply-container mb-1 discussion-options reply-element'></div>");
             //let repliedTo_Icon = $("<small class='card-text fw-500 discussion-options reply-element'> <i class='fa-solid fa-reply'></i> Replied to </small>");
             //let replyText = $("<p class='card-text white-space-on discussion-options reply-element'></p>");
+            let isAutodeletableSmall = $("<small class='card-text'></small>");
             let mainText = $("<p class='card-text white-space-on message-label discussion-options'></p>");
             let statsBox = $("<div class='discussion-options float-end me-1'></div>");
             let isChecked = $("<small class='card-text text-primary'></small>");
-            let dateAndTime = $("<small class='card-text text-muted discussion-options'></small>");
+            let dateAndTime = $("<small class='card-text text-muted'></small>");
             let isEdited = $("<small class='card-text text-muted' style='display: none;'></small>");
 
             messageMainBox.attr("id", response.trueId + "-DiscussionMsgBox");
@@ -1513,8 +1519,7 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
 
             //    textDecoder(response.result.replyText, response.trueId + "-DiscussionMsgReplyText");
             //}
-/*            else isReplyBox.addClass("d-none");*/
-
+            /*            else isReplyBox.addClass("d-none");*/
             mainText.attr("id", response.trueId + "-DiscussionOptionMsgText_Lbl");
             statsBox.attr("id", response.trueId + "-DiscussionMsgStatsBox");
             dateAndTime.attr("id", response.trueId + "-DiscussionMsgDateNTimeInfo_Lbl");
@@ -1528,7 +1533,11 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
             isChecked.html(' <i class="fa-solid fa-check text-muted"></i> ');
             dateAndTime.text(hrs + ":" + mins);
 
-/*            styleBox.append(isReplyBox);*/
+            /*styleBox.append(isReplyBox);*/
+            if (parseInt(response.result.isAutoDeletable) > 0) {
+                isAutodeletableSmall.html(' <i class="fa-solid fa-clock-rotate-left"></i> ' + response.result.isAutoDeletable + " mins");
+                styleBox.append(isAutodeletableSmall);
+            }
             styleBox.append(mainText);
             statsBox.append(isChecked);
             statsBox.append(dateAndTime);
@@ -1555,6 +1564,13 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
         else {
             alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
         }
+
+        $(".set-autodelete-duration").addClass("bg-white");
+        $(".set-autodelete-duration").removeClass("bg-primary text-light");
+        $("#SendMessage_IsAutoDeletable-TurnOnOrOff").html(' <i class="fa-solid fa-clock-rotate-left"></i> Auto-Deletable Message');
+        $("#SendMessage_IsAutoDeletable").val(0);
+        insideBoxClose(false, "MainTextEditor_Box");
+
     });
 });
 $(document).on("submit", "#SendDiscussionReply_Form", function (event) {
@@ -1623,6 +1639,8 @@ $("#GetMessageInfo_Form").on("submit", function (event) {
             if (response.result.isChecked) isChecked = ' <i class="fa-solid fa-check-double text-primary"></i> ';
             else isChecked = ' <i class="fa-solid fa-check"></i> ';
 
+            $("#EditingOrReplying_Box").slideUp(300);
+
             if (response.userId == response.result.userId) {
                 $("#EditDiscussionMsg_Col").fadeIn(0);
                 $("#DeleteDiscussionMsg_Col").fadeIn(0);
@@ -1640,6 +1658,7 @@ $("#GetMessageInfo_Form").on("submit", function (event) {
                 $("#DeleteDiscussionMsg_Col").fadeOut(0);
             }
             $("#EM_Id_Val").val(response.id);
+            $("#DDM_Id_Val").val(response.id);
             $("#GDMA_Id_Val").val(response.id);
             $("#SDMA_MessageId_Val").val(response.id);
             $("#RM_ReplyId_Val").val(response.id);
@@ -1702,6 +1721,7 @@ $("#DeleteDiscussionMessage_Form").on("submit", function (event) {
                 $("#" + response.id + "-DiscussionMsgBox").fadeOut(350);
                 $("#" + response.id + "-DiscussionMsgReplyText").text("Deleted message");
             }
+            $("#DDM_Id_Val").val(0)
             insideBoxClose(false, "DiscussionOptions_Box");
             $("#SentMessagesCount_Val").val(currentCount);
         }
@@ -1769,7 +1789,7 @@ $(document).on("submit", "#SendDiscussionMessageAnswer_Form", function (event) {
         }
         else alert(' <i class="fa-solid fa-comment-slash fa-shake text-warning" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 1;"></i> ', response.alert, "Close", null, 0, null, null, null, 3.25);
     });
-});//status-slider
+})
 $(document).on("submit", "#EditDiscussionMessageAnswer_Form", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -1790,8 +1810,8 @@ $(document).on("submit", "#EditDiscussionMessageAnswer_Form", function (event) {
         }
         else alert('<i class="fa-regular fa-circle-xmark fa-shake text-warning" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
     });
-});
-$("#DeleteDiscussionMessage_Form").on("submit", function (event) {
+}); 
+$("#DeleteDiscussionMessageAnswer_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
     let data = $(this).serialize();
@@ -1806,8 +1826,8 @@ $("#DeleteDiscussionMessage_Form").on("submit", function (event) {
             else if (answersCount == 1) $("#AnswersCount_Lbl").text("one answer");
             else $("#AnswersCount_Lbl").text(answersCount + " answers");
 
-            $("#DDM_Id_Val").val(0);
-            $("#DDM_Box").fadeIn(250);
+            $("#ADDM_Id_Val").val(0);
+            $("#ADDM_Box").fadeIn(250);
             $("#SDMA_Box").fadeOut(250);
 
             slideToLeft("#" + response.result + "-AnswerMain_Box");
@@ -1964,8 +1984,8 @@ $("#GetDiscussionMessageAnswers_Form").on("submit", function (event) {
 $(document).on("click", ".answer-options", function (event) {
     let trueId = getTrueId(event.target.id);
 
-    $("#DDM_Id_Val").val(0);
-    $("#DDM_Box").slideUp(250);
+    $("#ADDM_Id_Val").val(0);
+    $("#DDMA_Box").slideUp(250);
     $("#SDMA_Box").slideDown(250);
     if (trueId != null) {
         $(".send-answer-variety").attr("action", "/Answer/EditDiscussionMessageAnswer");
@@ -1994,12 +2014,12 @@ $(document).on("dblclick", ".answer-options", function (event) {
     $("#SDMA_Box").slideUp(250);
     $(".cancel-answer-options").fadeIn(250);
     if (trueId != null) {
-        $("#DDM_Id_Val").val(trueId);
-        $("#DDM_Box").fadeIn(250);
+        $("#ADDM_Id_Val").val(trueId);
+        $("#DDMA_Box").fadeIn(250);
     }
     else {
-        $("#DDM_Id_Val").val(0);
-        $("#DDM_Box").slideUp(250);
+        $("#ADDM_Id_Val").val(0);
+        $("#DDMA_Box").slideUp(250);
     }
 });
 $(document).on("click", ".cancel-answer-options", function () {
@@ -2012,8 +2032,8 @@ $(document).on("click", ".cancel-answer-options", function () {
     $("#SDMASbmt_Btn").text("Send");
     $("#SDMA_Box").slideDown(250);
 
-    $("#DDM_Id_Val").val(0);
-    $("#DDM_Box").fadeOut(250);
+    $("#ADDM_Id_Val").val(0);
+    $("#DDMA_Box").fadeOut(250);
 });
 
 $("#FindUsersToAdd_Form").on("submit", function (event) {
@@ -2195,7 +2215,7 @@ $("#CancelDiscussionMessageSettings_Btn").on("click", function () {
     $("#RM_ReplyText_Val").val("");
     $("#EM_Id_Val").val(0);
     $("#SendDiscussionMessage_Text_Val").val("");
-    $("#EditingOrReplying_Box").slideUp(350);
+    $("#EditingOrReplying_Box").slideUp(300);
 });
 $("#EditDiscussionMessage_Btn").on("click", function () {
     let uncodedText = textUncoder($("#EditingOrReplyingMsgText_Lbl").html());
@@ -2205,14 +2225,32 @@ $("#EditDiscussionMessage_Btn").on("click", function () {
     $("#SendDiscussionMessage_Text_Val").val(uncodedText);
     $(".send-message-variety").attr("action", "/DiscussionMessage/Edit");
     $(".send-message-variety").attr("id", "EditMessage_Form");
-    $("#EditingOrReplying_Box").slideDown(350);
+
+    if ($("#EditingOrReplying_Box").css("display") == "block") {
+        $("#EditingOrReplying_Box").slideUp(300);
+        setTimeout(function () {
+            $("#EditingOrReplying_Box").slideDown(300);
+        }, 350);
+    }
+    else {
+        $("#EditingOrReplying_Box").slideDown(300);
+    }
 });
 $("#ReplyDiscussionMessage_Btn").on("click", function () {
     $("#EditingOrReplyingMsgStatus_Lbl").text("Reply to");
     $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-solid fa-reply"></i> ');
     $(".send-message-variety").attr("action", "/DiscussionMessage/Reply");
     $(".send-message-variety").attr("id", "SendDiscussionReply_Form");
-    $("#EditingOrReplying_Box").slideDown(350);
+
+    if ($("#EditingOrReplying_Box").css("display") == "block") {
+        $("#EditingOrReplying_Box").slideUp(300);
+        setTimeout(function () {
+            $("#EditingOrReplying_Box").slideDown(300);
+        }, 350);
+    }
+    else {
+        $("#EditingOrReplying_Box").slideDown(300);
+    }
 });
 
 $("#DI_LoadAdditionalInfo_Btn").on("click", function () {
@@ -2448,14 +2486,6 @@ $(document).on("click", ".select-to-restore-the-discussion", function (event) {
     else $("#RestoreTheDiscussion_DiscussionId_Val").val(0);
 });
 
-$(document).on("click", ".delete-discussion-message", function (event) {
-    let id = $("#DDM_Id_Val").val();
-    if (id > 0) {
-        $("#DeleteDiscussionMessage_Form").submit();
-    }
-    else $("#DDM_Id_Val").val(0);
-});
-
 $(document).on("click", ".get-notification-info", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
@@ -2505,19 +2535,34 @@ $(document).on("click", ".auto-delete-on", function (event) {
         $(this).addClass("auto-delete-off");
         $(this).removeClass("auto-delete-on");
         $(this).html(' <i class="fa-regular fa-circle-check text-primary"></i> Auto-Delete Enabled');
-        $("#" + trueId).val(true);
     }
-    else $("#" + trueId).val(false);
 });
 $(document).on("click", ".auto-delete-off", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
-        $("#" + trueId).val(false);
+        $("#" + trueId).val(0);
         $(this).html(' <i class="fa-solid fa-clock-rotate-left"></i> Auto-Deletable Message');
         $(this).addClass("auto-delete-on");
         $(this).removeClass("auto-delete-off");
+        $(".set-autodelete-duration").removeClass("bg-primary text-light");
+        $(".set-autodelete-duration").addClass("bg-white");
     }
     else $("#" + trueId).val(false);
+});
+$(document).on("click", ".set-autodelete-duration", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#SendMessage_IsAutoDeletable").val(trueId);
+        $(".set-autodelete-duration").removeClass("bg-primary text-light");
+        $(".set-autodelete-duration").addClass("bg-white");
+        $("#" + trueId + "-MinsSet_Btn").removeClass("bg-white");
+        $("#" + trueId + "-MinsSet_Btn").addClass("bg-primary text-light");
+    }
+    else {
+        $("#SendMessage_IsAutoDeletable").val(trueId);
+        $(".set-autodelete-duration").removeClass("bg-primary text-light");
+        $(".set-autodelete-duration").addClass("bg-white");
+    }
 });
 
 $(document).on("keyup change", ".form-control-check-input", function () {
@@ -2555,11 +2600,12 @@ $(document).on("click", ".btn-smallside-open-container", function (event) {
 $(document).on("click", ".btn-open-inside-box", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
-        $(".messages-container").css("margin-bottom", "-1200px");
-        $(".messages-container").fadeOut(300);
+        insideBoxClose(true, ".messages-container");
+        //$(".messages-container").css("margin-bottom", "-120px");
+        //$(".messages-container").fadeOut(300);
         setTimeout(function () {
             insideBoxOpen(trueId);
-        }, 175);
+        }, 250);
     }
 });
 $(document).on("click", ".btn-close-inside-box", function (event) {
@@ -3548,11 +3594,17 @@ function botNavbarOpen(element, reservedBtn, reservedBtnHtml) {
 }
 
 function insideBoxOpen(element) {
+    let chatBarHeight = botOffNavbarH - 90;
+    let botOffNavbars = document.getElementsByClassName("bot-navbar");
+    for (let i = 0; i < botOffNavbars.length; i++) {
+        if ($("#" + botOffNavbars[i].id).innerHeight() - 75 > chatBarHeight) chatBarHeight = $("#" + botOffNavbars[i].id).innerHeight() - 75;
+    }
+
     $(".messages-container").css("margin-bottom", "-1200px");
 
     $("#" + element).fadeIn(0);
     $("#" + element).css("z-index", "0");
-    $("#" + element).css("margin-bottom", "2px");
+    $("#" + element).css("margin-bottom", chatBarHeight + "px");
     setTimeout(function () {
         $("#" + element).css("z-index", "1001");
     }, 225);
@@ -3823,10 +3875,12 @@ function displayCorrect(width) {
     let allBotNavbars = document.getElementsByClassName("bot-navbar");
     for (let i = 0; i < allBotNavbars.length; i++) {
         if (parseInt($("#" + allBotNavbars[i].id).css("bottom")) >= 0) {
+            console.log(allBotNavbars[i].id);
             botOffNavbarH = $("#" + allBotNavbars[i].id).innerHeight();
             break;
         }
     }
+
     let topNavbarH = $(".top-navbar").innerHeight();
     let neededH = fullHeight - 24 - botOffNavbarH - topNavbarH;
     let sideBarStatus = $("#Main_SideBar").css("margin-left");
