@@ -45,13 +45,13 @@ namespace AppY.Controllers
             if(ModelState.IsValid && User.Identity.IsAuthenticated)
             {              
                 int Result = await _messages.SendMessageAsync(Model);
-                if (Result != 0) return Json(new { success = true, trueId = Result, result = Model, isReply = Model.MessageId != 0 });
+                if (Result != 0) return Json(new { success = true, trueId = Result, result = Model });
             }
-            return Json(new { success = false, alert = "An error unexpected so it's unable to send a message" });
+            return Json(new { success = false, alert = "We're so sorry, but an unexpected error occured. Please, try to send your message a bit later or text us to get more information about this issue" });
         }
 
         [HttpPost]
-        public async Task<IActionResult> Reply(SendMessage Model)
+        public async Task<IActionResult> Reply(SendReply Model)
         {
             if (ModelState.IsValid && User.Identity.IsAuthenticated)
             {
@@ -75,7 +75,7 @@ namespace AppY.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(SendMessage Model)
+        public async Task<IActionResult> Edit(SendEdit Model)
         {
             if (ModelState.IsValid)
             {

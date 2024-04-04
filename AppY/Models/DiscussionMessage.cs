@@ -22,9 +22,14 @@ namespace AppY.Models
         public Discussion? Discussion { get; set; }
         public List<DiscussionMessageAnswer>? DiscussionMessageAnswers { get; set; }
         public List<DiscussionMessageReaction>? DiscussionMessageReactions { get; set; }
+        public List<DiscussionMessageImage>? DiscussionMessageImages { get; set; }
         [NotMapped]
         public string? UserPseudoname { get; set; }
         [NotMapped]
         public int DaysPassed { get; set; }
+        [NotMapped]
+        public int ImagesCount { get; set; }
+        [NotMapped]
+        public string? MainImgUrl { get; set; }
     }
 }

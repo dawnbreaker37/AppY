@@ -1,0 +1,171 @@
+﻿@model User
+@{
+    ViewData["Title"] = "Page";
+    User? UserInfo = ViewBag.UserInfo;
+}
+
+<div class="main-sidebar" id="Main_SideBar">
+    <div class="d-none">
+        <input type="hidden" id="AvatarSticker_Hdn_Val" value="@UserInfo.AvatarStickerUrl" />
+    </div>
+</div>
+
+<div class="main-container shadow-standard" id="Preloaded_Container">
+    <div class="header-container p-2 text-center" id="Preloaded_Container-Header">
+        <button type="button" class="btn btn-close rounded-circle float-end ms-1" id="Preloaded_Container-Close" aria-label="close"></button>
+        <h5 class="h5 text-truncate p-1">@UserInfo.PseudoName's Page</h5>
+    </div>
+    <div class="box-container p-2 pt-1 mt-1" id="Prealoded_Container-Box">
+        <div class="box-container bg-light p-3 text-center">
+            @if(UserInfo.AvatarUrl == null)
+            {
+                <div class="image-picture-none-container text-center mx-auto" style="background-color: #@UserInfo.AvatarBgColor;">
+                    <div class="unpictured-container-label" style="color: #@UserInfo.AvatarFgColor" id="UnpicturedAvatar_Lbl"> @UserInfo.UnpicturedAvatarInfo</div>
+                </div>
+                <span class="h2" id="UserInfo_Pseudoname_Lbl">@UserInfo.PseudoName</span>
+                <div></div>
+                <small class="card-text text-muted" id="DiscussionStatusBar_Lbl"><span class="status-slider" id="StatusBar_Lbl-0">@@@UserInfo.ShortName</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">member in @ViewBag.DiscussionsCount discussions</span></small>
+            }
+            else
+            {
+                <div class="image-container text-center mx-auto">
+                    <img class="image-container" src="/Avatars/@UserInfo.AvatarUrl" />
+                </div>
+                <span class="h2" id="UserInfo_Pseudoname_Lbl">@UserInfo.PseudoName</span>
+                <div></div>
+                <small class="card-text text-muted" id="DiscussionStatusBar_Lbl"><span class="status-slider" id="StatusBar_Lbl-0">@@@UserInfo.ShortName</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">member in @ViewBag.DiscussionsCount discussions</span></small>
+            }
+        </div>
+        <div class="box-container bg-light mt-1 p-2">
+            <h6 class="h6 text-muted">Bio</h6>
+            @if(UserInfo.Description != null)
+            {
+                <p class="card-text white-space-on message-label">@UserInfo.Description</p>
+            }
+            else
+            {
+                <p class="card-text white-space-on message-label">No bio</p>
+            }
+        </div>
+        <div class="box-container mt-1">
+            <div class="row">
+                <div class="col">
+                    <div>
+                        @if(ViewBag.DiscussionsCount > 0)
+                        {
+                            <button type="button" class="btn btn-standard-asset btn-light btn-slide-to-right w-100" id="Discussions_Container-Open"> <i class="fa-solid fa-quote-right text-primary"></i> <br />Discussions ∙ @ViewBag.DiscussionsCount</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-standard-asset btn-light w-100" disabled> <i class="fa-solid fa-quote-right text-primary"></i> <br /> No Discussions</button>
+                        }
+                    </div>
+                </div>
+                <div class="col">
+                    <div>
+                            <a asp-controller="Chat" asp-action="C" asp-route-Id="0" class="btn btn-standard-asset btn-light w-100" disabled> <i class="fa-regular fa-comments text-primary"></i> <br />Open Chat</a>
+                    </div>
+                </div>
+                <div class="col">
+                    <small class="d-none" id="UsersFullLink_Lbl">/User/Page/@UserInfo.ShortName</small>
+                    <div class="btn btn-standard-asset btn-light copy-to-clipboard w-100" id="UsersFullLink_Lbl-Copy"> <i class="fa-regular fa-copy text-primary copy-to-clipboard" id="UsersFullLink_Lbl-CopyX"></i> <br />Copy</div>
+                </div>
+                <div class="col">
+                    <div>
+                        <button type="button" class="btn btn-standard-asset btn-light w-100 btn-slide-to-right" id="AdditionalInfo_Container-Open"> <i class="fa-solid fa-ellipsis text-primary"></i> <br />More</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bordered-container mt-2 p-2" style="display: none; margin-left: -1200px;" id="AdditionalInfo_Container">
+            <h5 class="h5">Additional Info</h5>
+            <div class="border-top mt-2 pt-2">
+                <div>
+                    <span class="card-text fw-500 fs-6">Joined at</span>
+                    <div></div>
+                    <small class="card-text text-muted">@UserInfo.CreatedAt.ToShortDateString()</small>
+                </div>
+            </div>
+            <div class="border-top mt-2 pt-2">
+                <div>
+                    <span class="card-text fw-500 fs-6">Pseudoname</span>
+                    <div></div>
+                    <small class="card-text text-muted">@UserInfo.PseudoName</small>
+                </div>
+            </div>
+            <div class="border-top mt-2 pt-2">
+                <div>
+                    <div class="ms-1 float-end">
+                        <button type="button" class="btn btn-standard-asset btn-light text-primary btn-sm copy-to-clipboard" id="UserShortnameToCopy_Lbl-Copy"> <i class="fa-regular fa-copy"></i> Copy</button>
+                    </div>
+                    <span class="card-text fw-500 fs-6">Shortname (@@)</span>
+                    <div></div>
+                    <small class="card-text text-muted" id="UserShortnameToCopy_Lbl">@@@UserInfo.ShortName</small>
+                </div>
+            </div>
+            <div class="border-top mt-2 pt-2">
+                <div>
+                    <span class="card-text fw-500 fs-6">Member in</span>
+                    <div></div>
+                    <small class="card-text text-muted">@ViewBag.DiscussionsCount discussion(s)</small>
+                </div>
+            </div>
+            @if(ViewBag.SimilarDiscussionsCount > 0)
+            {
+                <div class="border-top mt-2 pt-2">
+                    <div>
+                        <span class="card-text fw-500 fs-6">Member with you in</span>
+                        <div></div>
+                        <small class="card-text text-muted">@ViewBag.SimilarDiscussionsCount discussion(s)</small>
+                    </div>
+                </div>
+            }
+            <div class="border-top mt-2 pt-2 text-center">
+                <button type="button" class="btn btn-standard btn-sm btn-slide-to-left w-100" id="AdditionalInfo_Container-Close">Close</button>
+            </div>
+        </div>
+        <div class="bordered-container p-2 mt-2" style="display: none; margin-left: -1200px;" id="Discussions_Container">
+            <span class="h6">Discussions ∙ @ViewBag.DiscussionsCount</span>
+            <div></div>
+            <small class="card-text text-muted">all discussions where @UserInfo.PseudoName insists in</small>
+            <div class="border-top mt-2 pt-2">
+                @if(ViewBag.DiscussionsCount > 0)
+                {
+                    @foreach(DiscussionShortInfo Item in ViewBag.Discussions)
+                    {
+                        <div class="box-container bg-light p-2 mt-1 mb-1">
+                            <span class="h5">@Item.DiscussionName</span>
+                            <div></div>
+                            <small class="card-text text-muted">joined at @Item.JoinedAt.ToShortDateString(), @Item.JoinedAt.ToShortTimeString()</small>
+                            <div class="box-container mt-2">
+                                <a asp-controller="Discussion" asp-action="Discuss" asp-route-Id="@Item.DiscussionId" class="btn btn-standard btn-sm"> <i class="fa-solid fa-up-right-from-square text-primary"></i> To the Discussion</a>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+        @if (ViewBag.SimilarDiscussionsCount > 0)
+        {
+            <div class="bordered-container p-2 mt-2" id="SimilarDiscussions_Container">
+                <span class="h6">Same Discussions ∙ @ViewBag.SimilarDiscussionsCount</span>
+                <div></div>
+                <small class="card-text text-muted">discussions where you and @UserInfo.PseudoName are in</small>
+                <div class="border-top mt-2 pt-2">
+                    @foreach (DiscussionShortInfo Item in ViewBag.SimilarDiscussions)
+                    {
+                        <div class="box-container bg-light p-2 mt-1 mb-1">
+                            <span class="h5">@Item.DiscussionName</span>
+                            <div></div>
+                            <small class="card-text text-muted">joined at @Item.JoinedAt.ToShortDateString(), @Item.JoinedAt.ToShortTimeString()</small>
+                            <div class="box-container mt-2">
+                                <a asp-controller="Discussion" asp-action="Discuss" asp-route-Id="@Item.DiscussionId" class="btn btn-standard btn-sm"> <i class="fa-solid fa-up-right-from-square text-primary"></i> To the Discussion</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

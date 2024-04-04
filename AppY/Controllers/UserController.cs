@@ -71,6 +71,55 @@ namespace AppY.Controllers
             return RedirectToAction("Create", "Account");
         }
 
+        public async Task<IActionResult> Page(string? Id)
+        {
+            if(User.Identity.IsAuthenticated)
+            {
+                User? UserInfo;
+                bool TryToParse = Int32.TryParse(Id, out int IntegerUserId);
+                if (TryToParse) UserInfo = await _user.GetAverageUserInfoAsync(IntegerUserId);
+                else UserInfo = await _user.GetAverageUserInfoAsync(Id);
+
+                if(UserInfo != null)
+                {
+                    int CurrentUserId = 0;
+                    if (Request.Cookies.ContainsKey("CurrentUserId"))
+                    {
+                        string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                        if (!String.IsNullOrWhiteSpace(CurrentUserId_Str)) Int32.TryParse(CurrentUserId_Str, out CurrentUserId);
+                    }
+
+                    if (UserInfo.Id != CurrentUserId)
+                    {
+                        IQueryable<DiscussionShortInfo>? Discussions_Preview = _discussion.GetUserDiscussions(UserInfo.Id);
+                        List<DiscussionShortInfo>? Discussions = null;
+                        List<DiscussionShortInfo>? SimilarDiscussions = null;
+                        if (Discussions_Preview != null)
+                        {
+                            Discussions = await Discussions_Preview.ToListAsync();
+                            if (CurrentUserId > 0)
+                            {
+                                SimilarDiscussions = await _discussion.GetSimilarDiscussionsAsync(CurrentUserId, Discussions);
+                            }
+                        }
+
+                        if (UserInfo.AvatarUrl == null) UserInfo.UnpicturedAvatarInfo = UserInfo.AvatarStickerUrl == null ? UserInfo.PseudoName?[0].ToString() : UserInfo.AvatarStickerUrl;
+
+                        ViewBag.UserInfo = UserInfo;
+                        ViewBag.DiscussionsCount = await _discussion.GetDiscussionsCountAsync(UserInfo.Id);
+                        ViewBag.Discussions = Discussions;
+                        ViewBag.DiscussionsCount = Discussions?.Count;
+                        ViewBag.SimilarDiscussions = SimilarDiscussions;
+                        ViewBag.SimilarDiscussionsCount = SimilarDiscussions?.Count;
+
+                        return View();
+                    }
+                }
+                return RedirectToAction("Index", "Home");
+            }
+            else return RedirectToAction("Create", "Account");
+        }
+
         public async Task<IActionResult> Notifications()
         {
             if(User.Identity.IsAuthenticated)

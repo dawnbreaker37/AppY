@@ -16,6 +16,8 @@ namespace AppY.Models
         [MaxLength(6)]
         public string? ReserveCode { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsPrivate { get; set; }
+        public bool AreMessagesAutoDeletable { get; set; }
         public string? AvatarStickerUrl { get; set; }
         public string? AvatarBgColor { get; set; }
         public string? AvatarFgColor { get; set; }

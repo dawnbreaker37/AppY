@@ -54,7 +54,7 @@ namespace AppY.Repositories
             if (Id > 0 && UserId > 0)
             {
                 int Result = await _context.DiscussionMessageAnswers.Where(d => d.Id == Id && d.UserId == UserId && !d.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true));
-                if (Result > 0) return Result;
+                if (Result > 0) return Id;
             }
             return 0;
         }

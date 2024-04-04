@@ -14,6 +14,7 @@ namespace AppY.ViewModels
         public bool IsMuted { get; set; }
         public bool IsPinned { get; set; }
         public bool IsDeleted { get; set; }
+        public string? DiscussionAvatar { get; set; }
         public string? LastMessageText { get; set; }
         public bool LastMessageIsChecked { get; set; }
         public DateTime LastMessageSentAt { get; set; }

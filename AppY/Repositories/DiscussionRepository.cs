@@ -3,7 +3,10 @@ using AppY.Interfaces;
 using AppY.Models;
 using AppY.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Bcpg;
+using System.Collections;
 using System.Data;
+using System.Linq;
 
 namespace AppY.Repositories
 {
@@ -152,16 +155,10 @@ namespace AppY.Repositories
             if (Id != 0) return _context.DiscussionUsers.AsNoTracking().Where(d => d.DiscussionId == Id && (!d.IsDeleted || d.IsDeleted && d.IsBlocked)).Select(d => new DiscussionUsers { JoinedAt = d.JoinedAt, UserId = d.UserId, UserName = d.User!.PseudoName, AccessLevel = d.AccessLevel, IsBlocked = d.IsBlocked }).OrderByDescending(d => d.JoinedAt).OrderBy(d => d.IsBlocked);
             else return null;
         }
-        //Edit//
-        public IQueryable<DiscussionShortInfo?>? GetUserMessagesSortedByDiscussions(int Id)
-        {
-            if (Id != 0) return _context.DiscussionUsers.AsNoTracking().Where(d => d.UserId == Id && !d.IsDeleted).Select(d => d.Discussion != null ? new DiscussionShortInfo { DiscussionId = d.DiscussionId, DiscussionName = d.Discussion != null ? d.Discussion!.Name : null, LastMessageText = d.Discussion!.DiscussionMessages != null ? d.Discussion.DiscussionMessages.OrderByDescending(d => d.SentAt).FirstOrDefault().Text : null } : null);
-            else return null;
-        }
 
         public IQueryable<DiscussionShortInfo>? GetUserDiscussions(int Id)
         {
-            if (Id != 0) return _context.DiscussionUsers.AsNoTracking().Where(d => d.UserId == Id && !d.IsDeleted).Select(d => new DiscussionShortInfo { Id = d.Id, JoinedAt = d.JoinedAt, IsMuted = d.IsMuted, IsPinned = d.IsPinned, DiscussionId = d.DiscussionId, DiscussionName = d.Discussion != null ? d.Discussion.Name : null, CreatedAt = d.Discussion != null ? d.Discussion.CreatedAt : DateTime.Now });
+            if (Id != 0) return _context.DiscussionUsers.AsNoTracking().Where(d => d.UserId == Id && !d.IsDeleted).Select(d => new DiscussionShortInfo { Id = d.Id, JoinedAt = d.JoinedAt, IsMuted = d.IsMuted, IsPinned = d.IsPinned, DiscussionId = d.DiscussionId, DiscussionName = d.Discussion != null ? d.Discussion.Name : null, DiscussionAvatar = d.Discussion != null ? d.Discussion.AvatarUrl : null });
             else return null;
         }
 
@@ -169,6 +166,38 @@ namespace AppY.Repositories
         {
             if (Id != 0) return _context.Discussions.AsNoTracking().Where(d => d.CreatorId == Id && d.IsDeleted).Select(d => new DiscussionShortInfo { CreatedAt = d.CreatedAt, DeletedAt = d.RemovedAt, DiscussionName = d.Name, DiscussionId = d.Id, UserId = Id });
             else return null;
+        }
+
+        public async Task<List<int?>?> GetUserDiscussionIds(int Id)
+        {
+            return await _context.DiscussionUsers.AsNoTracking().Where(d => d.UserId == Id && !d.IsDeleted && !d.IsBlocked).Select(d => d.DiscussionId).ToListAsync();
+        }
+
+        public async Task<List<DiscussionShortInfo>?> GetSimilarDiscussionsAsync(int Id, List<DiscussionShortInfo>? InitialList)
+        {
+            if (InitialList != null)
+            {
+                List<int?>? SecondUserIds = await _context.DiscussionUsers.AsNoTracking().Where(d => d.UserId == Id && !d.IsDeleted && !d.IsBlocked).Select(d => d.DiscussionId).ToListAsync();
+                if (SecondUserIds != null)
+                {
+                    List<DiscussionShortInfo>? NewSimilarsList = new List<DiscussionShortInfo>();
+                    foreach(DiscussionShortInfo Item in InitialList)
+                    {
+                        foreach (int? Item2 in SecondUserIds)
+                        {
+                            if (Item2.HasValue && Item2.Value == Item.DiscussionId) NewSimilarsList.Add(Item);
+                        }
+                    }
+
+                    return NewSimilarsList;
+                }
+            }
+            return null;
+        }
+
+        public async Task<int> GetDiscussionsCountAsync(int Id)
+        {
+            return await _context.DiscussionUsers.AsNoTracking().CountAsync(d => d.UserId == Id && !d.IsDeleted && !d.IsBlocked);
         }
 
         public async Task<bool> IsShortLinkFreeAsync(int Id, string? Shortlink)

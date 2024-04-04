@@ -28,6 +28,7 @@ builder.Services.AddTransient<IDiscussion, DiscussionRepository>();
 builder.Services.AddTransient<IMailMessages, MailMessages>();
 builder.Services.AddTransient<Message, DiscussionMessageRepository>();
 builder.Services.AddTransient<Answer, DiscussionMessageAnswersRepository>();
+builder.Services.AddTransient<ReactionAbstraction, DiscussionMessageReactionRepository>();
 builder.Services.AddTransient<ICommandLine, CommandLineTool>();
 
 builder.Services.AddIdentity<User, IdentityRole<int>>(Opt =>

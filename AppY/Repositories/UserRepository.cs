@@ -34,6 +34,12 @@ namespace AppY.Repositories
             else return null;
         }
 
+        public async Task<User?> GetAverageUserInfoAsync(int Id)
+        {
+            if (Id > 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, ShortName = u.ShortName, PseudoName = u.PseudoName, CreatedAt = u.CreatedAt, Description = u.Description, AvatarUrl = u.AvatarUrl, AvatarStickerUrl = u.AvatarUrl == null ? u.AvatarStickerUrl : null, AvatarBgColor = u.AvatarUrl == null ? u.AvatarBgColor : null, AvatarFgColor = u.AvatarUrl == null ? u.AvatarFgColor : null }).FirstOrDefaultAsync(u => u.Id == Id && !u.IsDisabled);
+            else return null;
+        }
+
         public async Task<string?> GetReserveCodeViaEmailAsync(string? Email)
         {
             if (!String.IsNullOrWhiteSpace(Email)) return await _context.Users.AsNoTracking().Where(u => u.Email == Email && !u.IsDisabled).Select(u => u.ReserveCode).FirstOrDefaultAsync();

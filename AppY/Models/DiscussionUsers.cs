@@ -16,10 +16,12 @@ namespace AppY.Models
         public bool IsPinned { get; set; }
         public bool IsBlocked { get; set; }
         public User? User { get; set; }
-        public Discussion? Discussion { get; set;}
+        public Discussion? Discussion { get; set; }
         [NotMapped]
         public string? UserName { get; set; }
         [NotMapped]
         public string? UserShortlink { get; set; }
+        [NotMapped]
+        public string? DiscussionName { get; set; }
     }
 }

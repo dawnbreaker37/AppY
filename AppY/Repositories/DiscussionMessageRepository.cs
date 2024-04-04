@@ -13,11 +13,13 @@ namespace AppY.Repositories
         private readonly Context _context;
         private readonly UserManager<User> _userManager;
         private readonly IMemoryCache _memoryCache;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public DiscussionMessageRepository(Context context, UserManager<User> userManager, IMemoryCache memoryCache)
+        public DiscussionMessageRepository(Context context, UserManager<User> userManager, IWebHostEnvironment webHostEnvironment, IMemoryCache memoryCache)
         {
             _context = context;
             _userManager = userManager;
+            _webHostEnvironment = webHostEnvironment;
             _memoryCache = memoryCache;
         }
 
@@ -36,7 +38,7 @@ namespace AppY.Repositories
             return 0;
         }
 
-        public async override Task<int> EditMessageAsync(SendMessage Model)
+        public async override Task<int> EditMessageAsync(SendEdit Model)
         {
             if((!String.IsNullOrEmpty(Model.Text)) && Model.Id != 0 && Model.DiscussionId != 0 && Model.UserId != 0)
             {
@@ -67,7 +69,7 @@ namespace AppY.Repositories
         {
             if (Id != 0 && UserId != 0)
             {
-                return _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).Select(d => new DiscussionMessage { Id = d.Id, Text = d.Text, DiscussionId = d.Id, IsAutoDeletable = d.IsAutoDeletable, IsChecked = d.IsChecked, IsEdited = d.IsEdited, SentAt = d.SentAt, UserId = d.UserId, IsPinned = d.IsPinned, RepliedMessageId = d.RepliedMessageId, RepliesMsgShortText = d.RepliesMsgShortText != null ? d.RepliesMsgShortText : "Deleted message" }).OrderBy(d => d.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(d => d.SentAt.Date);
+                return _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).Select(d => new DiscussionMessage { Id = d.Id, Text = d.Text, DiscussionId = d.Id, IsAutoDeletable = d.IsAutoDeletable, IsChecked = d.IsChecked, IsEdited = d.IsEdited, SentAt = d.SentAt, UserId = d.UserId, IsPinned = d.IsPinned, RepliedMessageId = d.RepliedMessageId, RepliesMsgShortText = d.RepliesMsgShortText != null ? d.RepliesMsgShortText : "Deleted message", ImagesCount = d.DiscussionMessageImages != null ? d.DiscussionMessageImages.Count : 0, MainImgUrl = d.DiscussionMessageImages != null ? d.DiscussionMessageImages.Select(d => d.Url).FirstOrDefault() : null }).OrderBy(d => d.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(d => d.SentAt.Date);
                 //return _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).Select(d => new DiscussionMessage { Id = d.Id, Text = d.Text, DiscussionId = d.Id, IsAutoDeletable = d.IsAutoDeletable, IsChecked = d.IsChecked, IsEdited = d.IsEdited, SentAt = d.SentAt, UserId = d.UserId, IsPinned = d.IsPinned, RepliedMessageId = d.RepliedMessageId, RepliesMsgShortText = _context.DiscussionMessages.AsNoTracking().Where(dm => dm.Id == d.RepliedMessageId && !dm.IsDeleted).Select(dm => dm.Text).FirstOrDefault() }).OrderBy(d => d.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(d => d.SentAt.Date);
             }
             else return null;
@@ -97,7 +99,7 @@ namespace AppY.Repositories
 
         public async override Task<int> SendMessageAsync(SendMessage Model)
         {
-            if (Model.DiscussionId != 0 && Model.UserId != 0 && !String.IsNullOrEmpty(Model.Text))
+            if (Model.DiscussionId != 0 && Model.UserId != 0 && (Model.Images == null && !String.IsNullOrWhiteSpace(Model.Text) || Model.Images != null))
             {
                 bool IsUserActiveInThisDiscussion = await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.DiscussionId == Model.DiscussionId && d.UserId == Model.UserId && !d.IsDeleted);
                 if (IsUserActiveInThisDiscussion)
@@ -109,24 +111,46 @@ namespace AppY.Repositories
                         RepliedMessageId = null,
                         DiscussionId = Model.DiscussionId,
                         UserId = Model.UserId,
-                        IsPinned = Model.IsPinned,
                         IsAutoDeletable = Model.IsAutoDeletable,
-                        SentAt = Model.SentAt.Value,                     
+                        SentAt = Model.SentAt.Value,
                         Text = Model.Text,
+                        IsPinned = false,
+                        IsChecked = false,
                         IsDeleted = false,
-                        IsEdited = false,
+                        IsEdited = false
                     };
                     await _context.AddAsync(discussionMessage);
                     await _context.SaveChangesAsync();
-                    await _context.Discussions.AsNoTracking().Where(d => d.Id == Model.DiscussionId).ExecuteUpdateAsync(d => d.SetProperty(d => d.LastMessageId, discussionMessage.Id));
 
+                    if (Model.Images != null)
+                    {
+                        int AcceptedImgsCount = Model.Images.Count > 6 ? 6 : Model.Images.Count;
+                        for(int i = 0; i < AcceptedImgsCount; i++)
+                        {
+                            string? FileExtension = Path.GetExtension(Model.Images[i].FileName);
+                            string? FileRandName = Guid.NewGuid().ToString().Substring(2, 12);
+                            using (FileStream fs = new FileStream(_webHostEnvironment.WebRootPath + "/DiscussionMessageImages/" + FileRandName + FileExtension, FileMode.Create))
+                            {
+                                await Model.Images[i].CopyToAsync(fs);
+                                DiscussionMessageImage discussionMessageImage = new DiscussionMessageImage
+                                {
+                                    IsDeleted = false,
+                                    MessageId = discussionMessage.Id,
+                                    Url = FileRandName + FileExtension
+                                };
+                                await _context.AddAsync(discussionMessageImage);
+                            }
+                        }
+                        await _context.SaveChangesAsync();
+                    }
+                    //await _context.Discussions.AsNoTracking().Where(d => d.Id == Model.DiscussionId).ExecuteUpdateAsync(d => d.SetProperty(d => d.LastMessageId, discussionMessage.Id));
                     return discussionMessage.Id;
                 }
             }
             return 0;
         }
 
-        public async override Task<int> ReplyToMessageAsync(SendMessage Model)
+        public async override Task<int> ReplyToMessageAsync(SendReply Model)
         {
             if(!String.IsNullOrWhiteSpace(Model.Text) && !String.IsNullOrWhiteSpace(Model.ReplyText) && Model.UserId != 0 && Model.MessageId != 0 && Model.DiscussionId != 0)
             {
@@ -170,69 +194,6 @@ namespace AppY.Repositories
         {
             if (Id > 0) return await _context.DiscussionMessages.AsNoTracking().CountAsync(d => d.RepliedMessageId == Id && !d.IsDeleted && d.RepliedMessageId != null);
             else return 0;
-        }
-
-        public async override Task<int> ScheduleMessageAsync(SendMessage Model)
-        {
-            if (!String.IsNullOrWhiteSpace(Model.Text) && Model.UserId != 0 && Model.SentAt.HasValue)
-            {
-                ScheduledMessage scheduledMessage = new ScheduledMessage
-                {
-                    Text = Model.Text,
-                    UserId = Model.UserId,
-                    IsAutoDeletable = false,
-                    IsDeleted = false,
-                    ScheduledTime = Model.SentAt.Value,
-                    DiscussionId = Model.DiscussionId
-                };
-                await _context.AddAsync(scheduledMessage);
-                await _context.SaveChangesAsync();
-
-                return scheduledMessage.Id;
-            }
-            else return 0;
-        }
-
-        public override IQueryable<ScheduledMessage>? GetScheduledMessages(int UserId)
-        {
-            if (UserId != 0) return _context.ScheduledMessages.AsNoTracking().Where(scd => scd.UserId == UserId && !scd.IsDeleted).Select(d => new ScheduledMessage { Id = d.Id, IsAutoDeletable = d.IsAutoDeletable, Text = d.Text, ScheduledTime = d.ScheduledTime }).OrderByDescending(d => d.ScheduledTime);
-            else return null;
-        }
-
-        public async override Task<int> TryToSendScheduledMessagesAsync(int DiscussionId)
-        {
-            if(DiscussionId > 0)
-            {
-                List<ScheduledMessage>? MessageInfos = await _context.ScheduledMessages.AsNoTracking().Where(d => d.DiscussionId == DiscussionId && !d.IsDeleted).Select(d => new ScheduledMessage { DiscussionId = DiscussionId, Text = d.Text, IsAutoDeletable = d.IsAutoDeletable, ScheduledTime = d.ScheduledTime, UserId = d.UserId}).ToListAsync();
-                if(MessageInfos.Count > 0)
-                {
-                    List<DiscussionMessage>? ScheduledMessages = new List<DiscussionMessage>();
-                    foreach(ScheduledMessage message in MessageInfos)
-                    {
-                        DiscussionMessage discussionMessage = new DiscussionMessage
-                        {
-                            Text = message.Text,
-                            DiscussionId = message.DiscussionId,
-                            IsAutoDeletable = 0,
-                            IsDeleted = false,
-                            IsEdited = false,
-                            IsChecked = false,
-                            RepliedMessageId = null,
-                            RepliesMsgShortText = null,
-                            IsPinned = false,
-                            SentAt = message.ScheduledTime,
-                            UserId = message.UserId
-                        };
-                        ScheduledMessages.Append(discussionMessage);
-
-                        await _context.AddRangeAsync(ScheduledMessages);
-                        await _context.SaveChangesAsync();
-
-                        return ScheduledMessages.Count;
-                    }
-                }
-            }
-            return 0;
         }
     }
 }

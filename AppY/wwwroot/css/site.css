@@ -119,6 +119,38 @@ body {
     backdrop-filter: blur(9px);
 }
 
+.btn-link {
+    cursor: pointer;
+    color: #fdfdfd;
+    text-decoration: none;
+    background-color: transparent;
+    padding: 0;
+    transition: all ease 0.3s;
+}
+.btn-link:hover,
+.btn-link:active {
+    color: black;
+    border-radius: 34px;
+    padding: 0 2px;
+    background-color: #f0f0f0;
+}
+
+.btn-link-opp {
+    cursor: pointer;
+    color: black;
+    text-decoration: none;
+    background-color: transparent;
+    padding: 0;
+    transition: all ease 0.3s;
+}
+.btn-link-opp:hover,
+.btn-link-opp:active {
+    color: #f8f9fa;
+    border-radius: 34px;
+    padding: 0 2px;
+    background-color: black;
+}
+
 .text-via-link {
     opacity: 1;
     text-decoration: underline;
@@ -147,17 +179,8 @@ body {
     background-color: rgb(240, 240, 240);
     transition: all ease 0.3s;
 }
-
-.image-picture-none-container-md {
-    width: 45px;
-    height: 45px;
-    border-radius: 45px;
-    background-color: rgb(240, 240, 240);
-    transition: all ease 0.3s;
-}
-
 .unpictured-container-label {
-    width: 100%;
+    width: 95px;
     font-weight: 500;
     text-align: center;
     font-size: 50px;
@@ -165,10 +188,21 @@ body {
     transition: all ease 0.3s;
 }
 
-.modal-content {
-    border: 0;
-    border-radius: 8px;
+.image-picture-none-container-md {
+    width: 45px;
+    height: 45px;
+    border-radius: 45px;
+    line-height: 45px;
+    background-color: rgb(240, 240, 240);
     transition: all ease 0.3s;
+}
+.unpictured-container-label-md {
+    width: 45px;
+    font-weight: 500;
+    text-align: center;
+    font-size: 28px;
+    line-height: 45px;
+    transition: all ease 0.37s;
 }
 
 .image-picture-none-container-sm {
@@ -179,21 +213,18 @@ body {
     transition: all ease 0.3s;
 }
 .unpictured-container-label-sm {
-    width: 100%;
+    width: 35px;
     font-weight: 500;
     text-align: center;
-    font-size: 23px;
+    font-size: 20px;
     line-height: 35px;
     transition: all ease 0.37s;
 }
 
-.unpictured-container-label-md {
-    width: 100%;
-    font-weight: 500;
-    text-align: center;
-    font-size: 28px;
-    line-height: 45px;
-    transition: all ease 0.37s;
+.modal-content {
+    border: 0;
+    border-radius: 8px;
+    transition: all ease 0.3s;
 }
 
 .z-index-standard {
@@ -201,6 +232,14 @@ body {
 }
 
 .transition-standard {
+    transition: all ease 0.3s;
+}
+
+.msg-img-container {
+    height: 190px;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 8px;
     transition: all ease 0.3s;
 }
 
@@ -273,6 +312,16 @@ body {
 }
 .user-via-shortname:hover,
 .user-via-shortname:active {
+    opacity: 0.75;
+}
+
+.relocate-to-discussion {
+    cursor: pointer;
+    opacity: 1;
+    transition: all ease 0.3s;
+}
+.relocate-to-discussion:hover,
+.relocate-to-discussion:active {
     opacity: 0.75;
 }
 
@@ -574,6 +623,25 @@ body {
 .btn-set-status:active {
     padding: 1px 3px;
     background-color: #f0f0f0;
+}
+
+.reaction-bubble {
+    margin: 0 4px 3px 0;
+    background-color: #f8f9fa;
+    border-radius: 70px;
+    color: #0d6efd;
+    padding: 3px 7px;
+    cursor: pointer;
+    height: 70px;
+    width: 70px;
+    transition: all ease 0.325s;
+}
+.reaction-container {
+    width: auto;
+    margin-bottom: 4px;
+    padding: 2px 6px;
+    border-radius: 34px;
+    transition: all ease 0.37s;
 }
 
 .btn-navbar {

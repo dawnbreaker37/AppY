@@ -13,5 +13,7 @@ namespace AppY.Models
         public User? User { get; set; }
         public Reaction? Reaction { get; set; }
         public DiscussionMessage? DiscussionMessage { get; set; }
+        [NotMapped]
+        public string? ReactionCode { get; set; }
     }
 }

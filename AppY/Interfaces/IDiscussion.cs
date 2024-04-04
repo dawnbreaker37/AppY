@@ -27,8 +27,9 @@ namespace AppY.Interfaces
         public Task<int> BlockUserAsync(int Id, int BlockerId, int UserId);
         public Task<int> UnblockUserAsync(int Id, int UnblockerId, int UserId);
         public Task<int> ChangeAccessLevel(int Id, int ChangerId, int UserId, int AccessLevel);
-        public IQueryable<DiscussionShortInfo?>? GetUserMessagesSortedByDiscussions(int Id);
         public IQueryable<DiscussionShortInfo>? GetUserDiscussions(int Id);
+        public Task<List<int?>?> GetUserDiscussionIds(int Id);
+        public Task<List<DiscussionShortInfo>?> GetSimilarDiscussionsAsync(int Id, List<DiscussionShortInfo>? InitialList);
         public IQueryable<DiscussionShortInfo>? GetUserDeletedDiscussions(int Id);
         public IQueryable<DiscussionUsers>? GetMembersInfo(int Id);
         public IQueryable<DiscussionShortInfo>? Find(string? Keyword);
@@ -38,6 +39,7 @@ namespace AppY.Interfaces
         public Task<Discussion?> GetDiscussionShortInfoAsync(int Id, int UserId);
         public Task<int> GetMembersCountAsync(int Id);
         public Task<int> GetDeletedDiscussionsCountAsync(int Id);
+        public Task<int> GetDiscussionsCountAsync(int Id);
         public Task<bool> HasThisUserAccessToThisDiscussionAsync(int UserId, int DiscussionId);
         public Task<bool> IsShortLinkFreeAsync(int Id, string? Shortlink);
         public Task<bool> IsThisDiscussionMutedAsync(int Id, int UserId);

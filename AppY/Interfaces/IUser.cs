@@ -8,6 +8,7 @@ namespace AppY.Interfaces
     {
         public Task<User?> GetMainUserInfoAsync(int Id);
         public Task<User?> GetAverageUserInfoAsync(string? Shortname);
+        public Task<User?> GetAverageUserInfoAsync(int Id);
         public Task<User?> GetUserSuperShortInfoAsync(int Id);
         public Task<User?> GetUserSuperShortInfoAsync(string? Shortname);
         public Task<int> GetCurrentUserAccessLevelAsync(int Id, int UserId);

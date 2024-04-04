@@ -4,6 +4,7 @@ using AppY.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppY.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20240403204415_03042024-0")]
+    partial class _030420240
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -252,30 +255,6 @@ namespace AppY.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("DiscussionMessageAnswers");
-                });
-
-            modelBuilder.Entity("AppY.Models.DiscussionMessageImage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("MessageId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Url")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MessageId");
-
-                    b.ToTable("DiscussionMessageImages");
                 });
 
             modelBuilder.Entity("AppY.Models.DiscussionMessageReaction", b =>
@@ -812,17 +791,6 @@ namespace AppY.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AppY.Models.DiscussionMessageImage", b =>
-                {
-                    b.HasOne("AppY.Models.DiscussionMessage", "DiscussionMessage")
-                        .WithMany("DiscussionMessageImages")
-                        .HasForeignKey("MessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DiscussionMessage");
-                });
-
             modelBuilder.Entity("AppY.Models.DiscussionMessageReaction", b =>
                 {
                     b.HasOne("AppY.Models.DiscussionMessage", "DiscussionMessage")
@@ -989,8 +957,6 @@ namespace AppY.Migrations
             modelBuilder.Entity("AppY.Models.DiscussionMessage", b =>
                 {
                     b.Navigation("DiscussionMessageAnswers");
-
-                    b.Navigation("DiscussionMessageImages");
 
                     b.Navigation("DiscussionMessageReactions");
                 });
