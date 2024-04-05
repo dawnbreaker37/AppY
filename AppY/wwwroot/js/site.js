@@ -1513,40 +1513,21 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
                 let messageMainBox = $("<div class='message-box'></div>");
                 let messageNotMainBox = $("<div class='cur-user-msg-box'></div>");
                 let styleBox = $("<div class='cur-user-styled-msg-box p-2'></div>");
-                let reactionBox = $("<div class='reaction-container' style='display: none;'></div>");
-                //let isReplyBox = $("<div class='cur-user-reply-container mb-1 discussion-options reply-element'></div>");
-                //let repliedTo_Icon = $("<small class='card-text fw-500 discussion-options reply-element'> <i class='fa-solid fa-reply'></i> Replied to </small>");
-                //let replyText = $("<p class='card-text white-space-on discussion-options reply-element'></p>");
                 let isAutodeletableSmall = $("<small class='card-text'></small>");
                 let mainText = $("<p class='card-text white-space-on message-label discussion-options'></p>");
                 let statsBox = $("<div class='discussion-options float-end me-1'></div>");
                 let isChecked = $("<small class='card-text text-primary'></small>");
                 let dateAndTime = $("<small class='card-text text-muted'></small>");
                 let isEdited = $("<small class='card-text text-muted' style='display: none;'></small>");
+                let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+                let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
+                let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
 
-                reactionBox.attr("id", response.trueId + "-Reactions_Container");
                 messageMainBox.attr("id", response.trueId + "-DiscussionMsgBox");
                 messageNotMainBox.attr("id", response.trueId + "-DiscussionMsgNmBox");
                 styleBox.attr("id", response.trueId + "-DiscussionMsgStyledBox");
                 isEdited.attr("id", response.trueId + "-DiscussionMessageIsEdited_Lbl");
-                //if (response.isReply) {
-                //    isReplyBox.attr("id", response.trueId + "-DiscussionMsgReplyBox");
-                //    repliedTo_Icon.attr("id", response.trueId + "-DiscussionMsgReplyIcon");
-                //    replyText.attr("id", response.trueId + "-DiscussionMsgReplyText");
-                //    isReplyBox.attr("data-bs-msg-id", response.result.messageId);
-                //    repliedTo_Icon.attr("data-bs-msg-id", response.result.messageId);
-                //    replyText.attr("data-bs-msg-id", response.result.messageId);
 
-                //    replaceAllUsersInText(response.result.replyText);
-                //    replyText.html(response.result.replyText);
-
-                //    isReplyBox.append(repliedTo_Icon);
-                //    isReplyBox.append(replyText);
-                //    styleBox.append(isReplyBox);
-
-                //    textDecoder(response.result.replyText, response.trueId + "-DiscussionMsgReplyText");
-                //}
-                /*else isReplyBox.addClass("d-none");*/
                 mainText.attr("id", response.trueId + "-DiscussionOptionMsgText_Lbl");
                 statsBox.attr("id", response.trueId + "-DiscussionMsgStatsBox");
                 dateAndTime.attr("id", response.trueId + "-DiscussionMsgDateNTimeInfo_Lbl");
@@ -1561,16 +1542,27 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
                 isChecked.html(' <i class="fa-solid fa-check text-muted"></i> ');
                 dateAndTime.text(hrs + ":" + mins);
 
-                /*styleBox.append(isReplyBox);*/
                 if (parseInt(response.result.isAutoDeletable) > 0) {
                     isAutodeletableSmall.html(' <i class="fa-solid fa-clock-rotate-left"></i> ' + response.result.isAutoDeletable + " mins");
                     styleBox.append(isAutodeletableSmall);
+                }
+                if (response.imgUrl != null) {
+                    let imgSeparator = $("<div></div>");
+                    imgTag.attr("src", "/DiscussionMessageImages/" + response.imgUrl);
+                    imgBox.append(imgTag);
+                    imgsLinkBtn.html(response.imgsCount + " Images in Pack <i class='fa-solid fa-angle-right'></i> ");
+                    imgsLinkBtn.attr("id", response.trueId + "-MsgImgsLinkBtn");
+                    imgBox.attr("id", response.trueId + "-MsgImgBox");
+                    imgTag.attr("id", response.trueId + "-MsgImgTag");
+
+                    styleBox.append(imgSeparator);
+                    styleBox.append(imgsLinkBtn);
+                    styleBox.append(imgBox);
                 }
                 styleBox.append(mainText);
                 statsBox.append(isChecked);
                 statsBox.append(dateAndTime);
                 statsBox.append(isEdited);
-                messageNotMainBox.append(reactionBox);
                 messageNotMainBox.append(styleBox);
                 messageNotMainBox.append(statsBox);
                 messageMainBox.append(messageNotMainBox);
@@ -1611,19 +1603,112 @@ $(document).on("submit", "#SendDiscussionReply_Form", function (event) {
     let data = $(this).serialize();
 
     $.post(url, data, function (response) {
-        $("#EditingOrReplying_Box").slideUp(350);
-        $("#RM_ReplyId_Val").val(0);
-        $("#RM_ReplyText_Val").val("");
         if (response.success) {
+            let sentMessagesCount = $("#SentMessagesCount_Val").val();
+
+            $("#SendMessage_Text_Val").val(null);
+            $("#SendDiscussionMessage_SbmtBtn").attr("disabled", true);
+            if (sentMessagesCount <= 0) $("#Presentation_Box").fadeOut(300);
+
+            let messageMainBox = $("<div class='message-box'></div>");
+            let messageNotMainBox = $("<div class='cur-user-msg-box'></div>");
+            let styleBox = $("<div class='cur-user-styled-msg-box p-2'></div>");
+            let isReplyBox = $("<div class='cur-user-reply-container mb-1 discussion-options reply-element'></div>");
+            let repliedTo_Icon = $("<small class='card-text fw-500 discussion-options reply-element'> <i class='fa-solid fa-reply'></i> Replied to </small>");
+            let replyText = $("<p class='card-text white-space-on discussion-options reply-element'></p>");
+            let isAutodeletableSmall = $("<small class='card-text'></small>");
+            let mainText = $("<p class='card-text white-space-on message-label discussion-options'></p>");
+            let statsBox = $("<div class='discussion-options float-end me-1'></div>");
+            let isChecked = $("<small class='card-text text-primary'></small>");
+            let dateAndTime = $("<small class='card-text text-muted'></small>");
+            let isEdited = $("<small class='card-text text-muted' style='display: none;'></small>");
+            let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+            let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
+            let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
+
+            messageMainBox.attr("id", response.trueId + "-DiscussionMsgBox");
+            messageNotMainBox.attr("id", response.trueId + "-DiscussionMsgNmBox");
+            styleBox.attr("id", response.trueId + "-DiscussionMsgStyledBox");
+            isEdited.attr("id", response.trueId + "-DiscussionMessageIsEdited_Lbl");
+
+            isReplyBox.attr("id", response.trueId + "-DiscussionMsgReplyBox");
+            repliedTo_Icon.attr("id", response.trueId + "-DiscussionMsgReplyIcon");
+            replyText.attr("id", response.trueId + "-DiscussionMsgReplyText");
+            isReplyBox.attr("data-bs-msg-id", response.result.messageId);
+            repliedTo_Icon.attr("data-bs-msg-id", response.result.messageId);
+            replyText.attr("data-bs-msg-id", response.result.messageId);
+
+            replaceAllUsersInText(response.result.replyText);
+            replyText.html(response.result.replyText);
+
+            isReplyBox.append(repliedTo_Icon);
+            isReplyBox.append(replyText);
+            styleBox.append(isReplyBox);
+
+            textDecoder(response.result.replyText, response.trueId + "-DiscussionMsgReplyText");
+            mainText.attr("id", response.trueId + "-DiscussionOptionMsgText_Lbl");
+            statsBox.attr("id", response.trueId + "-DiscussionMsgStatsBox");
+            dateAndTime.attr("id", response.trueId + "-DiscussionMsgDateNTimeInfo_Lbl");
+
+            let date = new Date(response.result.sentAt);
+            let hrs = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
+            let mins = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+
+            replaceAllUsersInText(response.result.text);
+            let decodedText = textDecoder(response.result.text, null);
+            mainText.html(decodedText);
+            isChecked.html(' <i class="fa-solid fa-check text-muted"></i> ');
+            dateAndTime.text(hrs + ":" + mins);
+
+            styleBox.append(isReplyBox);
+            if (parseInt(response.result.isAutoDeletable) > 0) {
+                isAutodeletableSmall.html(' <i class="fa-solid fa-clock-rotate-left"></i> ' + response.result.isAutoDeletable + " mins");
+                styleBox.append(isAutodeletableSmall);
+            }
+            if (response.imgUrl != null) {
+                let imgSeparator = $("<div></div>");
+                imgTag.attr("src", "/DiscussionMessageImages/" + response.imgUrl);
+                imgBox.append(imgTag);
+                imgsLinkBtn.html(response.imgsCount + " Images in Pack <i class='fa-solid fa-angle-right'></i> ");
+                imgsLinkBtn.attr("id", response.trueId + "-MsgImgsLinkBtn");
+                imgBox.attr("id", response.trueId + "-MsgImgBox");
+                imgTag.attr("id", response.trueId + "-MsgImgTag");
+
+                styleBox.append(imgSeparator);
+                styleBox.append(imgsLinkBtn);
+                styleBox.append(imgBox);
+            }
+            styleBox.append(mainText);
+            statsBox.append(isChecked);
+            statsBox.append(dateAndTime);
+            statsBox.append(isEdited);
+            messageNotMainBox.append(styleBox);
+            messageNotMainBox.append(statsBox);
+            messageMainBox.append(messageNotMainBox);
+
+            textDecoder(response.result.text, response.trueId + "-DiscussionOptionMsgText_Lbl");
+            if (sentMessagesCount <= 0) {
+                setTimeout(function () {
+                    $("#DiscussionMessages_MainBox").append(messageMainBox);
+                }, 300);
+            }
+            else {
+                $("#DiscussionMessages_MainBox").append(messageMainBox);
+            }
+            $("#SentMessagesCount_Val").val(++sentMessagesCount);
+            $("#StatusBar_Lbl-1").text(sentMessagesCount + " messages");
+
+            $("#EditingOrReplying_Box").slideUp(250);
+            $("#RM_ReplyId_Val").val(0);
+            $("#RM_ReplyText_Val").val("");
+            $("#SendMessage_Images_Val").val(null);
             $("#SendMessage_Text_Val").val("");
             $("#SendDiscussionMessage_SbmtBtn").attr("disabled", true);
             setTimeout(function () {
                 $("#SendDiscussionMessage_SbmtBtn").attr("disabled", false);
-            }, 1800);
+            }, 500);
         }
-        else {
-            alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 4);
-        }
+        else alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
     });
 });
 $(document).on("submit", "#EditMessage_Form", function (event) {
@@ -2279,7 +2364,7 @@ $("#ReplyDiscussionMessage_Btn").on("click", function () {
     insideBoxClose(false, "DiscussionOptions_Box");
     insideBoxClose(false, "ReactionsOptions_Container");
 
-    $("#SendMessage_Images_Val").val(null);
+    //$("#SendMessage_Images_Val").val(null);
     $("#SendMessage_Text_Val").val("");
     $("#EditingOrReplyingMsgStatus_Lbl").text("Reply to");
     $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-solid fa-reply"></i> ');

@@ -6,8 +6,8 @@ namespace AppY.Abstractions
 {
     public abstract class Message
     {
-        public abstract Task<int> SendMessageAsync(SendMessage Model);
-        public abstract Task<int> ReplyToMessageAsync(SendReply Model);
+        public abstract Task<string?> SendMessageAsync(SendMessage Model);
+        public abstract Task<string?> ReplyToMessageAsync(SendReply Model);
         public abstract Task<int> EditMessageAsync(SendEdit Model);
         public abstract Task<int> MarkAsReadAllMessagesAsync(int DiscussionId, int UserId);
         public abstract Task<int> MarkAsReadAsync(int MessageId, int UserId);

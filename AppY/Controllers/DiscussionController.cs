@@ -149,7 +149,7 @@ namespace AppY.Controllers
                             int MessagesCount = await _messages.SentMessagesCountAsync(Id);
                             if (MessagesCount > 0 && ((!DiscussionInfo.IsPrivate) || (DiscussionInfo.IsPrivate && AccessValue)))
                             {
-                                IQueryable<IGrouping<DateTime, DiscussionMessage>>? Result_Preview = _messages.GetMessages(Id, UserId, 0, 35);
+                                IQueryable<IGrouping<DateTime, DiscussionMessage>>? Result_Preview = _messages.GetMessages(Id, UserId, 0, 100);
                                 if (Result_Preview != null)
                                 {
                                     Messages = await Result_Preview.ToListAsync();

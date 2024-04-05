@@ -97,10 +97,11 @@ namespace AppY.Repositories
             return 0;
         }
 
-        public async override Task<int> SendMessageAsync(SendMessage Model)
+        public async override Task<string?> SendMessageAsync(SendMessage Model)
         {
             if (Model.DiscussionId != 0 && Model.UserId != 0 && (Model.Images == null && !String.IsNullOrWhiteSpace(Model.Text) || Model.Images != null))
             {
+                string? FirstImgUrl = null;
                 bool IsUserActiveInThisDiscussion = await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.DiscussionId == Model.DiscussionId && d.UserId == Model.UserId && !d.IsDeleted);
                 if (IsUserActiveInThisDiscussion)
                 {
@@ -128,7 +129,8 @@ namespace AppY.Repositories
                         for(int i = 0; i < AcceptedImgsCount; i++)
                         {
                             string? FileExtension = Path.GetExtension(Model.Images[i].FileName);
-                            string? FileRandName = Guid.NewGuid().ToString().Substring(2, 12);
+                            string? FileRandName = Guid.NewGuid().ToString().Substring(2, 14);
+                            if (i == 0) FirstImgUrl = FileRandName + FileExtension;
                             using (FileStream fs = new FileStream(_webHostEnvironment.WebRootPath + "/DiscussionMessageImages/" + FileRandName + FileExtension, FileMode.Create))
                             {
                                 await Model.Images[i].CopyToAsync(fs);
@@ -144,13 +146,15 @@ namespace AppY.Repositories
                         await _context.SaveChangesAsync();
                     }
                     //await _context.Discussions.AsNoTracking().Where(d => d.Id == Model.DiscussionId).ExecuteUpdateAsync(d => d.SetProperty(d => d.LastMessageId, discussionMessage.Id));
-                    return discussionMessage.Id;
+                    Model.Id = discussionMessage.Id;
+                    if (Model.Images == null) return discussionMessage.Text;
+                    else return FirstImgUrl;
                 }
             }
-            return 0;
+            return null;
         }
 
-        public async override Task<int> ReplyToMessageAsync(SendReply Model)
+        public async override Task<string?> ReplyToMessageAsync(SendReply Model)
         {
             if(!String.IsNullOrWhiteSpace(Model.Text) && !String.IsNullOrWhiteSpace(Model.ReplyText) && Model.UserId != 0 && Model.MessageId != 0 && Model.DiscussionId != 0)
             {
@@ -158,7 +162,6 @@ namespace AppY.Repositories
                 if (IsThisUserActive)
                 {
                     Model.ReplyText = Model.ReplyText.Length > 40 ? Model.ReplyText.Substring(0, 37) + "..." : Model.ReplyText;
-
                     DiscussionMessage discussionMessage = new DiscussionMessage
                     {
                         Text = Model.Text,
@@ -177,11 +180,13 @@ namespace AppY.Repositories
                     await _context.AddAsync(discussionMessage);
                     await _context.SaveChangesAsync();
 
-                    return discussionMessage.Id;
+                    Model.Id = discussionMessage.Id;
+                    Model.SentAt = DateTime.Now;
+
+                    return discussionMessage.Text;
                 }
-                else return -128;
             }
-            return 0;
+            return null;
         }
 
         public override async Task<int> SentMessagesCountAsync(int DiscussionId)
