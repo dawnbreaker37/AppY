@@ -123,32 +123,14 @@ namespace AppY.Repositories
                     await _context.AddAsync(discussionMessage);
                     await _context.SaveChangesAsync();
 
+                    Model.Id = discussionMessage.Id;
+                    //await _context.Discussions.AsNoTracking().Where(d => d.Id == Model.DiscussionId).ExecuteUpdateAsync(d => d.SetProperty(d => d.LastMessageId, discussionMessage.Id));
                     if (Model.Images != null)
                     {
-                        int AcceptedImgsCount = Model.Images.Count > 6 ? 6 : Model.Images.Count;
-                        for(int i = 0; i < AcceptedImgsCount; i++)
-                        {
-                            string? FileExtension = Path.GetExtension(Model.Images[i].FileName);
-                            string? FileRandName = Guid.NewGuid().ToString().Substring(2, 14);
-                            if (i == 0) FirstImgUrl = FileRandName + FileExtension;
-                            using (FileStream fs = new FileStream(_webHostEnvironment.WebRootPath + "/DiscussionMessageImages/" + FileRandName + FileExtension, FileMode.Create))
-                            {
-                                await Model.Images[i].CopyToAsync(fs);
-                                DiscussionMessageImage discussionMessageImage = new DiscussionMessageImage
-                                {
-                                    IsDeleted = false,
-                                    MessageId = discussionMessage.Id,
-                                    Url = FileRandName + FileExtension
-                                };
-                                await _context.AddAsync(discussionMessageImage);
-                            }
-                        }
-                        await _context.SaveChangesAsync();
+                        FirstImgUrl = await SendImagesAsync(Model.Id, Model.Images);
+                        return FirstImgUrl;
                     }
-                    //await _context.Discussions.AsNoTracking().Where(d => d.Id == Model.DiscussionId).ExecuteUpdateAsync(d => d.SetProperty(d => d.LastMessageId, discussionMessage.Id));
-                    Model.Id = discussionMessage.Id;
-                    if (Model.Images == null) return discussionMessage.Text;
-                    else return FirstImgUrl;
+                    else return discussionMessage.Text;
                 }
             }
             return null;
@@ -158,6 +140,7 @@ namespace AppY.Repositories
         {
             if(!String.IsNullOrWhiteSpace(Model.Text) && !String.IsNullOrWhiteSpace(Model.ReplyText) && Model.UserId != 0 && Model.MessageId != 0 && Model.DiscussionId != 0)
             {
+                string? FirstSendImg = null;
                 bool IsThisUserActive = await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.DiscussionId == Model.DiscussionId && d.UserId == Model.UserId && !d.IsBlocked && !d.IsDeleted);
                 if (IsThisUserActive)
                 {
@@ -183,7 +166,12 @@ namespace AppY.Repositories
                     Model.Id = discussionMessage.Id;
                     Model.SentAt = DateTime.Now;
 
-                    return discussionMessage.Text;
+                    if (Model.Images != null)
+                    {
+                        FirstSendImg = await SendImagesAsync(Model.Id, Model.Images);
+                        return FirstSendImg;
+                    }
+                    else return discussionMessage.Text;
                 }
             }
             return null;
@@ -199,6 +187,37 @@ namespace AppY.Repositories
         {
             if (Id > 0) return await _context.DiscussionMessages.AsNoTracking().CountAsync(d => d.RepliedMessageId == Id && !d.IsDeleted && d.RepliedMessageId != null);
             else return 0;
+        }
+
+        public async override Task<string?> SendImagesAsync(int Id, IFormFileCollection? Files)
+        {
+            if(Id > 0 && Files != null)
+            {
+                string? FirstFileName = null;
+                int MaxCount = Files.Count > 6 ? 6 : Files.Count;
+                for(int i = 0; i < MaxCount; i++)
+                {
+                    string? FileExtension = Path.GetExtension(Files[i].FileName);
+                    string? FileRandName = Guid.NewGuid().ToString().Substring(2, 14);
+                    if (i == 0) FirstFileName = FileRandName + FileExtension;
+
+                    using(FileStream fs = new FileStream(_webHostEnvironment.WebRootPath + "/DiscussionMessageImages/" + FileRandName + FileExtension, FileMode.Create))
+                    {
+                        await Files[i].CopyToAsync(fs);
+                        DiscussionMessageImage discussionMessageImage = new DiscussionMessageImage
+                        {
+                            IsDeleted = false,
+                            MessageId = Id,
+                            Url = FileRandName + FileExtension
+                        };
+                        await _context.AddAsync(discussionMessageImage);
+                    }
+                }
+                await _context.SaveChangesAsync();
+
+                return FirstFileName;
+            }
+            return null;
         }
     }
 }

@@ -24,7 +24,7 @@ namespace AppY.Repositories
 
         public async Task<User?> GetMainUserInfoAsync(int Id)
         {
-            if (Id != 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, AvatarUrl = u.AvatarUrl, Email = u.Email, AvatarBgColor = u.AvatarBgColor, AvatarFgColor = u.AvatarFgColor, EmailConfirmed = u.EmailConfirmed, Description = u.Description, PseudoName = u.PseudoName, ShortName = u.ShortName, PasswordChanged = u.PasswordChanged, AvatarStickerUrl = u.AvatarStickerUrl }).FirstOrDefaultAsync(u => u.Id == Id && !u.IsDisabled);
+            if (Id != 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, AvatarUrl = u.AvatarUrl, Email = u.Email, AvatarBgColor = u.AvatarBgColor, AvatarFgColor = u.AvatarFgColor, EmailConfirmed = u.EmailConfirmed, Description = u.Description, PseudoName = u.PseudoName, ShortName = u.ShortName, PasswordChanged = u.PasswordChanged, AvatarStickerUrl = u.AvatarStickerUrl, IsPrivate = u.IsPrivate, AreMessagesAutoDeletable = u.AreMessagesAutoDeletable }).FirstOrDefaultAsync(u => u.Id == Id && !u.IsDisabled);
             else return null;
         }
 
@@ -180,6 +180,25 @@ namespace AppY.Repositories
         {
             if (Id != 0) return await _context.DiscussionUsers.Where(d => d.UserId == UserId && d.DiscussionId == Id && !d.IsDeleted).Select(d => d.AccessLevel).FirstOrDefaultAsync();
             else return 0;
+        }
+
+        public async Task<bool> EditPrivacySettingsAsync(EditUserPrivacySettings Model)
+        {
+            if (Model.Id > 0 && Model.AreMessagesAutoDeletable >= 0)
+            {
+                int Result = await _context.Users.AsNoTracking().Where(d => d.Id == Model.Id && !d.IsDisabled).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsPrivate, Model.IsPrivate).SetProperty(d => d.AreMessagesAutoDeletable, Model.AreMessagesAutoDeletable));
+                if (Result > 0) return true;
+            }
+            return false;
+        }
+
+        public string? AutodeleteDelay(double MinsValue)
+        {
+            if (MinsValue >= 60 && MinsValue < 1440) return Math.Round(MinsValue / 60, 1) + " hour(s)";
+            else if (MinsValue >= 1440 && MinsValue < 10080) return Math.Round((MinsValue / 60) / 24, 1) + " day(s)";
+            else if (MinsValue >= 10080 && MinsValue < 43200) return Math.Round((MinsValue / 60) / 24, 1) + " week(s)";
+            else if (MinsValue >= 43200) return Math.Round((MinsValue / 60) / 24, 1) + " month(s)";
+            else return MinsValue + " min(s)";
         }
     }
 }

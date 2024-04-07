@@ -6,6 +6,7 @@ namespace AppY.Abstractions
 {
     public abstract class Message
     {
+        public abstract Task<string?> SendImagesAsync(int Id, IFormFileCollection? Files);
         public abstract Task<string?> SendMessageAsync(SendMessage Model);
         public abstract Task<string?> ReplyToMessageAsync(SendReply Model);
         public abstract Task<int> EditMessageAsync(SendEdit Model);

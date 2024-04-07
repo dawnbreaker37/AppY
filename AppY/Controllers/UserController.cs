@@ -181,6 +181,17 @@ namespace AppY.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> EditPrivacy(EditUserPrivacySettings Model)
+        {
+            if(ModelState.IsValid)
+            {
+                bool Result = await _user.EditPrivacySettingsAsync(Model);
+                if (Result) return Json(new { success = true, alert = "Privacy settings has been edited" });
+            }
+            return Json(new { success = false, alert = "Unable to edit privacy settings" });
+        }
+
+        [HttpPost]
         public async Task<IActionResult> SetProfilePhoto(int Id, IFormFile File)
         {
             if (ModelState.IsValid)

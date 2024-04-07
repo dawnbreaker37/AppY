@@ -57,9 +57,12 @@ namespace AppY.Controllers
             if (ModelState.IsValid && User.Identity.IsAuthenticated)
             {
                 string? Result = await _messages.ReplyToMessageAsync(Model);
-                if (Result != null && Model.Images == null) return Json(new { success = true, trueId = Model.Id, result = Model, imgsCount = 0 });
-                else if (Result != null && Model.Images != null) Json(new { success = true, result = Model, trueId = Model.Id, imgUrl = Result, imgsCount = Model.Images.Count });
-                else return Json(new { success = false, alert = "This reply cannot be sent" });
+                if (Result != null)
+                {
+                    if (Model.Images == null) return Json(new { success = true, trueId = Model.Id, result = Model, imgsCount = 0 });
+                    else return Json(new { success = true, result = Model, trueId = Model.Id, imgUrl = Result, imgsCount = Model.Images.Count });
+                }
+                else return Json(new { success = false, alert = "This reply can't be sent" });
             }
             return Json(new { success = false, alert = "We're sorry, but you haven't got access to send a reply" });
         }  

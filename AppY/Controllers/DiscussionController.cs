@@ -144,6 +144,7 @@ namespace AppY.Controllers
                             User? CreatorInfo;
                             bool IsThisDiscussionMuted = false;
                             bool AccessValue = await _discussion.HasThisUserAccessToThisDiscussionAsync(UserId, Id);
+                            string? AutodeleteDelayValue = UserInfo.AreMessagesAutoDeletable > 0 ? _user.AutodeleteDelay(UserInfo.AreMessagesAutoDeletable) : "disabled";
                             if(AccessValue) IsThisDiscussionMuted = await _discussion.IsThisDiscussionMutedAsync(Id, UserId);
                             //bool IsThisDiscussionMuted = UserInfo.MutedDiscussions != null ? UserInfo.MutedDiscussions.Any(d => d.DiscussionId == Id) : false;
                             int MessagesCount = await _messages.SentMessagesCountAsync(Id);
@@ -171,6 +172,7 @@ namespace AppY.Controllers
 
                             ViewBag.UserInfo = UserInfo;
                             ViewBag.AccessValue = AccessValue;
+                            ViewBag.AutodeleteDelayValue = AutodeleteDelayValue;
                             ViewBag.CreatorInfo = CreatorInfo;
                             ViewBag.Discussion = DiscussionInfo;
                             ViewBag.MembersCount = await _discussion.GetMembersCountAsync(Id);

@@ -13,6 +13,7 @@ namespace AppY.Interfaces
         public Task<User?> GetUserSuperShortInfoAsync(string? Shortname);
         public Task<int> GetCurrentUserAccessLevelAsync(int Id, int UserId);
         public Task<bool> EditUserInfoAsync(EditUserInfo_ViewModel Model);
+        public Task<bool> EditPrivacySettingsAsync(EditUserPrivacySettings Model);
         public Task<bool> EditAvatarDesignAsync(EditAvatarColors Model);
         public Task<string?> SetProfilePhotoAsync(int Id, IFormFile File);
         public Task<bool> DeleteProfilePhotoAsync(int Id, string? File);
@@ -24,5 +25,6 @@ namespace AppY.Interfaces
         public Task<string?> SubmitReserveCodeViaEmailAsync(string? Email, string Code);
         public IQueryable<User>? FindUsers(string? Keyword);
         public string? UnpicturedAvatarSelector(User? UserInfo);
+        public string? AutodeleteDelay(double MinsValue);
     }
 }
