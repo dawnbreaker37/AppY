@@ -5,6 +5,7 @@ using AppY.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Configuration;
 
 namespace AppY.Repositories
 {
@@ -27,7 +28,8 @@ namespace AppY.Repositories
         {
             if(Id != 0 && UserId != 0 && ChatOrDiscussionId != 0)
             {
-                int Result = await _context.DiscussionMessages.AsNoTracking().Where(d => d.Id == Id && d.UserId == UserId && d.DiscussionId == ChatOrDiscussionId && !d.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true));
+                DateTime? NullDateVal = null;
+                int Result = await _context.DiscussionMessages.AsNoTracking().Where(d => d.Id == Id && d.UserId == UserId && d.DiscussionId == ChatOrDiscussionId && !d.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true).SetProperty(d => d.IsPinned, false).SetProperty(d => d.PinnedAt, NullDateVal));
                 if (Result > 0)
                 {
                     string? NullText = null;
@@ -60,18 +62,20 @@ namespace AppY.Repositories
         {
             if (Id != 0 && UserId != 0)
             {
-                return await _context.DiscussionMessages.AsNoTracking().Where(d => d.Id == Id && !d.IsDeleted && d.UserId == UserId).Select(d => new DiscussionMessage { Text = d.Text, IsChecked = d.IsChecked, IsEdited = d.IsEdited, SentAt = d.SentAt, UserId = d.UserId }).FirstOrDefaultAsync();
+                return await _context.DiscussionMessages.AsNoTracking().Where(d => d.Id == Id && !d.IsDeleted && d.UserId == UserId).Select(d => new DiscussionMessage { Text = d.Text, IsChecked = d.IsChecked, IsEdited = d.IsEdited, SentAt = d.SentAt, UserId = d.UserId, IsPinned = d.IsPinned }).FirstOrDefaultAsync();
             }
             else return null;
         }
 
         public override IQueryable<IGrouping<DateTime, DiscussionMessage>>? GetMessages(int Id, int UserId, int SkipCount, int LoadCount)
         {
-            if (Id != 0 && UserId != 0)
-            {
-                return _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).Select(d => new DiscussionMessage { Id = d.Id, Text = d.Text, DiscussionId = d.Id, IsAutoDeletable = d.IsAutoDeletable, IsChecked = d.IsChecked, IsEdited = d.IsEdited, SentAt = d.SentAt, UserId = d.UserId, IsPinned = d.IsPinned, RepliedMessageId = d.RepliedMessageId, RepliesMsgShortText = d.RepliesMsgShortText != null ? d.RepliesMsgShortText : "Deleted message", ImagesCount = d.DiscussionMessageImages != null ? d.DiscussionMessageImages.Count : 0, MainImgUrl = d.DiscussionMessageImages != null ? d.DiscussionMessageImages.Select(d => d.Url).FirstOrDefault() : null }).OrderBy(d => d.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(d => d.SentAt.Date);
-                //return _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).Select(d => new DiscussionMessage { Id = d.Id, Text = d.Text, DiscussionId = d.Id, IsAutoDeletable = d.IsAutoDeletable, IsChecked = d.IsChecked, IsEdited = d.IsEdited, SentAt = d.SentAt, UserId = d.UserId, IsPinned = d.IsPinned, RepliedMessageId = d.RepliedMessageId, RepliesMsgShortText = _context.DiscussionMessages.AsNoTracking().Where(dm => dm.Id == d.RepliedMessageId && !dm.IsDeleted).Select(dm => dm.Text).FirstOrDefault() }).OrderBy(d => d.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(d => d.SentAt.Date);
-            }
+            if (Id != 0 && UserId != 0) return _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).Select(d => new DiscussionMessage { Id = d.Id, UserPseudoname = d.User!.PseudoName, Text = d.Text, DiscussionId = d.Id, IsAutoDeletable = d.IsAutoDeletable, IsChecked = d.IsChecked, IsEdited = d.IsEdited, SentAt = d.SentAt, UserId = d.UserId, IsPinned = d.IsPinned, RepliedMessageId = d.RepliedMessageId, RepliesMsgShortText = d.RepliesMsgShortText != null ? d.RepliesMsgShortText : "Deleted message", ImagesCount = d.DiscussionMessageImages != null ? d.DiscussionMessageImages.Count : 0, MainImgUrl = d.DiscussionMessageImages != null ? d.DiscussionMessageImages.Select(d => d.Url).FirstOrDefault() : null }).OrderByDescending(d => d.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(d => d.SentAt.Date);
+            else return null;
+        }
+
+        public override IQueryable<DiscussionMessage>? GetMessages(int Id, int SkipCount, int LoadCount)
+        {
+            if (Id > 0) return _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted).OrderByDescending(d => d.SentAt).Skip(SkipCount).Take(LoadCount).Select(d => new DiscussionMessage { Id = d.Id, Text = d.Text, IsChecked = d.IsChecked, IsEdited = d.IsEdited, IsAutoDeletable = d.IsAutoDeletable, SentAt = d.SentAt, RepliedMessageId = d.RepliedMessageId, RepliesMsgShortText = d.RepliedMessageId > 0 ? d.RepliesMsgShortText : null, MainImgUrl = d.DiscussionMessageImages != null ? d.DiscussionMessageImages.Select(d => d.Url).FirstOrDefault() : null, UserId = d.UserId, UserPseudoname = d.User!.PseudoName });
             else return null;
         }
 
@@ -218,6 +222,49 @@ namespace AppY.Repositories
                 return FirstFileName;
             }
             return null;
+        }
+
+        public async override Task<int> PinMessageAsync(int Id, int UserId)
+        {
+            if(Id > 0 && UserId > 0)
+            {
+                bool CheckUsersAccess = await _context.DiscussionUsers.AsNoTracking().AnyAsync(u => u.UserId == UserId && u.AccessLevel > 0);
+                if(CheckUsersAccess)
+                {
+                    int Result = await _context.DiscussionMessages.AsNoTracking().Where(dm => dm.Id == Id && !dm.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsPinned, true).SetProperty(d => d.PinnedAt, DateTime.Now));
+                    if (Result > 0) return Id;
+                } 
+            }
+            return 0;
+        }
+
+        public async override Task<int> UnpinMessageAsync(int Id, int DiscussionOrChatId, int UserId)
+        {
+            if (Id > 0 && DiscussionOrChatId > 0 && UserId > 0)
+            {
+                bool CheckUsersAccess = await _context.DiscussionUsers.AsNoTracking().AnyAsync(u => u.UserId == UserId && u.AccessLevel > 0);
+                if (CheckUsersAccess)
+                {
+                    DateTime? NullDate = null;
+                    int Result = await _context.DiscussionMessages.AsNoTracking().Where(dm => dm.Id == Id && !dm.IsDeleted).ExecuteUpdateAsync(dm => dm.SetProperty(dm => dm.IsPinned, false).SetProperty(d => d.PinnedAt, NullDate));
+                    if (Result > 0) return await _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == DiscussionOrChatId && d.IsPinned && !d.IsDeleted).Select(d => d.Id).FirstOrDefaultAsync();
+                }
+            }
+            return -256;
+        }
+
+        public async override Task<DiscussionMessage?> GetPinnedMessageInfoAsync(int Id, int SkipCount)
+        {
+            if (Id > 0)
+            {
+                return await _context.DiscussionMessages.AsNoTracking().Where(d => d.DiscussionId == Id && !d.IsDeleted && d.IsPinned).Select(d => new DiscussionMessage { Id = d.Id, Text = d.Text, PinnedAt = d.PinnedAt }).OrderByDescending(d => d.PinnedAt).Skip(SkipCount).FirstOrDefaultAsync();
+            }
+            else return null;
+        }
+        
+        public async override Task<int> GetPinnedMessagesCountAsync(int Id)
+        {
+            return await _context.DiscussionMessages.AsNoTracking().CountAsync(d => d.DiscussionId == Id && d.IsPinned && !d.IsDeleted);
         }
     }
 }

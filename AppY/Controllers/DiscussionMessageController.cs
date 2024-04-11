@@ -95,6 +95,47 @@ namespace AppY.Controllers
             return Json(new { success = false, alert = "Unable to edit this message. Please, check all datas and then try to edit it again" });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetOlderMessages(int Id, int SkipCount)
+        {
+            int CurrentUserId = GetCurrentUserIdFromCookies();
+            if(CurrentUserId > 0)
+            {
+                IQueryable<DiscussionMessage>? Messages_Preview = _messages.GetMessages(Id, SkipCount, 35);
+                if(Messages_Preview != null)
+                {
+                    List<DiscussionMessage>? Messages = await Messages_Preview.ToListAsync();
+                    if (Messages != null) return Json(new { success = true, currentUserId = CurrentUserId, result = Messages, loadedCount = Messages.Count, skipCount = SkipCount + Messages.Count });
+                }
+                return Json(new { success = false, skipCount = SkipCount });
+            }
+            else return Json(new { success = false, alert = "Sorry, but you haven't got access to get more messages" });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPinnedMessageInfo(int Id, int SkipCount)
+        {
+            DiscussionMessage? Result = await _messages.GetPinnedMessageInfoAsync(Id, SkipCount);
+            if (Result is not null) return Json(new { success = true, result = Result });
+            else return Json(new { success = false, alert = "No available info about that pinned message" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Pin(int Id, int UserId)
+        {
+            int Result = await _messages.PinMessageAsync(Id, UserId);
+            if (Result > 0) return Json(new { success = true, alert = "Message has been successfully pinned", id = Result });
+            else return Json(new { success = false, alert = "Sorry, but you can't pin this message" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Unpin(int Id, int DiscussionOrChatId, int UserId)
+        {
+            int Result = await _messages.UnpinMessageAsync(Id, DiscussionOrChatId, UserId);
+            if (Result >= 0) return Json(new { success = true, alert = "Message has been successfully unpinned", id = Result });
+            else return Json(new { success = false, alert = "Sorry, but you can't unpin this message" });
+        }
+
         [HttpPost]
         public async Task<IActionResult> MarkasRead(int Id, int UserId)
         {

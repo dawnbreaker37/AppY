@@ -55,6 +55,23 @@ namespace AppY.Controllers
             return Json(new { success = false, count = 0 });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetOtherUsersDiscussions(int Id, int UserId)
+        {
+            IQueryable<DiscussionShortInfo>? Discussion_Preview = _discussion.GetUserDiscussions(Id, UserId);
+            if(Discussion_Preview != null)
+            {
+                List<DiscussionShortInfo>? Discussions = await Discussion_Preview.ToListAsync();
+                if(Discussions != null)
+                {
+                    List<DiscussionShortInfo>? SimilarDiscussions= await _discussion.GetSimilarDiscussionsAsync(UserId, Discussions);
+                    if (SimilarDiscussions != null) return Json(new { success = true, result = Discussions, similars = SimilarDiscussions, similarsCount = SimilarDiscussions.Count });
+                    else return Json(new { success = true, result = Discussions, similarsCount = 0 });
+                }
+            }
+            return Json(new { success = false, alert = "No discussions to load" });
+        }
+
         [HttpPost]
         public async Task<IActionResult> SetAvatar(int Id, int UserId, IFormFile Image)
         {
@@ -142,18 +159,20 @@ namespace AppY.Controllers
                         if (DiscussionInfo != null)
                         {
                             User? CreatorInfo;
+                            DiscussionMessage? PinnedFirstMsgInfo = null;
                             bool IsThisDiscussionMuted = false;
+                            int PinnedMessagesCount = await _messages.GetPinnedMessagesCountAsync(Id);
                             bool AccessValue = await _discussion.HasThisUserAccessToThisDiscussionAsync(UserId, Id);
                             string? AutodeleteDelayValue = UserInfo.AreMessagesAutoDeletable > 0 ? _user.AutodeleteDelay(UserInfo.AreMessagesAutoDeletable) : "disabled";
                             if(AccessValue) IsThisDiscussionMuted = await _discussion.IsThisDiscussionMutedAsync(Id, UserId);
-                            //bool IsThisDiscussionMuted = UserInfo.MutedDiscussions != null ? UserInfo.MutedDiscussions.Any(d => d.DiscussionId == Id) : false;
                             int MessagesCount = await _messages.SentMessagesCountAsync(Id);
                             if (MessagesCount > 0 && ((!DiscussionInfo.IsPrivate) || (DiscussionInfo.IsPrivate && AccessValue)))
                             {
-                                IQueryable<IGrouping<DateTime, DiscussionMessage>>? Result_Preview = _messages.GetMessages(Id, UserId, 0, 100);
+                                IQueryable<IGrouping<DateTime, DiscussionMessage>>? Result_Preview = _messages.GetMessages(Id, UserId, 0, 65);
                                 if (Result_Preview != null)
                                 {
                                     Messages = await Result_Preview.ToListAsync();
+                                    PinnedFirstMsgInfo = await _messages.GetPinnedMessageInfoAsync(Id, 0);
                                     //foreach(var Item in Messages)
                                     //{
                                     //    foreach (DiscussionMessage discussionMessage in Item)
@@ -161,6 +180,7 @@ namespace AppY.Controllers
                                     //        if (discussionMessage.RepliedMessageId != null && discussionMessage.RepliesMsgShortText == null) discussionMessage.RepliesMsgShortText = "Deleted message";
                                     //    }
                                     //}
+                                    //bool IsThisDiscussionMuted = UserInfo.MutedDiscussions != null ? UserInfo.MutedDiscussions.Any(d => d.DiscussionId == Id) : false;
                                 }
                             }
 
@@ -176,7 +196,10 @@ namespace AppY.Controllers
                             ViewBag.CreatorInfo = CreatorInfo;
                             ViewBag.Discussion = DiscussionInfo;
                             ViewBag.MembersCount = await _discussion.GetMembersCountAsync(Id);
+                            ViewBag.PinnedMessagesCount = PinnedMessagesCount;
+                            ViewBag.FirstPinnedMessage = PinnedFirstMsgInfo;
                             ViewBag.MessagesCount = MessagesCount;
+                            ViewBag.SkipCount = MessagesCount > 65 ? 65 : MessagesCount;
                             ViewBag.Messages = Messages;
                             ViewBag.IsThisDiscussionMuted = IsThisDiscussionMuted;
                             ViewBag.DiscussionAvatar = DiscussionInfo.AvatarUrl == null ? DiscussionInfo.Name?[0].ToString() : DiscussionInfo.AvatarUrl;
@@ -234,10 +257,11 @@ namespace AppY.Controllers
                 int AdderAccessLevel = await _user.GetCurrentUserAccessLevelAsync(Id, AdderId);
                 return Json(new { success = true, id = Result, adderAccessLevel = AdderAccessLevel, alert = "User added to discussion" });
             }
-            else if (Result == 0) return Json(new { success = false, error = Result, alert = "An unexpected error occured. Please, try again later" });
+            else if (Result == -512) return Json(new { success = false, error = Result, alert = "This user's currently blocked. Unblock him/her to restore back" });
+            else if (Result == 0) return Json(new { success = false, error = Result, alert = "This user's already in discussion" });
             else if (Result == -128) return Json(new { success = false, error = Result, alert = "You can't add yourself to a discussion" });
-            else return Json(new { success = false, error = Result, alert = "This user's already in discussion" });
-        }
+            else return Json(new { success = false, error = Result, alert = "We're sorry, but an unexpected error occured. Please, try again later" });
+            }
 
         [HttpPost]
         public async Task<IActionResult> Join(int Id)

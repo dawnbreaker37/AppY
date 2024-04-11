@@ -267,6 +267,42 @@ body {
     transition: all ease 0.3s;
 }
 
+.bg-gradient-one {
+    background: rgb(63,94,251);
+    background: -moz-linear-gradient(90deg, rgba(63,94,251,1) 0%, rgba(252,70,107,1) 100%);
+    background: -webkit-linear-gradient(90deg, rgba(63,94,251,1) 0%, rgba(252,70,107,1) 100%);
+    background: linear-gradient(90deg, rgba(63,94,251,1) 0%, rgba(252,70,107,1) 100%);
+}
+.bg-gradient-cute {
+    background: rgb(238,174,202);
+    background: -moz-radial-gradient(circle, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
+    background: -webkit-radial-gradient(circle, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
+    background: radial-gradient(circle, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
+}
+
+.indicator-badge {
+    height: 14px;
+    width: 14px;
+    border-radius: 14px;
+    cursor: pointer;
+    margin-top: 3px;
+    margin-right: 6px;
+    display: inline-block;
+    transition: all ease 0.3s;
+}
+.indicator-badge:hover,
+.indicator-badge:active {
+    opacity: 0.85;
+}
+
+.postheader-container {
+    z-index: 10000;
+    max-height: 120px;
+    border-radius: 1px 1px 2px 2px;
+    border: 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
 .btn-group-member {
     cursor: pointer;
     border-radius: 8px;
@@ -359,6 +395,25 @@ body {
 }
 .special-form-control:focus {
     background-color: #f8f9fa;
+}
+
+.images-background-container {
+    background-color: black;
+    height: 100%;
+    border-radius: 6px;
+    transition: all ease 0.24s;
+}
+.images-img-container {
+    width: 100%;
+    height: 85%;
+    object-fit: contain;
+    border-radius: 8px;
+    transition: all ease 0.24s;
+}
+.images-container {
+    background-color: #f0f0f0;
+    height: 100%;
+    transition: all ease 0.24s;
 }
 
 .discussion-header {
@@ -566,12 +621,13 @@ body {
 }
 
 .header-container {
+    z-index: 10000;
     border-radius: 12px 12px 0 0;
     border: 0;
     background-color: transparent;
     backdrop-filter: blur(9px);
     border-bottom: 1px solid rgb(240, 240, 240);
-    transition: all ease 0.3s;
+    transition: all ease 0.2s;
 }
 
 .box-container {

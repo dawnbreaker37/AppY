@@ -162,6 +162,12 @@ namespace AppY.Repositories
             else return null;
         }
 
+        public IQueryable<DiscussionShortInfo>? GetUserDiscussions(int Id, int GetterId)
+        {
+            if (Id != 0) return _context.DiscussionUsers.AsNoTracking().Where(d => d.UserId == Id && !d.IsDeleted).Select(d => new DiscussionShortInfo { Id = d.Id, JoinedAt = d.JoinedAt, IsPrivate = d.Discussion!.IsPrivate, DiscussionId = d.DiscussionId, DiscussionName = d.Discussion != null ? d.Discussion.Name : null, DiscussionAvatar = d.Discussion != null ? d.Discussion.AvatarUrl : null });
+            else return null;
+        }
+
         public IQueryable<DiscussionShortInfo>? GetUserDeletedDiscussions(int Id)
         {
             if (Id != 0) return _context.Discussions.AsNoTracking().Where(d => d.CreatorId == Id && d.IsDeleted).Select(d => new DiscussionShortInfo { CreatedAt = d.CreatedAt, DeletedAt = d.RemovedAt, DiscussionName = d.Name, DiscussionId = d.Id, UserId = Id });
@@ -246,40 +252,45 @@ namespace AppY.Repositories
         {
             if (Id != 0 && AdderId != 0 && UserId != 0 && (UserId != AdderId))
             {
-                bool IsThisAdderHasPermission = await _context.Discussions.AsNoTracking().AnyAsync(d => d.Id == Id && d.CreatorId == AdderId);
+                bool IsThisAdderHasPermission = await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.DiscussionId == Id && !d.IsDeleted && !d.IsBlocked && d.AccessLevel > 0);
                 if (IsThisAdderHasPermission)
                 {
-                    DiscussionUsers? AddingUserInfo = await _context.DiscussionUsers.AsNoTracking().FirstOrDefaultAsync(d => d.UserId == UserId && d.DiscussionId == Id);
-                    if (AddingUserInfo is not null)
+                    bool IsThisUserNotBlocked = await _context.DiscussionUsers.AsNoTracking().AnyAsync(d => d.UserId == UserId && d.DiscussionId == Id && !d.IsBlocked);
+                    if (IsThisUserNotBlocked)
                     {
-                        if (AddingUserInfo.IsDeleted)
+                        DiscussionUsers? AddingUserInfo = await _context.DiscussionUsers.AsNoTracking().FirstOrDefaultAsync(d => d.UserId == UserId && d.DiscussionId == Id && !d.IsBlocked);
+                        if (AddingUserInfo is not null)
                         {
-                            AddingUserInfo.IsDeleted = false;
+                            if (AddingUserInfo.IsDeleted)
+                            {
+                                AddingUserInfo.IsDeleted = false;
+                                await _context.SaveChangesAsync();
+
+                                return UserId;
+                            }
+                            else return 0;
+                        }
+                        else
+                        {
+                            DiscussionUsers discussionUsers = new DiscussionUsers
+                            {
+                                DiscussionId = Id,
+                                UserId = UserId,
+                                IsDeleted = false,
+                                AccessLevel = 0,
+                                JoinedAt = DateTime.Now
+                            };
+                            await _context.AddAsync(discussionUsers);
                             await _context.SaveChangesAsync();
 
                             return UserId;
                         }
-                        else return -256;
                     }
-                    else
-                    {
-                        DiscussionUsers discussionUsers = new DiscussionUsers
-                        {
-                            DiscussionId = Id,
-                            UserId = UserId,
-                            IsDeleted = false,
-                            AccessLevel = 0,
-                            JoinedAt = DateTime.Now
-                        };
-                        await _context.AddAsync(discussionUsers);
-                        await _context.SaveChangesAsync();
-
-                        return UserId;
-                    }
+                    else return -512;
                 }
+                return 0;
             }
             else return -128;
-            return 0;
         }
 
         public async Task<int> JoinAsync(int Id, int UserId)

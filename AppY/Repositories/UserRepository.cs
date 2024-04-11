@@ -157,21 +157,20 @@ namespace AppY.Repositories
 
         public async Task<User?> GetUserSuperShortInfoAsync(int Id)
         {
-            if (Id != 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, PseudoName = u.PseudoName, ShortName = u.ShortName }).FirstOrDefaultAsync(u => u.Id == Id);
+            if (Id != 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, AvatarUrl = u.AvatarUrl, PseudoName = u.PseudoName, ShortName = u.ShortName, IsPrivate = u.IsPrivate }).FirstOrDefaultAsync(u => u.Id == Id && !u.IsPrivate);
             else return null;
         }
 
         public async Task<User?> GetUserSuperShortInfoAsync(string? Shortname)
         {
-            if (!String.IsNullOrWhiteSpace(Shortname)) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, PseudoName = u.PseudoName, ShortName = u.ShortName }).FirstOrDefaultAsync(u => u.ShortName != null && u.ShortName.ToLower().Equals(Shortname.ToLower()));
-            else return null;
+            return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, PseudoName = u.PseudoName, ShortName = u.ShortName, IsPrivate = u.IsPrivate }).FirstOrDefaultAsync(u => u.ShortName != null && u.ShortName.ToLower().Equals(Shortname!.ToLower()) && !u.IsPrivate);
         }
 
         public IQueryable<User>? FindUsers(string? Keyword)
         {
             if (!String.IsNullOrWhiteSpace(Keyword))
             {
-                return _context.Users.AsNoTracking().Where(u => (u.PseudoName != null && u.PseudoName.ToLower().Contains(Keyword.ToLower())) || (u.ShortName != null && u.ShortName.ToLower().Contains(Keyword.ToLower()) || (u.UserName != null && u.UserName.ToLower().Contains(Keyword.ToLower()) || (u.Email != null && u.Email.ToLower().Contains(Keyword.ToLower())))) && !u.IsDisabled).Select(u => new User { Id = u.Id, PseudoName = u.PseudoName, ShortName = u.ShortName });
+                return _context.Users.AsNoTracking().Where(u => !u.IsPrivate && !u.IsDisabled && (u.UserName != null && u.UserName.ToLower().Contains(Keyword.ToLower()) || u.ShortName != null && u.ShortName.ToLower().Contains(Keyword.ToLower()) || u.PseudoName != null && u.PseudoName.ToLower().Contains(Keyword.ToLower()))).Select(u => new User { Id = u.Id, PseudoName = u.PseudoName, ShortName = u.ShortName, IsPrivate = u.IsPrivate });
             }
             else return null;
         }

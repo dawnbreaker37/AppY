@@ -28,6 +28,7 @@ namespace AppY.Interfaces
         public Task<int> UnblockUserAsync(int Id, int UnblockerId, int UserId);
         public Task<int> ChangeAccessLevel(int Id, int ChangerId, int UserId, int AccessLevel);
         public IQueryable<DiscussionShortInfo>? GetUserDiscussions(int Id);
+        public IQueryable<DiscussionShortInfo>? GetUserDiscussions(int Id, int GetterId);
         public Task<List<int?>?> GetUserDiscussionIds(int Id);
         public Task<List<DiscussionShortInfo>?> GetSimilarDiscussionsAsync(int Id, List<DiscussionShortInfo>? InitialList);
         public IQueryable<DiscussionShortInfo>? GetUserDeletedDiscussions(int Id);

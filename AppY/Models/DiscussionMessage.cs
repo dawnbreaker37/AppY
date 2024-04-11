@@ -12,6 +12,7 @@ namespace AppY.Models
         public bool IsPinned { get; set; }
         public int IsAutoDeletable { get; set; }
         public DateTime SentAt { get; set; }
+        public DateTime? PinnedAt { get; set; }
         public string? RepliesMsgShortText { get; set; }
         public int? RepliedMessageId { get; set; }
         [ForeignKey("User")]

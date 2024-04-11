@@ -91,26 +91,14 @@ namespace AppY.Controllers
 
                     if (UserInfo.Id != CurrentUserId)
                     {
-                        IQueryable<DiscussionShortInfo>? Discussions_Preview = _discussion.GetUserDiscussions(UserInfo.Id);
-                        List<DiscussionShortInfo>? Discussions = null;
-                        List<DiscussionShortInfo>? SimilarDiscussions = null;
-                        if (Discussions_Preview != null)
-                        {
-                            Discussions = await Discussions_Preview.ToListAsync();
-                            if (CurrentUserId > 0)
-                            {
-                                SimilarDiscussions = await _discussion.GetSimilarDiscussionsAsync(CurrentUserId, Discussions);
-                            }
-                        }
+                        int DiscussionsCount = await _discussion.GetDiscussionsCountAsync(UserInfo.Id);
 
                         if (UserInfo.AvatarUrl == null) UserInfo.UnpicturedAvatarInfo = UserInfo.AvatarStickerUrl == null ? UserInfo.PseudoName?[0].ToString() : UserInfo.AvatarStickerUrl;
 
                         ViewBag.UserInfo = UserInfo;
+                        ViewBag.CurrentUserId = CurrentUserId;
                         ViewBag.DiscussionsCount = await _discussion.GetDiscussionsCountAsync(UserInfo.Id);
-                        ViewBag.Discussions = Discussions;
-                        ViewBag.DiscussionsCount = Discussions?.Count;
-                        ViewBag.SimilarDiscussions = SimilarDiscussions;
-                        ViewBag.SimilarDiscussionsCount = SimilarDiscussions?.Count;
+                        ViewBag.DiscussionsCount = DiscussionsCount;
 
                         return View();
                     }
@@ -231,11 +219,22 @@ namespace AppY.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> FindByShortname(string Shortname)
+        public async Task<IActionResult> FindByShortname(string? Shortname)
         {
             User? UserSuperShortInfo = await _user.GetUserSuperShortInfoAsync(Shortname);
-            if (UserSuperShortInfo != null) return Json(new { success = true, result = UserSuperShortInfo });
+            if (UserSuperShortInfo != null)
+            {
+                return Json(new { success = true, result = UserSuperShortInfo });
+            }
             else return Json(new { success = false, alert = "We haven't found any user with that kind of shortname" });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FindById(int Id)
+        {
+            User? UserSuperShortInfo = await _user.GetUserSuperShortInfoAsync(Id);
+            if (UserSuperShortInfo != null) return Json(new { success = true, result = UserSuperShortInfo });
+            else return Json(new { success = false, alert = "Unfortunately, we haven't found any user with that Identifier, or selected user has private account so we can't get any additional info about him" });
         }
     }
 }
