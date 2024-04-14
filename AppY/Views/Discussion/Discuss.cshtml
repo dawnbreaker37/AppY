@@ -280,42 +280,43 @@
 <div class="main-container images-container shadow-standard p-2" id="ImagesShow_Container">
     <div class="images-background-container p-2">
         <div class="hstack gap-3 border-bottom border-light pb-2" id="ImagesShow-Header">
-@*             <button type="button" class="btn btn-outline-light border-0 btn-sm btn-standard-asset" disabled> <i class="fa-solid fa-circle-info"></i> </button> *@
-            <small class="card-text text-light me-auto">Image file name.file extension</small>
-            <small class="card-text fw-500 text-light" id="ImagesCounter_Lbl">1 of 6</small>
+            <small class="card-text text-light me-auto" id="ImagesShowImg_Lbl">Image file name.file extension</small>
+            <small class="card-text fw-500 text-light" id="ImagesCounter_Lbl">1</small><small class="card-text fw-500 text-light"> of </small><small class="card-text fw-500 text-light" id="ImagesFullCount_Lbl">6</small>
             <button type="button" class="btn btn-outline-light border-0 shadow-none btn-standard-asset btn-sm btn-open-container" id="Preloaded_Container-CloseAfterOpen">Close</button>
         </div>
         <div class="images-img-container mt-2" id="ImagesShow_Box">
-            <img class="images-img-container" src="#" alt="Cannot display this image right now" />
+            <img class="images-img-container" src="#" id="ImageShow_Img" alt="Cannot display this image right now" />
         </div>
         <div class="box-container mt-2" id="ImagesShow-Footer">
+            <div class="d-none" id="ImageForms_Box">
+                <form method="get" asp-controller="Image" asp-action="GetPrev" id="GetPrevDiscussionMessageImg_Form">
+                    <input type="hidden" name="Id" id="GPDMI_Id_Val" value="0" />
+                    <input type="hidden" name="SkipCount" id="GPDMI_SkipCount_Val" value="0" />
+                    <input type="hidden" name="FullCount" id="GPDMI_FullCount_Val" value="0" />
+                </form>
+                <form method="get" asp-controller="Image" asp-action="GetNext" id="GetNextDiscussionMessageImg_Form">
+                    <input type="hidden" name="Id" id="GNDMI_Id_Val" value="0" />
+                    <input type="hidden" name="SkipCount" id="GNDMI_SkipCount_Val" value="0" />
+                    <input type="hidden" name="FullCount" id="GNDMI_FullCount_Val" value="0" />
+                    <input type="hidden" name="StartTry" id="GPDMI_StartTry_Val" value="true" />
+                </form>
+            </div>
+            <div class="d-none" id="ImagesShowVals_Box">
+
+            </div>
             <div class="row">
                 <div class="col">
-                    <div>
-                        <form method="get" asp-controller="Image" asp-action="Previous" id="GetPrevDiscussionMessageImg_Form">
-                            <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
-                            <input type="hidden" name="MessageId" value="0" />
-                            <input type="hidden" name="SkipCount" value="0" />
-                            <button type="submit" class="btn btn-outline-light border-0 w-100 btn-standard-asset" id="GPDMSbmt_Btn" disabled> <i class="fa-solid fa-chevron-left"></i> Prev</button>
-                        </form>
-                    </div>
+                    <button type="button" class="btn btn-outline-light border-0 w-100 btn-standard-asset btn-get-ready-message-image" id="GPDMSbmt_Btn" disabled> <i class="fa-solid fa-chevron-left"></i> Prev</button>
                 </div>
                 <div class="col">
-                    <div>
-                        <form method="get" asp-controller="Image" asp-action="Next" id="GetNextDiscussionMessageImg_Form">
-                            <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
-                            <input type="hidden" name="MessageId" value="0" />
-                            <input type="hidden" name="SkipCount" value="0" />
-                            <button type="submit" class="btn btn-outline-light border-0 w-100 btn-standard-asset" id="GNDMSbmt_Btn">Next <i class="fa-solid fa-chevron-right"></i> </button>
-                        </form>
-                    </div>
+                    <button type="button" class="btn btn-outline-light border-0 w-100 btn-standard-asset btn-get-ready-message-image" id="GNDMSbmt_Btn">Next <i class="fa-solid fa-chevron-right"></i> </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="main-container shadow-standard" id="Preloaded_Container">
+<div class="main-container mh-max shadow-standard" id="Preloaded_Container">
     <div class="box-container p-2" style="display: none; margin-left: -1200px;" id="Preloaded_Container_ShowBox">
         <div class="box-container text-center">
             <button type="button" class="btn btn-light btn-standard-asset btn-sm float-start me-1 discussion-header-return" id="Preloaded_Container_ShowBox-Return">Back</button>
@@ -594,7 +595,7 @@
         <div class="box-container ps-1 pe-1" id="TextEditorIndicators_Box">
         </div>
     </div>
-    @if (FirstPinnedMessageInfo is not null)
+    @if (FirstPinnedMessageInfo != null)
     {
         <div class="postheader-container p-2 bg-light" id="Preloaded_Container_PostHeader">
             <div class="float-end ms-1">
@@ -612,7 +613,7 @@
     }
     else
     {
-        <div class="postheader-container p-2 bg-light" id="Preloaded_Container_PostHeader" style="display: none; margin-left: -1200px;">
+        <div class="postheader-container p-2 bg-light" id="Preloaded_Container_PostHeader" style="display: none; margin-left: -2500px;">
             <div class="float-end ms-1">
                 <form method="get" asp-controller="DiscussionMessage" asp-action="GetPinnedMessageInfo" id="GetPinnedMessageInfo_Form">
                     <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
@@ -668,9 +669,9 @@
                                             @if (message.MainImgUrl != null)
                                             {
                                                 <div></div>
-                                                <button type="button" class="btn btn-link btn-sm">@message.ImagesCount Images in Pack <i class="fa-solid fa-angle-right"></i> </button>
+                                                <button type="button" class="btn btn-link btn-sm btn-get-message-image" id="@message.Id-GetDiscussionInitialMsg_Btn">@message.ImagesCount Images in Pack <i class="fa-solid fa-angle-right"></i> </button>
                                                 <div class="box-container mt-1 mb-1">
-                                                    <img class="msg-img-container" src="~/DiscussionMessageImages/@message.MainImgUrl" alt="Cannot display this message" />
+                                                    <img class="msg-img-container" id="@message.Id-DiscussionMsg_Img" src="~/DiscussionMessageImages/@message.MainImgUrl" alt="Cannot display this message" />
                                                 </div>
                                             }
                                             @if (message.RepliedMessageId != null)
@@ -1013,7 +1014,8 @@
                         <textarea name="Text" id="SendMessage_Text_Val" class="send-message-form-control message-form-control me-auto form-control-check-input w-100 overflow-hidden" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendMessage_SbmtBtn"></textarea>
                         <button type="button" class="btn btn-message-example btn-sm open-animated-collapse btn-open-inside-box" id="MainTextEditor_Box-Open"> <i class="fa-solid fa-plus btn-open-inside-box" id="MainTextEditor_Box-OpenY"></i> </button>
                         <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="SendAFileInMessage_Btn" data-bs-html="SendMessage_Images_Val"> <i class="fa-regular fa-file-image"></i> </button>
-                        <button type="submit" class="btn btn-message-example btn-sm bg-primary text-light" id="SendMessage_SbmtBtn" disabled>Send</button>
+@*                         <button type="button" class="btn btn-message-example btn-sm shadow-none me-1"> <i class="fa-solid fa-align-left"></i> </button> *@
+                        <button type="submit" class="btn btn-message-example btn-sm btn-submit-msg-sending bg-primary text-light" id="SendMessage_SbmtBtn" disabled>Send</button>
                     </div>
                 </form>
             </div>
@@ -1078,7 +1080,7 @@
                         <textarea name="Text" id="SendMessage_Text_Val" class="send-message-form-control message-form-control me-auto form-control-check-input w-100 overflow-hidden" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendMessage_SbmtBtn" disabled readonly></textarea>
                         <button type="button" class="btn btn-message-example btn-sm open-animated-collapse btn-open-inside-box" id="MainTextEditor_Box-Open"> <i class="fa-solid fa-plus btn-open-inside-box" id="MainTextEditor_Box-OpenY"></i> </button>
                         <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="SendAFileInMessage_Btn" data-bs-html="SendMessage_Images_Val"> <i class="fa-regular fa-file-image"></i> </button>
-                        <button type="submit" class="btn btn-message-example btn-sm bg-primary text-light" id="SendMessage_SbmtBtn" disabled>Send</button>
+                        <button type="submit" class="btn btn-message-example btn-submit-msg-sending btn-sm bg-primary text-light" id="SendMessage_SbmtBtn" disabled>Send</button>
                     </div>
                 </form>
             </div>

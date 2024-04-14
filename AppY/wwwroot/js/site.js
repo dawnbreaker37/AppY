@@ -6,6 +6,7 @@ let currentUrl;
 let letters = /^[A-Za-z]+$/;
 
 window.onload = function () {
+    let standardTimeout = 300;
     currentUrl = document.location.href;
     fullHeight = parseInt(window.innerHeight);
     fullWidth = parseInt(window.innerWidth);
@@ -22,19 +23,14 @@ window.onload = function () {
         if (fullWidth >= 768) {
             animatedOpen(false, "SmallsidePreloaded_Container", true, false);
             if ($("#SmallsidePreloaded_Container").css("display") == "block") {
+                standardTimeout += 650;
                 setTimeout(function () {
                     animatedOpen(false, "Preloaded_Container", true, false);
                 }, 650);
             }
-            else {
-                animatedOpen(false, "Preloaded_Container", true, false);
-            }
+            else animatedOpen(false, "Preloaded_Container", true, false);
         }
-        else {
-            setTimeout(function () {
-                animatedOpen(false, "Preloaded_Container", true, false);
-            }, 300);
-        }
+        else animatedOpen(false, "Preloaded_Container", true, false);
     }, 300);
 
     if (currentUrl.toLowerCase().includes("/discuss")) {
@@ -46,7 +42,7 @@ window.onload = function () {
 
         setTimeout(function () {
             slideToTheBottom("Preloaded_Container");
-        }, 300);
+        }, standardTimeout);
     }
     else if (currentUrl.toLowerCase().includes("/page")) {
         statusSlider("StatusBar_Lbl", 1);
@@ -391,7 +387,7 @@ $("#IsEmailUnique_Form").on("submit", function (event) {
             $("#EmailStatus_Lbl").html(' <i class="fa-regular fa-circle-xmark text-danger"></i> This email address is busy');
         }
     });
-});
+}); //SendMessage_Images_Val
 $("#IsUsernameUnique_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -2167,6 +2163,181 @@ $("#UnpinTheDiscussionMessage_Form").on("submit", function (event) {
     });
 });
 
+$("#GetPrevDiscussionMessageImg_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            let setableSkipCount = parseInt(response.skipCount);
+            let showableSkipCount = parseInt(++response.skipCount);
+
+            if ($("#" + setableSkipCount + "-ImagesShow_Val").val() == undefined) {
+                let hdnInput = $("<input type='hidden' />");
+                hdnInput.attr("id", setableSkipCount + "-ImagesShow_Val");
+                hdnInput.val(response.result.url);
+                $("#ImagesShowVals_Box").append(hdnInput);
+            }
+
+            $("#ImagesCounter_Lbl").text(showableSkipCount);
+            $("#ImagesFullCount_Lbl").text(response.fullCount);
+            $("#GNDMI_SkipCount_Val").val(setableSkipCount);
+            $("#GPDMI_SkipCount_Val").val(setableSkipCount);
+            $("#GPDMI_FullCount_Val").val(response.fullCount);
+            $("#GNDMI_FullCount_Val").val(response.fullCount);
+            $("#ImageShow_Img").attr("src", "/DiscussionMessageImages/" + response.result.url);
+            $("#ImagesShowImg_Lbl").text(response.result.url);
+
+            if (showableSkipCount >= parseInt(response.fullCount)) {
+                $("#GPDMSbmt_Btn").attr("disabled", false);
+                $("#GNDMSbmt_Btn").attr("disabled", true);
+            }
+            else if (showableSkipCount <= 1) {
+                $("#GPDMSbmt_Btn").attr("disabled", true);
+                $("#GNDMSbmt_Btn").attr("disabled", false);
+            }
+            else {
+                $("#GPDMSbmt_Btn").attr("disabled", false);
+                $("#GNDMSbmt_Btn").attr("disabled", false);
+            }
+
+            if (parseInt($("#ImagesShow_Container").css("bottom")) < 0) animatedOpen(false, "ImagesShow_Container", true, true);
+        }
+        else alert('<i class="fa-regular fa-eye-slash"></i>', response.alert, "Got It", null, 0, null, null, null, 3.25);
+    });
+});
+$("#GetNextDiscussionMessageImg_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            let setableSkipCount = parseInt(response.skipCount);
+            let showableSkipCount = parseInt(++response.skipCount);
+
+            if (response.startTry) {
+                showableSkipCount = 1;
+                setableSkipCount = 0;
+            }
+            if ($("#" + setableSkipCount + "-ImagesShow_Val").val() == undefined) {
+                let hdnInput = $("<input type='hidden' />");
+                hdnInput.attr("id", setableSkipCount + "-ImagesShow_Val");
+                hdnInput.val(response.result.url);
+                $("#ImagesShowVals_Box").append(hdnInput);
+            }
+
+            $("#ImagesCounter_Lbl").text(showableSkipCount);
+            $("#ImagesFullCount_Lbl").text(response.fullCount);
+            $("#GNDMI_SkipCount_Val").val(setableSkipCount);
+            $("#GPDMI_SkipCount_Val").val(setableSkipCount);
+            $("#GPDMI_FullCount_Val").val(response.fullCount);
+            $("#GNDMI_FullCount_Val").val(response.fullCount);
+            $("#ImageShow_Img").attr("src", "/DiscussionMessageImages/" + response.result.url);
+            $("#ImagesShowImg_Lbl").text(response.result.url);
+
+            if (showableSkipCount >= parseInt(response.fullCount)) {
+                $("#GPDMSbmt_Btn").attr("disabled", false);
+                $("#GNDMSbmt_Btn").attr("disabled", true);
+            }
+            else if (showableSkipCount <= 1) {
+                $("#GPDMSbmt_Btn").attr("disabled", true);
+                $("#GNDMSbmt_Btn").attr("disabled", false);
+            }
+            else {
+                $("#GPDMSbmt_Btn").attr("disabled", false);
+                $("#GNDMSbmt_Btn").attr("disabled", false);
+            }
+
+            if (parseInt($("#ImagesShow_Container").css("bottom")) < 0) animatedOpen(false, "ImagesShow_Container", true, true);
+        }
+        else alert('<i class="fa-regular fa-eye-slash"></i>', response.alert, "Got It", null, 0, null, null, null, 3.25);
+    });
+});
+
+$("#GPDMSbmt_Btn").on("click", function () {
+    let skipCount = parseInt($("#GPDMI_SkipCount_Val").val()) - 1;
+    skipCount = skipCount < 0 ? 0 : skipCount;
+    if ($("#" + skipCount + "-ImagesShow_Val").val() == undefined) {
+        $("#GetPrevDiscussionMessageImg_Form").submit();
+    }
+    else {
+        let fullCount = parseInt($("#GNDMI_FullCount_Val").val());
+        $("#GPDMI_SkipCount_Val").val(skipCount);
+        $("#GNDMI_SkipCount_Val").val(skipCount);
+        $("#ImageShow_Img").attr("src", "/DiscussionMessageImages/" + $("#" + skipCount + "-ImagesShow_Val").val());
+        $("#ImagesShowImg_Lbl").text($("#" + skipCount + "-ImagesShow_Val").val());
+        $("#ImagesCounter_Lbl").text(++skipCount);
+
+        if (skipCount >= fullCount) {
+            $("#GPDMSbmt_Btn").attr("disabled", false);
+            $("#GNDMSbmt_Btn").attr("disabled", true);
+        }
+        else if (skipCount <= 1) {
+            $("#GPDMSbmt_Btn").attr("disabled", true);
+            $("#GNDMSbmt_Btn").attr("disabled", false);
+        }
+        else {
+            $("#GPDMSbmt_Btn").attr("disabled", false);
+            $("#GNDMSbmt_Btn").attr("disabled", false);
+        }
+    }
+});
+$("#GNDMSbmt_Btn").on("click", function () {
+    let skipCount = parseInt($("#GNDMI_SkipCount_Val").val()) + 1;
+    let fullCount = parseInt($("#GNDMI_FullCount_Val").val());
+    skipCount = skipCount >= fullCount ? 0 : skipCount;
+    $("#GPDMI_StartTry_Val").val(false);
+
+    if ($("#" + skipCount + "-ImagesShow_Val").val() == undefined) {
+        $("#GetNextDiscussionMessageImg_Form").submit();
+    }
+    else { 
+        $("#GPDMI_SkipCount_Val").val(skipCount);
+        $("#GNDMI_SkipCount_Val").val(skipCount);
+        $("#ImageShow_Img").attr("src", "/DiscussionMessageImages/" + $("#" + skipCount + "-ImagesShow_Val").val());
+        $("#ImagesShowImg_Lbl").text($("#" + skipCount + "-ImagesShow_Val").val());
+        $("#ImagesCounter_Lbl").text(++skipCount);
+        if (skipCount >= fullCount) {
+            $("#GPDMSbmt_Btn").attr("disabled", false);
+            $("#GNDMSbmt_Btn").attr("disabled", true);
+        }
+        else if (skipCount <= 1) {
+            $("#GPDMSbmt_Btn").attr("disabled", true);
+            $("#GNDMSbmt_Btn").attr("disabled", false);
+        }
+        else {
+            $("#GPDMSbmt_Btn").attr("disabled", false);
+            $("#GNDMSbmt_Btn").attr("disabled", false);
+        }
+    }
+});
+$(document).on("click", ".btn-get-message-image", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#ImagesShowVals_Box").empty();
+        $("#GPDMI_Id_Val").val(trueId);
+        $("#GPDMI_SkipCount_Val").val(0);
+        $("#GPDMI_FullCount_Val").val(0);
+        $("#GNDMI_Id_Val").val(trueId);
+        $("#GNDMI_SkipCount_Val").val(0);
+        $("#GNDMI_FullCount_Val").val(0);
+        $("#GPDMI_StartTry_Val").val(true);
+        $("#GetNextDiscussionMessageImg_Form").submit();
+    }
+    else {
+        $("#ImagesShowVals_Box").empty();
+        $("#GPDMI_Id_Val").val(0);
+        $("#GPDMI_SkipCount_Val").val(0);
+        $("#GPDMI_FullCount_Val").val(0);
+        $("#GNDMI_Id_Val").val(0);
+        $("#GNDMI_SkipCount_Val").val(0);
+        $("#GNDMI_FullCount_Val").val(0);
+        $("#GNDMI_FullCount_Val").val(true);
+    }
+});
+
 //Discussion Messages//
 $("#GetMessageInfo_Form").on("submit", function (event) {
     event.preventDefault();
@@ -3625,6 +3796,7 @@ $(document).on("change", ".send-message-files", function (event) {
             $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-regular fa-images text-primary"></i> ');
             $("#EditingOrReplyingMsgText_Lbl").html("Max images count per single message is restricted by <span class='fw-500'>6</span>. All other images will not be sent");
             $("#EditingOrReplying_Box").slideDown(250);
+
         }
         else {
             $("#SendMessage_Images_Val").val(null);

@@ -8,5 +8,7 @@ namespace AppY.Models
         [ForeignKey("DiscussionMessage")]
         public int MessageId { get; set; }
         public DiscussionMessage? DiscussionMessage { get; set; }
+        [NotMapped]
+        public int SkipCount { get; set; }
     }
 }
