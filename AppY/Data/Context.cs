@@ -21,6 +21,8 @@ namespace AppY.Data
         public DbSet<ScheduledMessage> ScheduledMessages { get; set; }
         public DbSet<Chat> Chats { get; set; }
         public DbSet<ChatUsers> ChatUsers { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<Reaction> Reactions { get; set; }
+        public DbSet<LinkedAccount> LinkedAccounts { get; set; }
     }
 }

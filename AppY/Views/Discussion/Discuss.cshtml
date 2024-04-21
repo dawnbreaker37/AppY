@@ -630,7 +630,7 @@
     <div class="box-container p-2 pt-1 mt-1 discussion-box" id="Preloaded_Container-Box">
         <div class="box-container" id="Messages_Container_Box">
             <div class="box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto" style="display: none;" id="NoSentMessages_Box">
-                <h1 class="h1"> <i class="fa-regular fa-comment-dots"></i> </h1>
+                <h1 class="h1"> <i class="fa-solid fa-quote-right text-neon-purple"></i> </h1>
                 <h3 class="h3 style-font">No Sent Messages</h3>
                 <small class="card-text text-muted">be the first one who've sent a message in this discussion</small>
             </div>
@@ -669,7 +669,7 @@
                                             @if (message.MainImgUrl != null)
                                             {
                                                 <div></div>
-                                                <button type="button" class="btn btn-link btn-sm btn-get-message-image" id="@message.Id-GetDiscussionInitialMsg_Btn">@message.ImagesCount Images in Pack <i class="fa-solid fa-angle-right"></i> </button>
+                                                <button type="button" class="btn btn-link btn-sm btn-get-message-image" id="@message.Id-GetDiscussionInitialMsg_Btn">@message.ImagesCount Images in Stack <i class="fa-solid fa-angle-right"></i> </button>
                                                 <div class="box-container mt-1 mb-1">
                                                     <img class="msg-img-container" id="@message.Id-DiscussionMsg_Img" src="~/DiscussionMessageImages/@message.MainImgUrl" alt="Cannot display this message" />
                                                 </div>
@@ -718,9 +718,9 @@
                                             @if (message.MainImgUrl != null)
                                             {
                                                 <div></div>
-                                                <button type="button" class="btn btn-link-opp btn-sm">@message.ImagesCount Images in Pack <i class="fa-solid fa-angle-right"></i> </button>
+                                                <button type="button" class="btn btn-link-opp btn-get-message-image btn-sm" id="@message.Id-GetDiscussionInitialMsg_Btn">@message.ImagesCount Images in Stack <i class="fa-solid fa-angle-right"></i> </button>
                                                 <div class="box-container mt-1 mb-1">
-                                                    <img class="msg-img-container" src="~/DiscussionMessageImages/@message.MainImgUrl" alt="Cannot display this message" />
+                                                    <img class="msg-img-container" src="~/DiscussionMessageImages/@message.MainImgUrl" id="@message.Id-DiscussionMsg_Img" alt="Cannot display this message" />
                                                 </div>
                                             }
                                             @if (message.RepliedMessageId != null)
@@ -929,6 +929,18 @@
     </div>
 </div>
 
+<div class="main-container shadow-standard" id="MessagePreview_Container">
+    <div class="header-container p-2 text-center" id="MessagePreview_Container-Header">
+        <button type="button" class="btn btn-standard-asset btn-light btn-sm float-end ms-1 btn-open-container" id="Preloaded_Container-OpenMessagePreview_Container">Close</button>
+        <h5 class="h5 text-truncate p-1" id="MessagePreview_Container">Message Preview</h5>
+    </div>
+    <div class="box-container p-2 pt-1 mt-1" id="MessagePreview_Container-Box">
+        <div class="box-container" id="MessagePreview_Box">
+
+        </div>
+        <button type="button" class="btn btn-primary w-100 btn-standard-asset" id="SendPreviewedMessage_Btn">Send this Template</button>
+    </div>
+</div>
 <div class="main-container shadow-standard" id="TextEditorSettings_Container">
     <div class="header-container p-2 text-center" id="TextEditorSettings_Container-Header">
         <button type="button" class="btn btn-standard-asset btn-light btn-sm float-end ms-1 btn-open-container" id="Preloaded_Container-Open">Back</button>
@@ -1003,7 +1015,7 @@
                     <div class="d-none">
                         <input type="hidden" name="Id" id="EM_Id_Val" value="0" />
                         <input type="hidden" name="MessageId" id="RM_ReplyId_Val" value="0" />
-                        <input type="hidden" name="ReplyText" id="RM_ReplyText_Val" value="0" />
+                        <input type="hidden" name="ReplyText" id="RM_ReplyText_Val" />
                         <input type="hidden" name="DiscussionId" id="SM_DiscussionId_Val" value="@DiscussionInfo.Id" />
                         <input type="hidden" name="UserId" id="SM_UserId_Val" value="@UserInfo.Id" />
                         <input type="hidden" id="SendMessage_IsAutoDeletable" name="IsAutoDeletable" value="@UserInfo.AreMessagesAutoDeletable" />
@@ -1014,7 +1026,7 @@
                         <textarea name="Text" id="SendMessage_Text_Val" class="send-message-form-control message-form-control me-auto form-control-check-input w-100 overflow-hidden" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendMessage_SbmtBtn"></textarea>
                         <button type="button" class="btn btn-message-example btn-sm open-animated-collapse btn-open-inside-box" id="MainTextEditor_Box-Open"> <i class="fa-solid fa-plus btn-open-inside-box" id="MainTextEditor_Box-OpenY"></i> </button>
                         <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="SendAFileInMessage_Btn" data-bs-html="SendMessage_Images_Val"> <i class="fa-regular fa-file-image"></i> </button>
-@*                         <button type="button" class="btn btn-message-example btn-sm shadow-none me-1"> <i class="fa-solid fa-align-left"></i> </button> *@
+                        <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="PreviewTheMessage_Btn" style="display: none;"> <i class="fa-solid fa-align-left"></i> </button>
                         <button type="submit" class="btn btn-message-example btn-sm btn-submit-msg-sending bg-primary text-light" id="SendMessage_SbmtBtn" disabled>Send</button>
                     </div>
                 </form>
@@ -1069,7 +1081,7 @@
                     <div class="d-none">
                         <input type="hidden" name="Id" id="EM_Id_Val" value="0" />
                         <input type="hidden" name="MessageId" id="RM_ReplyId_Val" value="0" />
-                        <input type="hidden" name="ReplyText" id="RM_ReplyText_Val" value="0" />
+                        <input type="hidden" name="ReplyText" id="RM_ReplyText_Val" />
                         <input type="hidden" name="DiscussionId" id="SM_DiscussionId_Val" value="@DiscussionInfo.Id" />
                         <input type="hidden" name="UserId" id="SM_UserId_Val" value="@UserInfo.Id" />
                         <input type="hidden" id="SendMessage_IsAutoDeletable" name="IsAutoDeletable" value="@UserInfo.AreMessagesAutoDeletable" />

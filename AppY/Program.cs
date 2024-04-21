@@ -1,11 +1,11 @@
 using AppY.Abstractions;
+using AppY.ChatHub;
 using AppY.Data;
 using AppY.Interfaces;
 using AppY.Models;
 using AppY.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +18,7 @@ builder.Services.AddResponseCompression(Opt =>
     Opt.MimeTypes = new[] { "/application/json" };
 });
 builder.Services.AddMemoryCache();
+builder.Services.AddSignalR();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddTransient(typeof(IBase<>), typeof(Base<>));
@@ -25,7 +26,9 @@ builder.Services.AddTransient<IAccount, Account>();
 builder.Services.AddTransient<IUser, UserRepository>();
 builder.Services.AddTransient<INotification, Notification>();
 builder.Services.AddTransient<IDiscussion, DiscussionRepository>();
+builder.Services.AddTransient<IChat, ChatRepository>();
 builder.Services.AddTransient<IMailMessages, MailMessages>();
+builder.Services.AddTransient<ChatMessageAbstraction, ChatMessageRepository>();
 builder.Services.AddTransient<Message, DiscussionMessageRepository>();
 builder.Services.AddTransient<Answer, DiscussionMessageAnswersRepository>();
 builder.Services.AddTransient<ReactionAbstraction, DiscussionMessageReactionRepository>();
@@ -59,7 +62,7 @@ app.UseRouting();
 
 app.UseAuthorization();
 app.UseAuthentication();
-
+app.MapHub<ChatHub>("/chat");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

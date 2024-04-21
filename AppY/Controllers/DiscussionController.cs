@@ -186,7 +186,7 @@ namespace AppY.Controllers
 
                             if (DiscussionInfo.CreatorId != UserInfo.Id) CreatorInfo = await _user.GetUserSuperShortInfoAsync(DiscussionInfo.CreatorId);
                             else CreatorInfo = new User { PseudoName = UserInfo.PseudoName, ShortName = UserInfo.ShortName };
-                            DiscussionInfo.Status = DiscussionInfo.Status == null ? "Tap to edit the status" : DiscussionInfo.Status;
+                            DiscussionInfo.Status = DiscussionInfo.Status == null ? "tap to edit the status" : DiscussionInfo.Status;
 
                             await _messages.MarkAsReadAllMessagesAsync(Id, UserId);
 

@@ -1,0 +1,138 @@
+﻿@model User
+@{
+    ViewData["Title"] = "Your Linked Accounts";
+
+    User? UserInfo = ViewBag.UserInfo;
+    int LinkedAccountsCount = ViewBag.LinkedAccountsCount;
+}
+
+<div class="main-sidebar" id="Main_SideBar">
+    <div class="smallside-box-container shadow-standard on-start-position p-2" style="bottom: 0; display: block;" id="LinkedAccountsInfoTooltip_Container">
+        <div class="box-container text-center bg-light p-2">
+            <h2 class="h2 text-primary"> <i class="fa-solid fa-folder-tree"></i> </h2>
+            <h5 class="h5">About Linked Accounts</h5>
+            <small class="card-text text-muted">If you're interested in how this thing works please, read this widget fully and then start your work</small>
+        </div>
+        <div class="box-container mt-3">
+            <div class="bordered-container p-2">
+                <span class="card-text fw-500 fs-6">What Linked Accounts are used for?</span>
+                <div></div>
+                <small class="card-text text-muted"><span class="fw-500">Linked Accounts</span> are designed for those, who have got multiple accounts. It helps you switch between them much quicker and easier without any waste of time</small>
+            </div>
+            <div class="bordered-container p-2 mt-2">
+                <span class="card-text fw-500 fs-6">How can you control your accounts?</span>
+                <div></div>
+                <small class="card-text text-muted"><span class="fw-500">Linked Accounts</span> give you ability to add as much accounts as you want by confirming your credentials and <span class="fw-500">reserve code</span>. Without it no account may be added or removed</small>
+            </div>
+            <div class="bordered-container p-2 mt-2">
+                <span class="card-text fw-500 fs-6">Can other users see your accounts?</span>
+                <div></div>
+                <small class="card-text text-muted">No other user except <span class="fw-500">You</span> have got access to linked accounts information as well as you can't get any information about other users linked accounts</small>
+            </div>
+            <div class="bordered-container p-2 mt-2">
+                <span class="card-text fw-500 fs-6">Other important information</span>
+                <div></div>
+                <small class="card-text text-muted"> - Once added accounts won't be needed for later confirmations even if a password has been changed there <br/> - Linked accounts are another way to make all your accounts safer <br/> - You can switch your account from any page of app</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-container shadow-standard" id="Preloaded_Container">
+    <div class="header-container p-2 text-center" id="Preloaded_Container-Header">
+        <h5 class="h5 text-truncate p-1" id="HeaderText_Lbl">Linked Accounts</h5>
+    </div>
+    <div class="box-container p-2 pt-1 mt-1" id="Prealoded_Container-Box">
+        <div class="box-container">
+            @if(LinkedAccountsCount > 0)
+            {
+                
+            }
+            else
+            {
+                <div class="box-container text-center" id="NoLinkedAccount_Box">
+                    <h2 class="h2"> <i class="fa-solid fa-link-slash"></i> </h2>
+                    <h4 class="h4">No Linked Accounts Yet</h4>
+                    <small class="card-text text-muted">link any other your account (if you got another one) to this to make switching between them much easier and quickier</small>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-standard-asset btn-primary btn-sm"> <i class="fa-solid fa-link"></i> Start Linking</button>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="bordered-container mt-3 p-2">
+            <div class="box-container">
+                <button type="button" class="btn btn-standard float-end ms-1 btn-sm btn-slide-to-prev" id="LinkAccount_Box-PrevSlide" disabled> <i class="fa-solid fa-arrow-left"></i> Back</button>
+                <span class="h5">Link Account</span>
+                <div></div>
+                <small class="card-text text-muted">Please enter this form to link your accounts with each other</small>
+                <div class="box-container mt-2" id="LinkAccount_Box">
+                    <div class="box-container">
+                        <div class="slider-container" id="LinkAccount_Box-Part0">
+                            <small class="badge bg-primary text-light rounded-pill">Step 1/3 (33.3%)</small>
+                            <div class="box-container mt-1">
+                                <form method="get" asp-controller="Account" asp-action="CheckAccountCredentials" id="CheckAccountCredentials_Form">
+                                    <div class="form-floating">
+                                        <input asp-for="UserName" autocomplete="off" class="form-control" placeholder="Email or Username" />
+                                        <label class="fw-500" asp-for="UserName">Email or Username</label>
+                                    </div>
+                                    <div class="form-floating mt-1">
+                                        <input type="password" asp-for="PasswordHash" name="Password" id="Password" class="form-control" placeholder="Password of account" />
+                                        <label class="fw-500" asp-for="PasswordHash" for="Password">Password</label>
+                                    </div>
+                                    <input type="hidden" name="CurrentUserId" value="@UserInfo.Id" />
+                                    <div class="box-container mt-2 w-100">
+                                        <div class="row">
+                                            <div class="col">
+                                                <button type="submit" class="btn btn-primary btn-standard-asset w-100">Check & Continue</button>
+                                            </div>
+                                            <div class="col">
+                                                <button type="button" class="btn btn-standard-asset btn-light w-100">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="slider-container" id="LinkAccount_Box-Part1" style="display: none;">
+                            <small class="badge bg-primary text-light rounded-pill">Step 2/3 (66.7%)</small>
+                            <div></div>
+                            <small class="card-text text-muted">Account: <span class="fw-500" id="LinkAccountInfo_Span">No Info</span></small>
+                            <div class="box-container mt-2">
+                                <form method="get" asp-controller="User" asp-action="SubmitReserveCode" id="SubmitAccountReserveCode_Form">
+                                    <div class="d-none">
+                                        <input type="hidden" name="Id" id="SARC_Id_Val" value="0" />
+                                    </div>
+                                    <div class="box-container">
+                                        <label class="form-label fw-500">Reserve Code</label>
+                                        <input asp-for="ReserveCode" class="special-form-control-sm border-primary w-100" placeholder="6-Char Code" maxlength="6" />
+                                    </div>
+                                    <div class="box-container mt-2 w-100">
+                                        <div class="row">
+                                            <div class="col">
+                                                <button type="submit" class="btn btn-primary btn-standard-asset w-100">Check & Continue</button>
+                                            </div>
+                                            <div class="col">
+                                                <button type="button" class="btn btn-standard-asset btn-light w-100">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-none">
+                        <div>
+                            <div class="d-none">
+                                <input type="hidden" id="LinkAccount_Box-StepVal" value="0" />
+                                <input type="hidden" id="LinkAccount_Box-MaxStepVal" value="3" />
+                            </div>
+                            <button type="button" class="btn btn-slide-to-next d-none" id="LinkAccount_Box-NextSlide"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

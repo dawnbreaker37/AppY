@@ -13,7 +13,6 @@ namespace AppY.ViewModels
         public int UserId { get; set; }
         [DataType(DataType.ImageUrl)]
         public IFormFileCollection? Images { get; set; }
-        [Required]
         public int DiscussionId { get; set; }
         public int ChatId { get; set; }
     }

@@ -24,6 +24,28 @@ namespace AppY.Repositories
             _notification = notification;
         }
 
+        public IQueryable<LinkedAccount_ViewModel>? GetLinkedAccounts(int Id)
+        {
+            if (Id > 0) return _context.LinkedAccounts.AsNoTracking().Where(l => l.UserId == Id && !l.IsDeleted).Select(l => new LinkedAccount_ViewModel { Id = l.UserId, CodeName = l.CodeName,  Pseudoname = l.User!.PseudoName, Shortname = l.User!.ShortName, LastSeen = l.User!.LastSeen });
+            else return null;
+        }
+
+        public async Task<int> CheckAccountCredentialsAsync(string? Username, string? Password)
+        {
+            if(!String.IsNullOrWhiteSpace(Username) && !String.IsNullOrWhiteSpace(Password))
+            {
+                User? UserInfo = null;
+                UserInfo = await _userManager.FindByEmailAsync(Username);
+                if (UserInfo == null) UserInfo = await _userManager.FindByNameAsync(Username);
+                if(UserInfo != null)
+                {
+                    bool Result = await _userManager.CheckPasswordAsync(UserInfo, Password);
+                    if (Result) return UserInfo.Id;
+                }
+            }
+            return 0;
+        }
+
         public async Task<bool> ResetPasswordAsync(ChangePassword Model)
         {
             if(!String.IsNullOrEmpty(Model.OldPassword) && !String.IsNullOrEmpty(Model.NewPassword) && !String.IsNullOrEmpty(Model.ConfirmPassword) && Model.Id != 0)

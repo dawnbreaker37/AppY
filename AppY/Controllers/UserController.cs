@@ -19,12 +19,14 @@ namespace AppY.Controllers
         private readonly INotification _notification;
         private readonly IDiscussion _discussion;
         private readonly IMemoryCache _memoryCache;
+        private readonly IChat _chat;
 
-        public UserController(Context context, UserManager<User> userManager, IUser user, INotification notification, IDiscussion discussion, IMemoryCache memoryCache)
+        public UserController(Context context, UserManager<User> userManager, IChat chat, IUser user, INotification notification, IDiscussion discussion, IMemoryCache memoryCache)
         {
             _context = context;
             _userManager = userManager;
             _user = user;
+            _chat = chat;
             _discussion = discussion;
             _notification = notification;
             _memoryCache = memoryCache;
@@ -91,12 +93,14 @@ namespace AppY.Controllers
 
                     if (UserInfo.Id != CurrentUserId)
                     {
+                        UserInfo.LastSeenText = _user.SetLastSeenText(UserInfo.LastSeen);
                         int DiscussionsCount = await _discussion.GetDiscussionsCountAsync(UserInfo.Id);
-
                         if (UserInfo.AvatarUrl == null) UserInfo.UnpicturedAvatarInfo = UserInfo.AvatarStickerUrl == null ? UserInfo.PseudoName?[0].ToString() : UserInfo.AvatarStickerUrl;
+                        int ChatId = await _chat.FindChatAvailability(UserInfo.Id, CurrentUserId, true);
 
                         ViewBag.UserInfo = UserInfo;
                         ViewBag.CurrentUserId = CurrentUserId;
+                        ViewBag.ChatId = ChatId;
                         ViewBag.DiscussionsCount = await _discussion.GetDiscussionsCountAsync(UserInfo.Id);
                         ViewBag.DiscussionsCount = DiscussionsCount;
 
@@ -235,6 +239,28 @@ namespace AppY.Controllers
             User? UserSuperShortInfo = await _user.GetUserSuperShortInfoAsync(Id);
             if (UserSuperShortInfo != null) return Json(new { success = true, result = UserSuperShortInfo });
             else return Json(new { success = false, alert = "Unfortunately, we haven't found any user with that Identifier, or selected user has private account so we can't get any additional info about him" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SetLastSeen()
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                if (Request.Cookies.ContainsKey("CurrentUserId"))
+                {
+                    string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                    if (CurrentUserId_Str != null)
+                    {
+                        bool TryParseResult = Int32.TryParse(CurrentUserId_Str, out int CurrentUserId);
+                        if(TryParseResult)
+                        {
+                            int Result = await _user.SetLastSeenAsync(CurrentUserId);
+                            if (Result > 0) return Json(new { success = true });
+                        }
+                    }
+                }
+            }
+            return Json(new { success = false });
         }
     }
 }

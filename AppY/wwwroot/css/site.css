@@ -100,13 +100,12 @@ body {
     background-color: transparent;
     backdrop-filter: blur(9px);
     border-radius: 8px;
-    transition: all ease 0.15s;
 }
 .dropdown-item {
     padding: 4px;
     cursor: pointer;
     border-radius: 8px;
-    transition: all ease 0.3s;
+    transition: all ease 0.25s;
 }
 
 .list-group {
@@ -394,6 +393,22 @@ body {
     transition: all ease 0.3s;
 }
 .special-form-control:focus {
+    background-color: #f8f9fa;
+}
+
+.special-form-control-sm {
+    cursor: pointer;
+    font-family: 'Trebuchet MS';
+    padding: 8px;
+    width: 100%;
+    font-size: 20px;
+    outline: none;
+    border-radius: 9px;
+    border: 2px solid #865be9;
+    background-color: transparent;
+    transition: all ease 0.3s;
+}
+.special-form-control-sm:focus {
     background-color: #f8f9fa;
 }
 
@@ -745,6 +760,32 @@ body {
 }
 .shadow-standard {
     box-shadow: rgba(0, 0, 0, 0.1) 1px -2px 2px;
+}
+
+.bg-blur {
+    filter: blur(9px);
+}
+
+.vanish-animation {
+    animation: vanish-animation linear 1s infinite normal;
+}
+
+@keyframes vanish-animation {
+    0% {
+        opacity: 1;
+    }
+    25% {
+        opacity: 0.75;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    75% {
+        opacity: 0.25;
+    }
+    100% {
+        opacity: 0;
+    }
 }
 
 @keyframes plus-change-animation {

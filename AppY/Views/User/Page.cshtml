@@ -24,7 +24,7 @@
                 </div>
                 <span class="h2" id="UserInfo_Pseudoname_Lbl">@UserInfo.PseudoName</span>
                 <div></div>
-                <small class="card-text text-muted" id="DiscussionStatusBar_Lbl"><span class="status-slider" id="StatusBar_Lbl-0">@@@UserInfo.ShortName</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">member in @ViewBag.DiscussionsCount discussions</span></small>
+                <small class="card-text text-muted" id="DiscussionStatusBar_Lbl"><span class="status-slider" id="StatusBar_Lbl-0">@@@UserInfo.ShortName</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">@UserInfo.LastSeenText</span><span class="status-slider" id="StatusBar_Lbl-2" style="display: none;">member in @ViewBag.DiscussionsCount discussions</span></small>
             }
             else
             {
@@ -33,7 +33,7 @@
                 </div>
                 <span class="h2" id="UserInfo_Pseudoname_Lbl">@UserInfo.PseudoName</span>
                 <div></div>
-                <small class="card-text text-muted" id="DiscussionStatusBar_Lbl"><span class="status-slider" id="StatusBar_Lbl-0">@@@UserInfo.ShortName</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">member in @ViewBag.DiscussionsCount discussions</span></small>
+                <small class="card-text text-muted" id="DiscussionStatusBar_Lbl"><span class="status-slider" id="StatusBar_Lbl-0">@@@UserInfo.ShortName</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">@UserInfo.LastSeenText</span><span class="status-slider" id="StatusBar_Lbl-2" style="display: none;">member in @ViewBag.DiscussionsCount discussions</span></small>
             }
         </div>
         <div class="box-container bg-light mt-1 p-2">
@@ -69,7 +69,7 @@
                 </div>
                 <div class="col">
                     <div>
-                            <a asp-controller="Chat" asp-action="C" asp-route-Id="0" class="btn btn-standard-asset btn-light w-100" disabled> <i class="fa-regular fa-comments text-primary"></i> <br />Chat</a>
+                            <a asp-controller="Chat" asp-action="C" asp-route-Id="@ViewBag.ChatId" class="btn btn-standard-asset btn-light w-100" disabled> <i class="fa-regular fa-comments text-primary"></i> <br />Chat</a>
                     </div>
                 </div>
 @*                 <div class="col">

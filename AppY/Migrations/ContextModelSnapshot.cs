@@ -17,7 +17,7 @@ namespace AppY.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.3")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -36,6 +36,10 @@ namespace AppY.Migrations
                     b.Property<int>("CreatorId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(600)
+                        .HasColumnType("nvarchar(600)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -43,9 +47,66 @@ namespace AppY.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("nvarchar(120)");
 
+                    b.Property<string>("Shortname")
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
+
                     b.HasKey("Id");
 
                     b.ToTable("Chats");
+                });
+
+            modelBuilder.Entity("AppY.Models.ChatMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChatId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IsAutodeletable")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsChecked")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEdited")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("RepliedMessageId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RepliesMessageText")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("SendAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(3400)
+                        .HasColumnType("nvarchar(3400)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChatId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("AppY.Models.ChatUsers", b =>
@@ -59,10 +120,19 @@ namespace AppY.Migrations
                     b.Property<int>("ChatId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ChatSecondUserName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsBlocked")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsMuted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsPinned")
@@ -353,6 +423,30 @@ namespace AppY.Migrations
                     b.ToTable("DiscussionUsers");
                 });
 
+            modelBuilder.Entity("AppY.Models.LinkedAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodeName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LinkedAccounts");
+                });
+
             modelBuilder.Entity("AppY.Models.NotificationCategory", b =>
                 {
                     b.Property<int>("Id")
@@ -526,6 +620,9 @@ namespace AppY.Migrations
 
                     b.Property<bool>("IsPrivate")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastSeen")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -751,6 +848,25 @@ namespace AppY.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AppY.Models.ChatMessage", b =>
+                {
+                    b.HasOne("AppY.Models.Chat", "Chat")
+                        .WithMany("ChatMessages")
+                        .HasForeignKey("ChatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AppY.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chat");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AppY.Models.ChatUsers", b =>
                 {
                     b.HasOne("AppY.Models.Chat", "Chat")
@@ -862,6 +978,17 @@ namespace AppY.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("Discussion");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AppY.Models.LinkedAccount", b =>
+                {
+                    b.HasOne("AppY.Models.User", "User")
+                        .WithMany("LinkedAccounts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -979,6 +1106,8 @@ namespace AppY.Migrations
 
             modelBuilder.Entity("AppY.Models.Chat", b =>
                 {
+                    b.Navigation("ChatMessages");
+
                     b.Navigation("ChatUsers");
                 });
 
@@ -1015,6 +1144,8 @@ namespace AppY.Migrations
                     b.Navigation("DiscussionMessages");
 
                     b.Navigation("DiscussionUsers");
+
+                    b.Navigation("LinkedAccounts");
 
                     b.Navigation("Notifications");
 

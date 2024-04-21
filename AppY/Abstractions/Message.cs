@@ -1,5 +1,4 @@
-﻿using AppY.Interfaces;
-using AppY.Models;
+﻿using AppY.Models;
 using AppY.ViewModels;
 
 namespace AppY.Abstractions

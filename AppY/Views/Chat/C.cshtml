@@ -1,0 +1,858 @@
+﻿@model Chat
+@{
+    ViewData["Title"] = "Chat";
+
+    User? UserInfo = ViewBag.UserInfo;
+    User? SecondUserInfo = ViewBag.SecondUserInfo;
+    Chat? ChatInfo = ViewBag.ChatInfo;
+    List<IGrouping<DateTime, DiscussionMessage>>? ChatMessages = ViewBag.Messages;
+}
+
+<div class="main-sidebar" id="Main_SideBar">
+    <div class="d-none">
+        <input type="hidden" id="SentMessagesCount_Val" value="@ViewBag.MessagesCount" />
+        <input type="hidden" id="CurrentChatId_Val" value="@ChatInfo.Id" />
+        <form method="get" asp-controller="Chat" asp-action="CheckShortnameAvailability" id="ChatShortnameAvailabilityCheck_Form">
+            <input type="hidden" name="Id" value="@ChatInfo.Id" />
+            <input type="hidden" name="Value" id="CSA_Value_Val" />
+        </form>
+        <form method="get" asp-controller="ChatMessage" asp-action="GetMessageInfo" id="GetChatMessageInfo_Form">
+            <input type="hidden" name="Id" id="CGMI_Id_Val" value="0" />
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
+    </div>
+
+    <div class="smallside-box-container shadow-standard overflow-hidden" id="DeleteChat_Container">
+        <div class="header-container p-2 text-center" id="DeleteChat_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="DeleteChat_Container-Close"></button>
+            <span class="h5 text-truncate" id="ClearHistory_Container-Header">Delete Chat</span>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="DeleteChat_Container-Box">
+            <div class="box-container text-center">
+                <h2 class="h2 text-danger"> <i class="fa-solid fa-triangle-exclamation"></i> </h2>
+                <h4 class="h4">Are You Sure to Delete This Chat?</h4>
+                <small class="card-text text-muted">Deleting this chat you'll lose all information in it. Please, read all the following items before making a decision about this chat</small>
+                <div class="border-top mt-2 pt-2 text-start border-bottom pb-2">
+                    <ul>
+                        <li class="card-text text-muted"><small>You and your conversable'll lose all information of this chat (including images and chat link)</small></li>
+                        <li class="card-text text-muted"><small>This chat with his own link will become unavailable</small></li>
+                        <li class="card-text text-muted"><small>Reserved shortname of this chat will become free for other users to use</small></li>
+                        <li class="card-text text-muted"><small>This chat will disappear from your active chat lists (and will fully disappear even from inactivated chat lists after 5 days)</small></li>
+                        <li class="card-text text-muted"><small>Chat will remain available for restoring for next <span class="fw-500">5 days</span>. If you or your interlocutor do not restore the chat within 5 days, then it'll completely disappear from chat list, without any possibility of restoration</small></li>
+                    </ul>
+                </div>
+                <div class="box-container mt-3">
+                    <div class="row">
+                        <div class="col">
+                            <form method="post" asp-controller="Chat" asp-action="Delete" id="DeleteChat_Form">
+                                <div class="d-none">
+                                    <input type="hidden" name="Id" id="DCF_Id_Val" value="@ChatInfo.Id" />
+                                    <input type="hidden" name="UserId" id="DCF_UserId_Val" value="@UserInfo.Id" />
+                                </div>
+                                <button type="submit" class="btn btn-danger btn-standard-asset w-100">Delete</button>
+                            </form>
+                        </div>
+                        <div class="col">
+                            <button type="button" class="btn btn-standard-asset w-100 btn-light" onclick="closeSidebar();">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard overflow-hidden" id="ClearHistory_Container">
+        <div class="header-container p-2 text-center" id="ClearHistory_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="ClearHistory_Container-Close"></button>
+            <span class="h5 text-truncate" id="ClearHistory_Container-Header">Clear Chat History</span>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="ClearHistory_Container-Box">
+            <div class="box-container text-center">
+                <h2 class="h2"> <i class="fa-solid fa-broom"></i> </h2>
+                <h4 class="h4">Are You Sure to Clean History?</h4>
+                <small class="card-text text-muted">If you're sure to clean the history of this chat tap on <span class="text-danger fw-500">Clear</span> button. All messages, including images and other files will be deleted from this chat and cannot be restored lately</small>
+                <div class="box-container mt-3">
+                    <div class="row">
+                        <div class="col">
+                            <form method="post" asp-controller="Chat" asp-action="ClearHistory" id="ClearChatHistory_Form">
+                                <div class="d-none">
+                                    <input type="hidden" name="Id" id="CCH_Id_Val" value="@ChatInfo.Id" />
+                                    <input type="hidden" name="UserId" id="CCH_UserId_Val" value="@UserInfo.Id" />
+                                </div>
+                                <button type="submit" class="btn btn-danger btn-standard-asset w-100">Clear</button>
+                            </form>
+                        </div>
+                        <div class="col">
+                            <button type="button" class="btn btn-standard-asset w-100 btn-light" onclick="closeSidebar();">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard on-start-position" style="bottom: 0; display: block;" id="ChatInfoTooltips_Container">
+        <div class="box-container p-3">
+            <div class="slider-container" id="ChatInfoTooltips_Box-Part0">
+                <div class="row">
+                    <div class="col col-2 text-center">
+                        <h1 class="h1 text-primary"> <i class="fa-regular fa-comments"></i> </h1>
+                        <small class="card-text text-muted fw-500">1/9</small>
+                    </div>
+                    <div class="col col-10">
+                        <h5 class="h5">Welcome to Chats!</h5>
+                        <small class="card-text text-muted">We're happy to introducre you to Chats! The easiest and fastest way to communicate with your discussors. Please, slide to next card so we can introduce you to all features of chats</small>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-light btn-standard-asset btn-sm" onclick="animatedClose(false, 'ChatInfoTooltips_Container', true, true);">Ignore and Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slider-container" id="ChatInfoTooltips_Box-Part1" style="display: none;">
+                <div class="row">
+                    <div class="col col-2 text-center">
+                        <h1 class="h1 text-neon-purple"> <i class="fa-solid fa-arrows-spin fa-spin"></i> </h1>
+                        <small class="card-text text-muted fw-500">2/9</small>
+                    </div>
+                    <div class="col col-10">
+                        <h5 class="h5">Real-Time Messaging</h5>
+                        <small class="card-text text-muted">Chats are real-time. It means that every action that you do here will be instantly shown to your discussor so that you and your friend would no miss any event</small>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-light btn-standard-asset btn-sm" onclick="animatedClose(false, 'ChatInfoTooltips_Container', true, true);">Ignore and Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slider-container" id="ChatInfoTooltips_Box-Part2" style="display: none;">
+                <div class="row">
+                    <div class="col col-2 text-center">
+                        <h1 class="h1 vanish-animation"> <i class="fa-solid fa-barcode"></i> </h1>
+                        <small class="card-text text-muted fw-500">3/9</small>
+                    </div>
+                    <div class="col col-10">
+                        <h5 class="h5">Secured means Encrypted</h5>
+                        <small class="card-text text-muted">All your sent messages will be instantly encrypted so no one can have access to its text. Encryption is done by our own specific codes so that no one has access to them and so, your messages are fully secured</small>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-light btn-standard-asset btn-sm" onclick="animatedClose(false, 'ChatInfoTooltips_Container', true, true);">Ignore and Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="border-top mt-1 p-1 w-100">
+            <div class="w-75 text-center mx-auto">
+                <div class="d-none">
+                    <input type="hidden" id="ChatInfoTooltips_Box-StepVal" value="0" />
+                    <input type="hidden" id="ChatInfoTooltips_Box-MaxStepVal" value="6" />
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <button type="button" class="btn btn-standard btn-sm btn-slide-to-prev w-100" id="ChatInfoTooltips_Box-PrevSlide" disabled> <i class="fa-solid fa-arrow-left"></i> Previous</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard btn-sm btn-slide-to-next w-100" id="ChatInfoTooltips_Box-NextSlide">Next <i class="fa-solid fa-arrow-right"></i> </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="main-container mh-max shadow-standard" id="Preloaded_Container">
+    <div class="box-container p-2" style="display: none; margin-left: -1200px;" id="Preloaded_Container_ShowBox">
+        <button type="button" class="btn btn-light btn-standard-asset btn-sm float-start me-1 discussion-header-return" id="Preloaded_Container_ShowBox-Return">Back</button>
+        <button type="button" class="btn btn-standard-asset btn-sm float-end ms-1 btn-light" id="EditChatInfo_Box-Trigger" data-bs-toggle="collapse" data-bs-target="#EditChatInfo_Box" aria-expanded="false" aria-controls="EditChatInfo_Box">Edit</button>
+        <div class="box-container text-center">
+            <div class="image-picture-none-container text-center bg-light mx-auto" id="UnpicturedAvatar_Box">
+                <div class="unpictured-container-label" id="UnpicturedAvatar_Lbl">@ChatInfo.Name![0]</div>
+            </div>
+            <span class="h3 text-truncate" id="ChatName_Span">@ChatInfo.Name</span>
+            <div></div>
+            <small class="card-text text-muted">@UserInfo.PseudoName, @SecondUserInfo.PseudoName</small>
+        </div>
+        <div class="box-container mt-4">
+            <div class="row">
+                <div class="col">
+                    <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell-slash text-primary"></i> <br />Mute</button>
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-solid fa-fingerprint text-primary"></i> <br />Security</button>
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-solid fa-palette text-primary"></i> <br />Appearance</button>
+                </div>
+                <div class="col">
+                    <div class="dropstart">
+                        <button class="btn btn-standard-asset btn-light w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false"> <i class="fa-solid fa-ellipsis text-primary"></i> <br />More </button>
+                        <ul class="dropdown-menu shadow-sm p-1">
+                            <li><a asp-controller="User" asp-action="Page" asp-route-Id="@SecondUserInfo.Id" class="dropdown-item"> <i class="fa-solid fa-up-right-from-square"></i> @SecondUserInfo.PseudoName's Page</a></li>
+                            <li><button type="button" class="dropdown-item mt-1 btn-smallside-open-container" id="ClearHistory_Container-Open"> <i class="fa-solid fa-broom"></i> Clear History</button></li>
+                            <li><button type="button" class="dropdown-item text-danger mt-1 btn-smallside-open-container" id="BlockUser_Container-Open"> <i class="fa-solid fa-ban"></i> Block @SecondUserInfo.PseudoName</button></li>
+                            <li><button type="button" class="dropdown-item text-danger mt-1 btn-smallside-open-container" id="DeleteChat_Container-Open"> <i class="fa-solid fa-trash-can"></i> Delete</button></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="box-container mt-1" id="MembersInfo_Box">
+            <div class="box-container bg-light p-2">
+                <span class="h6">You</span>
+                <div></div>
+                <small class="card-text text-muted">@@@UserInfo.ShortName</small>
+            </div>
+            <div class="box-container bg-light p-2 mt-1">
+                <a asp-controller="User" asp-action="Page" asp-route-Id="@SecondUserInfo.Id" class="h6 text-dark text-decoration-none user-via-shortname">@SecondUserInfo.PseudoName</a>
+                <div></div>
+                <small class="card-text text-muted">@@@SecondUserInfo.ShortName</small>
+            </div>
+        </div>
+        <div class="collapse" id="EditChatInfo_Box">
+            <div class="bordered-container p-2 mt-2">
+                <h6 class="h6">Edit Chat Info</h6>
+                <div class="box-container mt-3">
+                    <form method="post" asp-controller="Chat" asp-action="Edit" id="EditChat_Form">
+                        <div class="d-none">
+                            <input type="hidden" name="Id" id="ChatEdit_Id_Val" value="@ChatInfo.Id" />
+                        </div>
+                        <div class="form-floating">
+                            <input asp-for="Name" class="form-control" placeholder="Enter chat's name here" value="@ChatInfo.Name" />
+                            <label class="form-label fw-500" asp-for="Name">Chat Name</label>
+                        </div>
+                        <div class="ms-1">
+                            <small class="card-text text-muted">Chats with empty names automatically get 'New Chat' title</small>
+                        </div>
+                        <div class="form-floating mt-2">
+                            <textarea name="Description" class="form-control" id="ChatDescription_Val" placeholder="Enter chat's description here" maxlength="600">@ChatInfo.Description</textarea>
+                            <label class="form-label fw-500" asp-for="Description">Description</label>
+                        </div>
+                        <div class="form-floating mt-2">
+                            <input asp-for="Shortname" id="ChatShortname_Val" class="form-control strong-input" placeholder="Create a shorname for your chat" maxlength="24" value="@ChatInfo.Shortname" />
+                            <label class="form-label fw-500" asp-for="Shortname">@@Shortname</label>
+                        </div>
+                        <div class="ms-1">
+                            <small class="card-text text-muted" id="ShortnameDescription_Lbl">Shortname must be unique. May container up to 24 characters with these criteries: [A-Z, a-z], [0-9] and underscore</small>
+                        </div>
+                        <div class="box-container mt-3">
+                            <button type="submit" class="btn btn-standard text-primary w-100" id="EditChatSbmt_Btn">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="header-container special-container-header bg-light p-2" id="Preloaded_Container-Header">
+        <span class="h5 text-truncate p-1 discussion-header w-75" id="Preloaded_Container_ShowBox-Open">@ChatInfo.Name</span>
+        <div></div>
+        <small class="card-text text-muted ms-1 btn-set-status" id="ChatStatusBar_Lbl"><span class="status-slider" id="StatusBar_Lbl-0">online</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">chat with @SecondUserInfo.PseudoName</span><span class="status-slider" id="StatusBar_Lbl-2" style="display: none;">tap to edit settings</span></small>
+    </div>
+    <div class="box-container p-2 pt-1 mt-1 discussion-box" id="Prealoded_Container-Box">
+        <div class="box-container" id="Messages_Box">
+            @if (ViewBag.MessagesCount == 0)
+            {
+                <div class="box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto" id="NoSentMessages_Box">
+                    <h1 class="h1"> <i class="fa-regular fa-comments text-primary"></i> </h1>
+                    <h3 class="h3 style-font">No Sent Messages</h3>
+                    <small class="card-text text-muted">send your first message in this chat</small>
+                </div>
+                <div class="box-container" id="HaveSentMessage_Box" style="display: none;">
+                </div>
+            }
+            else
+            {
+                <div class="box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto" id="NoSentMessages_Box" style="display: none;">
+                    <h1 class="h1"> <i class="fa-regular fa-comments text-primary"></i> </h1>
+                    <h3 class="h3 style-font">No Sent Messages</h3>
+                    <small class="card-text text-muted">send your first message in this chat</small>
+                </div>
+                <div class="box-container" id="HaveSentMessage_Box">
+                    @foreach(var Key in ChatMessages)
+                    {
+                        <div class="grouping-box mx-auto text-center">
+                            <small class="card-text text-muted">@Key.Key.ToString("d/MM, dddd")</small>
+                        </div>
+                        @foreach(DiscussionMessage message in Key)
+                        {
+                            @if(message.UserId == UserInfo.Id)
+                            {
+                                <div class="message-box" id="@message.Id-ChatMsgBox">
+                                    <div class="cur-user-msg-box" id="@message.Id-ChatMsgNmBox">
+                                        <div class="cur-user-styled-msg-box p-2" id="@message.Id-ChatMsgStyledBox">
+                                            @if (message.IsAutoDeletable > 0)
+                                            {
+                                                <small class="card-text"> <i class="fa-solid fa-clock-rotate-left"></i> @message.IsAutoDeletable mins</small>
+                                            }
+                                            @if (message.MainImgUrl != null)
+                                            {
+                                                <div></div>
+                                                <button type="button" class="btn btn-link btn-sm btn-get-message-image" id="@message.Id-GetChatInitialMsg_Btn">@message.ImagesCount Images in Stack <i class="fa-solid fa-angle-right"></i> </button>
+                                                <div class="box-container mt-1 mb-1">
+                                                    <img class="msg-img-container" id="@message.Id-ChatMsg_Img" src="~/ChatMessageImages/@message.MainImgUrl" alt="Cannot display this message" />
+                                                </div>
+                                            }
+                                            @if (message.RepliedMessageId != 0)
+                                            {
+                                                <div class="cur-user-reply-container mb-1 reply-element" id="@message.Id-ChatMsgReplyBox" data-bs-msg-id="@message.Id">
+                                                    <small class="card-text fw-500 reply-element" id="@message.RepliedMessageId-ChatMsgReplyIcon" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-reply"></i> Replied to</small>
+                                                    <p class="card-text white-space-on message-label chat-options reply-element" id="@message.RepliedMessageId-ChatMsgReplyText" data-bs-msg-id="@message.Id">@message.RepliesMsgShortText</p>
+                                                </div>
+                                            }
+                                            <p class="card-text white-space-on message-label chat-options" id="@message.Id-ChatOptionMsgText_Lbl">@message.Text</p>
+                                        </div>
+                                        <div class="float-end me-1" id="@message.Id-ChatMsgStatsBox">
+                                            @if (message.IsChecked)
+                                            {
+                                                <small class="card-text text-primary"> <i class="fa-solid fa-check-double"></i> </small>
+                                            }
+                                            else
+                                            {
+                                                <small class="card-text text-muted discussion-options" id="@message.Id-ChatMsgDateNTimeInfo_Lbl" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-check"></i> </small>
+                                            }
+                                            <small class="card-text text-muted">@message.SentAt.ToShortTimeString()</small>
+                                            @if (message.IsEdited)
+                                            {
+                                                <small class="card-text text-muted" id="@message.Id-ChatMsgIsEdited_Lbl">edited</small>
+                                            }
+                                            else
+                                            {
+                                                <small class="card-text text-muted" style="display: none;" id="@message.Id-ChatMsgIsEdited_Lbl">edited</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="message-box">
+                                    <div class="other-user-msg-box">
+                                        <div class="other-user-styled-msg-box p-2" id="@message.Id-ReplyToChatMessageViaDiscussionMessage">
+                                            @if (message.IsAutoDeletable > 0)
+                                            {
+                                                <small class="card-text"> <i class="fa-solid fa-clock-rotate-left"></i> @message.IsAutoDeletable mins</small>
+                                            }
+                                            @if (message.MainImgUrl != null)
+                                            {
+                                                <div></div>
+                                                <button type="button" class="btn btn-link-opp btn-get-message-image btn-sm" id="@message.Id-GetChatnitialMsg_Btn">@message.ImagesCount Images in Stack <i class="fa-solid fa-angle-right"></i> </button>
+                                                <div class="box-container mt-1 mb-1">
+                                                    <img class="msg-img-container" src="~/ChatMessageImages/@message.MainImgUrl" id="@message.Id-ChatMsg_Img" alt="Cannot display this message" />
+                                                </div>
+                                            }
+                                            @if (message.RepliedMessageId != 0)
+                                            {
+                                                <div class="other-user-reply-container mb-1 reply-element" id="@message.Id-ChatMsgReplyBox" data-bs-msg-id="@message.Id">
+                                                    <small class="card-text fw-500 reply-element" id="@message.Id-ChatMsgReplyIcon" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-reply"></i> Replied to</small>
+                                                    <p class="card-text reply-to-chat-message message-label white-space-on reply-element" id="@message.Id-ChatMsgReplyText" data-bs-msg-id="@message.Id">@message.RepliesMsgShortText</p>
+                                                </div>
+                                            }
+                                            <p class="card-text white-space-on message-label reply-to-chat-message" id="@message.Id-ChatOptionMsgText_Lbl">@message.Text</p>
+                                        </div>
+                                        <div class="ms-1">
+                                            <small class="card-text text-muted">@message.SentAt.ToShortTimeString()</small>
+                                            @if (message.IsEdited)
+                                            {
+                                                <small class="card-text text-muted" id="@message-IsChatMsgEdited_Lbl">edited</small>
+                                            }
+                                            else
+                                            {
+                                                <small class="card-text text-muted" id="@message-IsChatMsgEdited_Lbl" style="display: none;"></small>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    } 
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="messages-container bordered-container overflow-hidden p-2 shadow-sm" style="display: none; margin-bottom: -1200px; background-color: transparent;" id="ChatMessageOptions_Box">
+        <div class="box-container">
+            <div class="d-none">
+                <input type="hidden" class="got-msg-id-value" id="CurrentGotChatMsg_Id_Val" value="0" />
+            </div>
+            <button type="button" class="btn btn-standard btn-sm copy-to-clipboard float-end" id="ChatOptionMessageText_Lbl-CopyToTheClipboard"> <i class="fa-regular fa-copy text-primary"></i> Copy</button>
+            <div class="float-end ms-1" id="PinTheMessage_Box">
+                <form method="post" asp-controller="ChatMessage" asp-action="Pin" id="PinTheDiscussionMessage_Form">
+                    <input type="hidden" name="Id" id="PCM_Id_Val" value="0" />
+                    <input type="hidden" name="UserId" value="@UserInfo.Id" />
+                    <button type="submit" class="btn btn-standard btn-sm float-end me-1"> <i class="fa-solid fa-thumbtack text-primary"></i> Pin</button>
+                </form>
+            </div>
+            <div class="float-end ms-1" id="UnpinTheMessage_Box" style="display: none;">
+                <form method="post" asp-controller="ChatMessage" asp-action="Unpin" id="UnpinTheDiscussionMessage_Form">
+                    <input type="hidden" name="Id" id="UCM_Id_Val" value="0" />
+                    <input type="hidden" name="DiscussionOrChatId" value="@ChatInfo.Id" />
+                    <input type="hidden" name="UserId" value="@UserInfo.Id" />
+                    <button type="submit" class="btn btn-standard btn-sm float-end me-1"> <i class="fa-solid fa-link-slash text-primary"></i> Unpin</button>
+                </form>
+            </div>
+            <small class="card-text text-muted got-msg-datetime" id="ChatMsgOptionAdditionalInfo_Lbl">sent date, time, is checked and edited</small>
+            <div class="mt-1">
+                <button type="button" class="btn btn-standard-asset btn-light btn-sm delete-message-options" id="ChatMessageOptions_Box-Close"> <i class="fa-solid fa-xmark text-primary"></i> Cancel</button>
+                <small class="card-text got-msg-text" id="ChatOptionMessageText_Lbl">Message Text</small>
+            </div>
+        </div>
+        <div class="box-container mt-3">
+            <div class="row">
+                <div class="col" id="EditChatMsg_Col">
+                    <button type="button" class="btn btn-standard btn-sm w-100" id="EditChatMessage_Btn"> <i class="fa-regular fa-pen-to-square text-primary"></i> Edit</button>
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-standard btn-sm w-100" id="ReplyChatMessage_Btn"> <i class="fa-solid fa-reply text-primary"></i> Reply</button>
+                </div>
+                <div class="col">
+                    <div>
+                        <form method="get" asp-controller="Answer" asp-action="GetChatMessageAnswers" id="GetChatMessageAnswers_Form">
+                            <div class="d-none">
+                                <input type="hidden" name="Id" id="GCMA_Id_Val" value="0" />
+                                <input type="hidden" name="UserId" id="GCMA_UserId_Val" value="0" />
+                                <input type="hidden" name="SkipCount" id="GCMA_SkipCount_Val" value="0" />
+                                <input type="hidden" name="MessageText" id="GCMA_MsgText_Val" />
+                            </div>
+                            <button type="submit" class="btn btn-standard btn-sm w-100" id="GCMASbmt_Btn"> <i class="fa-solid fa-feather-pointed text-primary"></i> Answer</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="col" id="DeleteChatMsg_Col">
+                    <form method="post" asp-controller="ChatMessage" asp-action="Delete" id="DeleteChatMessage_Form">
+                        <input type="hidden" name="Id" id="DDM_Id_Val" value="0" />
+                        <input type="hidden" name="DiscussionId" value="@ChatInfo.Id" />
+                        <button type="submit" class="btn btn-standard btn-sm text-danger w-100" id="DeleteChatMessageSbmt_Btn"> <i class="fa-regular fa-trash-can"></i> Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="fixed-bottom bot-navbar shadow-sm p-2" id="Preloaded_BotOffNavbar">
+    <div class="box-container" id="SendMessage_FirstInside_Box">
+        <div class="box-container">
+            <div class="border-bottom pb-1" id="EditingOrReplying_Box" style="display: none;">
+                <div class="box-container text-start">
+                    <button type="button" class="btn btn-standard-asset text-primary float-end ms-1 btn-sm" id="CancelChatMessageSettings_Btn"> <i class="fa-solid fa-xmark"></i> </button>
+                    <span class="card-text fs-6 text-primary" id="EditingOrReplyingMsgIcon_Lbl"> <i class="fa-regular fa-pen-to-square"></i> </span>
+                    <span class="card-text fs-6 fw-500 text-primary" id="EditingOrReplyingMsgStatus_Lbl">Edit Message</span>
+                </div>
+                <div class="box-container mt-2 pb-1 text-start">
+                    <small class="card-text me-auto" id="EditingOrReplyingMsgText_Lbl">Message Text...</small>
+                </div>
+            </div>
+            <div class="d-none">
+                <input type="hidden" name="Id" id="EM_Id_Val" value="0" />
+                <input type="hidden" name="MessageId" id="RM_ReplyId_Val" value="0" />
+                <input type="hidden" name="ReplyText" id="RM_ReplyText_Val" />
+                <input type="hidden" name="ChatId" id="SM_ChatId_Val" value="@ChatInfo.Id" />
+                <input type="hidden" name="UserId" id="SM_UserId_Val" value="@UserInfo.Id" />
+                <input type="hidden" name="ReceiverId" id="SM_ReceiverId_Val" value="@ViewBag.ReceiverId" />
+                <input type="hidden" id="SendMessage_IsAutoDeletable" name="IsAutoDeletable" value="@UserInfo.AreMessagesAutoDeletable" />
+                <input type="file" class="send-message-files" id="SendMessage_Images_Val" name="Images" accept=".png, .jpg, .jpeg" multiple max="6" />
+            </div>
+
+            <div class="hstack gap-2" id="TextSendingBox">
+                <button type="button" class="btn btn-standard btn-sm return-main-bot-navbar"> <i class="fa-solid fa-chevron-down"></i> </button>
+                <textarea name="Text" id="SendMessage_Text_Val" class="send-message-form-control message-form-control me-auto form-control-check-input w-100 overflow-hidden" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendMessage_SbmtBtn"></textarea>
+                <button type="button" class="btn btn-message-example btn-sm open-animated-collapse btn-open-inside-box" id="MainTextEditor_Box-Open"> <i class="fa-solid fa-plus btn-open-inside-box" id="MainTextEditor_Box-OpenY"></i> </button>
+                <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="SendAFileInMessage_Btn" data-bs-html="SendMessage_Images_Val"> <i class="fa-regular fa-file-image"></i> </button>
+                <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="PreviewTheMessage_Btn" style="display: none;"> <i class="fa-solid fa-align-left"></i> </button>
+                <button type="submit" class="btn btn-message-example btn-sm btn-submit-msg-sending bg-primary text-light" id="SendMessage_SbmtBtn" disabled>Send</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+<script>
+        const hubConnection = new signalR.HubConnectionBuilder().withUrl("/chat").build();
+        async function start() {
+            try {
+                await hubConnection.start();
+            }
+            catch (err) {
+                console.log(err.toString());
+                setTimeout(function () {
+                    start();
+                }, 5000);
+            }
+        }
+
+    window.onblur = function() {
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        hubConnection.invoke("ClosedTheChat", receiverId).catch(function (err) {
+            console.log(err.toString());
+        });
+    }
+    window.onfocus = function () {
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        hubConnection.invoke("OpenedTheChat", receiverId).catch(function (err) {
+            console.log(err.toString());
+        });
+    }
+
+    document.getElementById("EditChat_Form").addEventListener("submit", function (event) {
+        event.preventDefault();
+        const id = parseInt($("#ChatEdit_Id_Val").val());
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        const name = $("#Name").val();
+        const description = $("#ChatDescription_Val").val();
+        const shortName = $("#ChatShortname_Val").val();
+        const currentChatId = parseInt($("#CurrentChatId_Val").val());
+
+        hubConnection.invoke("EditChat", id, receiverId, name, description, shortName, currentChatId).catch(function (err) {
+            console.log(err.toString());
+        });
+    });
+    document.getElementById("ClearChatHistory_Form").addEventListener("submit", function (event) {
+        event.preventDefault();
+        const id = parseInt($("#CCH_Id_Val").val());
+        const userId = parseInt($("#CCH_UserId_Val").val());
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        const currentChatId = $("#CurrentChatId_Val").val();
+        hubConnection.invoke("ClearHistory", id, userId, receiverId, currentChatId).catch(function (err) {
+            console.log(err.toString());
+        });
+    });
+    document.getElementById("DeleteChat_Form").addEventListener("submit", function (event) {
+        event.preventDefault();
+        const id = parseInt($("#DCF_Id_Val").val());
+        const userId = parseInt($("#DCF_UserId_Val").val());
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        const currentChatId = parseInt($("#CurrentChatId_Val").val());
+        hubConnection.invoke("Delete", id, userId, receiverId, currentChatId).catch(function (err) {
+            console.log(err.toString());
+        });
+    });
+
+    document.getElementById("SendMessage_Text_Val").addEventListener("focusin", function () {
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        hubConnection.invoke("Typing", receiverId).catch(function (err) {
+            console.log(err.toString());
+        });
+    });
+    document.getElementById("SendMessage_Text_Val").addEventListener("focusout", function () {
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        hubConnection.invoke("Idling", receiverId).catch(function (err) {
+            console.log(err.toString());
+        });
+    });
+
+        document.getElementById("SendMessage_SbmtBtn").addEventListener("click", function () {
+            const message = $("#SendMessage_Text_Val").val();
+            const senderId = parseInt($("#SM_UserId_Val").val());
+            const receiverId = $("#SM_ReceiverId_Val").val();
+            const chatId = parseInt($("#SM_ChatId_Val").val());
+            const messageId = parseInt($("#EM_Id_Val").val());
+            const isAutodeletable = parseInt($("#SendMessage_IsAutoDeletable").val());
+            const updatedMessage = deleteAllEndEmptyChars(message);
+
+        if (messageId <= 0) {
+            hubConnection.invoke("Send", updatedMessage, senderId, receiverId, chatId, isAutodeletable).catch(function (err) {
+                    console.log(err.toString());
+                });
+            }
+            else {
+            hubConnection.invoke("Edit", messageId, senderId, receiverId, updatedMessage, chatId).catch(function (err) {
+                    console.log(err.toString());
+                });
+            }
+            $("#SendMessage_SbmtBtn").attr("disabled", true);
+            $("#SendMessage_Text_Val").val("");
+        });
+
+    hubConnection.on("Caller_EditChat", function (name, description, shortname) {
+        document.getElementById("EditChatInfo_Box-Trigger").click();
+        headerReturn("Preloaded_Container_ShowBox");
+        if (name != null) {
+            $("#ChatName_Span").html(name);
+            $("#Preloaded_Container_ShowBox-Open").html(name);
+            $("#UnpicturedAvatar_Lbl").html(name[0]);
+        }
+        else {
+            $("#ChatName_Span").html("New Chat");
+            $("#Preloaded_Container_ShowBox-Open").html("New Chat");
+            $("#UnpicturedAvatar_Lbl").html("N");
+        }
+
+        let chatAlertDiv = $("<div class='grouping-box mx-auto text-center'></div>");
+        let chatAlertText = $("<small class='card-text text-muted'>Chat info has been edited</small>");
+
+        chatAlertDiv.append(chatAlertText);
+        $("#HaveSentMessage_Box").append(chatAlertDiv);
+    });
+    hubConnection.on("EditChat", function (name, description, shortname, chatId) {
+        let currentChatId = $("#CurrentChatId_Val").val();
+        if (chatId == currentChatId) {
+            if (name != null) {
+                $("#ChatName_Span").html(name);
+                $("#Preloaded_Container_ShowBox-Open").html(name);
+                $("#UnpicturedAvatar_Lbl").html(name[0]);
+            }
+            else {
+                $("#ChatName_Span").html("New Chat");
+                $("#Preloaded_Container_ShowBox-Open").html("New Chat");
+                $("#UnpicturedAvatar_Lbl").html("N");
+            }
+
+            let chatAlertDiv = $("<div class='grouping-box mx-auto text-center'></div>");
+            let chatAlertText = $("<small class='card-text text-muted'>Chat info has been edited</small>");
+
+            chatAlertDiv.append(chatAlertText);
+            $("#HaveSentMessage_Box").append(chatAlertDiv);
+        }
+    });
+    hubConnection.on("Caller_ClearHistory", function () {
+        $("#SentMessagesCount_Val").val(0);
+        setTimeout(function () {
+            closeSidebar();
+            animatedClose(false, "ClearHistory_Container", false, true);
+            animatedClose(false, "Preloaded_Container", false, true);
+        }, 200);
+
+        setTimeout(function () {
+            headerReturn("Preloaded_Container_ShowBox");
+            let div = $("<div class='box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto'></div>");
+            let icon = $("<h1 class='h1'> <i class='fa-regular fa-comments text-primary'></i> </h1>");
+            let text = $("<h3 class='h3 style-font'>History Cleared</h3>");
+            let description = $("<small class='card-text text-muted'>no sent messages as the history of this chat has been recently cleared</small>");
+            $("#HaveSentMessage_Box").empty();
+            $("#HaveSentMessage_Box").fadeOut(300);
+            div.append(icon);
+            div.append(text);
+            div.append(description);
+
+            $("#Messages_Box").append(div);
+            animatedOpen(false, "Preloaded_Container", true, true);
+        }, 650);
+    });
+    hubConnection.on("ClearHistory", function (chatId) {
+        let currentChatId = $("#CurrentChatId_Val").val();
+        if (currentChatId == chatId) {
+            $("#SentMessagesCount_Val").val(0);
+            setTimeout(function () {
+                closeSidebar();
+                animatedClose(false, "ClearHistory_Container", false, true);
+                animatedClose(false, "Preloaded_Container", false, true);
+            }, 200);
+
+            setTimeout(function () {
+                headerReturn("Preloaded_Container_ShowBox");
+                let div = $("<div class='box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto'></div>");
+                let icon = $("<h1 class='h1'> <i class='fa-regular fa-comments text-primary'></i> </h1>");
+                let text = $("<h3 class='h3 style-font'>History Cleared</h3>");
+                let description = $("<small class='card-text text-muted'>no sent messages as the history of this chat has been recently cleared</small>");
+                $("#HaveSentMessage_Box").empty();
+                $("#HaveSentMessage_Box").fadeOut(300);
+                div.append(icon);
+                div.append(text);
+                div.append(description);
+
+                $("#Messages_Box").append(div);
+                animatedOpen(false, "Preloaded_Container", true, true);
+            }, 650);
+        }
+    });
+    hubConnection.on("Caller_DeleteChat", function () {
+        closeSidebar();
+        headerReturn("Preloaded_Container_ShowBox");
+        $("#Preloaded_Container").addClass("bg-blur");
+        $("#Preloaded_Container").css("pointer-events", "none");
+        $("#SendMessage_Text_Val").attr("readonly", true);
+        $("#SendMessage_Text_Val").attr("disabled", true);
+        $("#SendAFileInMessage_Btn").attr("disabled", true);
+        $("#MainTextEditor_Box-Open").attr("disabled", true);
+        $("#SendMessage_Text_Val").attr("placeholder", "Chat has been deleted");
+        $("#SendMessage_Text_Val").val(null);
+    });
+    hubConnection.on("DeleteChat", function (chatId) {
+        let currentChatId = $("#CurrentChatId_Val").val();
+        if (currentChatId == chatId) {
+            headerReturn("Preloaded_Container_ShowBox");
+            $("#Preloaded_Container").addClass("bg-blur");
+            $("#Preloaded_Container").css("pointer-events", "none");
+            $("#SendAFileInMessage_Btn").attr("disabled", true);
+            $("#MainTextEditor_Box-Open").attr("disabled", true);
+            $("#SendMessage_Text_Val").attr("readonly", true);
+            $("#SendMessage_Text_Val").attr("disabled", true);
+            $("#SendMessage_Text_Val").attr("placeholder", "Chat has been deleted");
+            $("#SendMessage_Text_Val").val(null);
+        }
+    });
+
+    hubConnection.on("Typing", function () {
+
+        document.getElementById("StatusBar_Lbl-0").innerHTML = ' <i class="fa-regular fa-keyboard text-primary"></i> typing...';
+    });
+    hubConnection.on("Idling", function () {
+        document.getElementById("StatusBar_Lbl-0").innerHTML = "online";
+    });
+    hubConnection.on("ClosedTheChat", function (dateAndTime) {
+        document.getElementById("StatusBar_Lbl-0").innerHTML = "last seen " + dateAndTimeTranslator(dateAndTime);
+    });
+    hubConnection.on("OpenedTheChat", function () {
+        document.getElementById("StatusBar_Lbl-0").innerHTML = "online";
+    });
+
+    hubConnection.on("CallerReceive", function (message, id) {
+            let messageMainBox = document.createElement("div");
+            let messageNotMainBox = document.createElement("div");
+            let isAutodeletableSmall = document.createElement("small");
+            let mainText = document.createElement("p");
+            let styleBox = document.createElement("div");
+            let statsBox = document.createElement("div");
+            let isChecked = document.createElement("small");
+            let dateAndTime = document.createElement("small");
+            let isEdited = document.createElement("small");
+
+            messageMainBox.classList.add("message-box");
+            messageNotMainBox.classList.add("cur-user-msg-box");
+            styleBox.classList.add("cur-user-styled-msg-box");
+            styleBox.classList.add("p-2");
+            isAutodeletableSmall.classList.add("card-text");
+            mainText.classList.add("card-text");
+            mainText.classList.add("white-space-on");
+            mainText.classList.add("message-label");
+            mainText.classList.add("chat-options");
+            statsBox.classList.add("float-end");
+            statsBox.classList.add("me-1");
+            isChecked.classList.add("card-text");
+            dateAndTime.classList.add("card-text");
+            dateAndTime.classList.add("text-muted");
+            isEdited.classList.add("card-text");
+            isEdited.classList.add("text-muted");
+            isEdited.style.display = "none";
+
+            // let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+            // let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
+            // let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
+
+            let currentDate = new Date();
+            let newMessage = textDecoder(message, null);
+            mainText.innerHTML = newMessage;
+            dateAndTime.innerHTML = dateAndTimeTranslator(currentDate);
+            isChecked.innerHTML = ' <i class="fa-solid fa-check text-muted"></i> ';
+
+            styleBox.appendChild(isAutodeletableSmall);
+            styleBox.appendChild(mainText);
+            statsBox.appendChild(isChecked);
+            statsBox.appendChild(dateAndTime);
+            statsBox.appendChild(isEdited);
+            messageNotMainBox.appendChild(styleBox);
+            messageNotMainBox.appendChild(statsBox);
+            messageMainBox.appendChild(messageNotMainBox);
+
+            messageMainBox.setAttribute("id", id + "-ChatMsgBox");
+            isEdited.setAttribute("id", id + "-ChatMsgIsEdited_Lbl");
+            dateAndTime.setAttribute("id", id + "-ChatMsgDateAndTime_Lbl");
+            mainText.setAttribute("id", id + "-ChatOptionMsgText_Lbl");
+
+            document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
+            setTimeout(function () {
+                $("#SendMessage_SbmtBtn").attr("disabled", false);
+            }, 1500);
+
+            let sentMessagesCount = parseInt(document.getElementById("SentMessagesCount_Val").value);
+            if (parseInt(document.getElementById("SentMessagesCount_Val").value) > 0) {
+                document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
+            }
+            else {
+                slideToLeft("NoSentMessages_Box");
+                document.getElementById("HaveSentMessage_Box").style.display = "block";
+                document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
+            }
+            sentMessagesCount++;
+            document.getElementById("SentMessagesCount_Val").value = sentMessagesCount;
+    });
+
+        hubConnection.on("Receive", function (message, id, chatId) {
+            let currentChatId = $("#CurrentChatId_Val").val();
+
+            if (chatId == currentChatId) {
+                let messageMainBox = document.createElement("div");
+                let messageNotMainBox = document.createElement("div");
+                let isAutodeletableSmall = document.createElement("small");
+                let mainText = document.createElement("p");
+                let styleBox = document.createElement("div");
+                let statsBox = document.createElement("div");
+                let isChecked = document.createElement("small");
+                let dateAndTime = document.createElement("small");
+                let isEdited = document.createElement("small");
+
+                messageMainBox.classList.add("message-box");
+                messageNotMainBox.classList.add("other-user-msg-box");
+                styleBox.classList.add("other-user-styled-msg-box");
+                styleBox.classList.add("p-2");
+                isAutodeletableSmall.classList.add("card-text");
+                mainText.classList.add("card-text");
+                mainText.classList.add("white-space-on");
+                mainText.classList.add("message-label");
+                mainText.classList.add("reply-to-chat-message");
+                statsBox.classList.add("ms-1");
+                isChecked.classList.add("card-text");
+                dateAndTime.classList.add("card-text");
+                dateAndTime.classList.add("text-muted");
+                isEdited.classList.add("card-text");
+                isEdited.classList.add("text-muted");
+                isEdited.style.display = "none";
+
+                // let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+                // let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
+                // let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
+
+                messageMainBox.setAttribute("id", id + "-ChatMsgBox");
+                isEdited.setAttribute("id", id + "-ChatMsgIsEdited_Lbl");
+                dateAndTime.setAttribute("id", id + "-ChatMsgDateAndTime_Lbl");
+                mainText.setAttribute("id", id + "-ChatOptionMsgText_Lbl");
+
+                let currentDate = new Date();
+                let newMessage = textDecoder(message, null);
+                mainText.innerHTML = newMessage;
+                dateAndTime.innerHTML = dateAndTimeTranslator(currentDate);
+                isChecked.innerHTML = ' <i class="fa-solid fa-check text-muted"></i> ';
+
+                styleBox.appendChild(isAutodeletableSmall);
+                styleBox.appendChild(mainText);
+                statsBox.appendChild(isChecked);
+                statsBox.appendChild(dateAndTime);
+                statsBox.appendChild(isEdited);
+                messageNotMainBox.appendChild(styleBox);
+                messageNotMainBox.appendChild(statsBox);
+                messageMainBox.appendChild(messageNotMainBox);
+
+                let sentMessagesCount = parseInt(document.getElementById("SentMessagesCount_Val").value);
+                if (parseInt(document.getElementById("SentMessagesCount_Val").value) > 0) {
+                    document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
+                }
+                else {
+                    slideToLeft("NoSentMessages_Box");
+                    slideToRight("HaveSentMessages_Box");
+                    document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
+                }
+                sentMessagesCount++;
+                document.getElementById("SentMessagesCount_Val").value = sentMessagesCount;
+            }
+        });
+
+    hubConnection.on("EditReceive", function (message, id) {
+        textDecoder(message, id + "-ChatOptionMsgText_Lbl");
+        $("#" + id + "-ChatMsgIsEdited_Lbl").text("edited");
+        $("#" + id + "-ChatMsgIsEdited_Lbl").fadeIn(250);
+    });
+
+    hubConnection.on("Edit_CallerReceive", function (message, id) {
+        textDecoder(message, id + "-ChatOptionMsgText_Lbl");
+        $("#" + id + "-ChatMsgIsEdited_Lbl").text("edited");
+        $("#" + id + "-ChatMsgIsEdited_Lbl").fadeIn(250);
+        $("#EditingOrReplying_Box").slideUp(250);
+    });
+
+        hubConnection.onclose(async function () {
+            await start();
+        });
+
+        start();
+</script>

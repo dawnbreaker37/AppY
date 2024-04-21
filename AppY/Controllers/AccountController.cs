@@ -4,6 +4,7 @@ using AppY.Models;
 using AppY.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace AppY.Controllers
@@ -182,6 +183,47 @@ namespace AppY.Controllers
             bool Result = await _user.IsUsernameUniqueAsync(Username);
             if (Result) return Json(new { success = true, value = Username });
             else return Json(new { success = false });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CheckAccountCredentials(string? Username, string? Password, int CurrentUserId)
+        {
+            int Result = await _account.CheckAccountCredentialsAsync(Username, Password);
+            if (Result > 0 && Result != CurrentUserId) return Json(new { success = true, account = Username, id = Result, alert = "Account credentials are true. Let's get to the next step" });
+            else return Json(new { success = false, alert = "Account credentials are wrong" });
+        }
+
+        public async Task<IActionResult> LinkedAccounts()
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                if (Request.Cookies.ContainsKey("CurrentUserId"))
+                {
+                    string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                    if (CurrentUserId_Str != null)
+                    {
+                        bool TryParse = Int32.TryParse(CurrentUserId_Str, out int CurrentUserId);
+                        if (TryParse)
+                        {
+                            User? UserInfo = await _user.GetMainUserInfoAsync(CurrentUserId);
+                            if (UserInfo != null)
+                            {
+                                List<LinkedAccount_ViewModel>? LinkedAccounts = null;
+                                IQueryable<LinkedAccount_ViewModel>? LinkedAccounts_Preview = _account.GetLinkedAccounts(CurrentUserId);
+                                if (LinkedAccounts_Preview != null) LinkedAccounts = await LinkedAccounts_Preview.ToListAsync();
+
+                                ViewBag.UserInfo = UserInfo;
+                                ViewBag.LinkedAccounts = LinkedAccounts;
+                                ViewBag.LinkedAccountsCount = LinkedAccounts?.Count;
+
+                                return View();
+                            }
+                        }
+                    }
+                }
+                return RedirectToAction("Create", "Account");
+            }
+            return RedirectToAction("Index", "Home");
         }
     }
 }

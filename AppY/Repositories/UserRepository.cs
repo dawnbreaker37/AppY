@@ -30,13 +30,13 @@ namespace AppY.Repositories
 
         public async Task<User?> GetAverageUserInfoAsync(string? Shortname)
         {
-            if (!String.IsNullOrWhiteSpace(Shortname)) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, ShortName = u.ShortName, AvatarUrl = u.AvatarUrl, PseudoName = u.PseudoName, CreatedAt = u.CreatedAt }).FirstOrDefaultAsync(u => u.ShortName != null && (u.ShortName.ToLower() == Shortname.ToLower()));
+            if (!String.IsNullOrWhiteSpace(Shortname)) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, ShortName = u.ShortName, AvatarUrl = u.AvatarUrl, PseudoName = u.PseudoName, CreatedAt = u.CreatedAt, LastSeen = u.LastSeen }).FirstOrDefaultAsync(u => u.ShortName != null && (u.ShortName.ToLower() == Shortname.ToLower()));
             else return null;
         }
 
         public async Task<User?> GetAverageUserInfoAsync(int Id)
         {
-            if (Id > 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, ShortName = u.ShortName, PseudoName = u.PseudoName, CreatedAt = u.CreatedAt, Description = u.Description, AvatarUrl = u.AvatarUrl, AvatarStickerUrl = u.AvatarUrl == null ? u.AvatarStickerUrl : null, AvatarBgColor = u.AvatarUrl == null ? u.AvatarBgColor : null, AvatarFgColor = u.AvatarUrl == null ? u.AvatarFgColor : null }).FirstOrDefaultAsync(u => u.Id == Id && !u.IsDisabled);
+            if (Id > 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, ShortName = u.ShortName, LastSeen = u.LastSeen, PseudoName = u.PseudoName, CreatedAt = u.CreatedAt, Description = u.Description, AvatarUrl = u.AvatarUrl, AvatarStickerUrl = u.AvatarUrl == null ? u.AvatarStickerUrl : null, AvatarBgColor = u.AvatarUrl == null ? u.AvatarBgColor : null, AvatarFgColor = u.AvatarUrl == null ? u.AvatarFgColor : null }).FirstOrDefaultAsync(u => u.Id == Id && !u.IsDisabled);
             else return null;
         }
 
@@ -79,6 +79,24 @@ namespace AppY.Repositories
                 }
             }
             return null;
+        }
+
+        public async Task<bool> SubmitReserveCodeAsync(int Id, string? Code)
+        {
+            if(Id > 0 && !String.IsNullOrWhiteSpace(Code))
+            {
+                return await _context.Users.AsNoTracking().AnyAsync(u => u.Id == Id && u.ReserveCode == Code);
+            }
+            return false;
+        }
+
+        public async Task<bool> SubmitReserveCodeAsync(string? UsernameOrEmail, string? Code)
+        {
+            if (!String.IsNullOrWhiteSpace(UsernameOrEmail) && !String.IsNullOrWhiteSpace(Code))
+            {
+                return await _context.Users.AsNoTracking().AnyAsync(u => ((u.Email != null && u.Email == UsernameOrEmail) || (u.UserName != null && u.UserName == UsernameOrEmail)) && u.ReserveCode == Code);
+            }
+            else return false;
         }
 
         public async Task<string?> SubmitSingleUseCodeAsync(string? Email, string Code)
@@ -157,13 +175,19 @@ namespace AppY.Repositories
 
         public async Task<User?> GetUserSuperShortInfoAsync(int Id)
         {
-            if (Id != 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, AvatarUrl = u.AvatarUrl, PseudoName = u.PseudoName, ShortName = u.ShortName, IsPrivate = u.IsPrivate }).FirstOrDefaultAsync(u => u.Id == Id && !u.IsPrivate);
+            if (Id != 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, AvatarUrl = u.AvatarUrl, PseudoName = u.PseudoName, ShortName = u.ShortName, IsPrivate = u.IsPrivate, LastSeen = u.LastSeen }).FirstOrDefaultAsync(u => u.Id == Id && !u.IsPrivate);
+            else return null;
+        }
+
+        public async Task<User?> GetUserSuperShortInfoEvenIfPrivateAsync(int Id)
+        {
+            if (Id != 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, AvatarUrl = u.AvatarUrl, PseudoName = u.PseudoName, LastSeen = u.LastSeen, ShortName = u.ShortName, IsPrivate = u.IsPrivate }).FirstOrDefaultAsync(u => u.Id == Id);
             else return null;
         }
 
         public async Task<User?> GetUserSuperShortInfoAsync(string? Shortname)
         {
-            return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, PseudoName = u.PseudoName, ShortName = u.ShortName, IsPrivate = u.IsPrivate }).FirstOrDefaultAsync(u => u.ShortName != null && u.ShortName.ToLower().Equals(Shortname!.ToLower()) && !u.IsPrivate);
+            return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, PseudoName = u.PseudoName, ShortName = u.ShortName, IsPrivate = u.IsPrivate, LastSeen = u.LastSeen }).FirstOrDefaultAsync(u => u.ShortName != null && u.ShortName.ToLower().Equals(Shortname!.ToLower()) && !u.IsPrivate);
         }
 
         public IQueryable<User>? FindUsers(string? Keyword)
@@ -193,11 +217,34 @@ namespace AppY.Repositories
 
         public string? AutodeleteDelay(double MinsValue)
         {
-            if (MinsValue >= 60 && MinsValue < 1440) return Math.Round(MinsValue / 60, 1) + " hour(s)";
-            else if (MinsValue >= 1440 && MinsValue < 10080) return Math.Round((MinsValue / 60) / 24, 1) + " day(s)";
-            else if (MinsValue >= 10080 && MinsValue < 43200) return Math.Round((MinsValue / 60) / 24, 1) + " week(s)";
-            else if (MinsValue >= 43200) return Math.Round((MinsValue / 60) / 24, 1) + " month(s)";
-            else return MinsValue + " min(s)";
+            if (MinsValue >= 60 && MinsValue < 1440) return Math.Round(MinsValue / 60, 0) + " hour(s)";
+            else if (MinsValue >= 1440 && MinsValue < 10080) return Math.Round((MinsValue / 60) / 24, 0) + " day(s)";
+            else if (MinsValue >= 10080 && MinsValue < 43200) return Math.Round((MinsValue / 60) / 24, 0) + " week(s)";
+            else if (MinsValue >= 43200) return Math.Round((MinsValue / 60) / 24, 0) + " month(s)";
+            else return Math.Round(MinsValue, 0) + " min(s)";
+        }
+
+        public string? SetLastSeenText(DateTime LastSeen)
+        {
+            DateTime Current = DateTime.Now;
+            double DaysBetween = Current.Subtract(LastSeen).TotalDays;
+
+            if (DaysBetween >= 370) return "last seen over a year ago";
+            else if (DaysBetween >= 31 && DaysBetween < 370) return "last seen over a month ago";
+            else if (DaysBetween > 7 && DaysBetween < 31) return "last seen within a month";
+            else if (DaysBetween > 1 && DaysBetween < 7) return "last seen " + Math.Round(DaysBetween, 0) + " days ago, at " + LastSeen.ToShortTimeString();
+            else if (DaysBetween == 1) return "last seen yesterday, at " + LastSeen.ToShortTimeString();
+            else return "last seen today, at " + LastSeen.ToShortTimeString();
+        }
+
+        public async Task<int> SetLastSeenAsync(int Id)
+        {
+            if (Id > 0)
+            {
+                int Result = await _context.Users.AsNoTracking().Where(u => u.Id == Id).ExecuteUpdateAsync(u => u.SetProperty(u => u.LastSeen, DateTime.Now));
+                if (Result > 0) return Id;
+            }
+            return 0;
         }
     }
 }

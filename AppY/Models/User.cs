@@ -24,6 +24,7 @@ namespace AppY.Models
         [DataType(DataType.ImageUrl)]
         public string? AvatarUrl { get; set; }
         public DateTime? PasswordChanged { get; set; }
+        public DateTime LastSeen { get; set; }
         public bool IsDisabled { get; set; }
         public List<NotificationModel>? Notifications { get; set; }
         public List<Discussion>? Discussions { get; set; }
@@ -31,8 +32,11 @@ namespace AppY.Models
         public List<DiscussionMessage>? DiscussionMessages { get; set; }
         public List<ScheduledMessage>? ScheduledMessages { get; set; }
         public List<DiscussionUsers>? DiscussionUsers { get; set; }
+        public List<LinkedAccount>? LinkedAccounts { get; set; }
         public List<ChatUsers>? ChatUsers { get; set; }
         [NotMapped]
         public string? UnpicturedAvatarInfo { get; set; }
+        [NotMapped]
+        public string? LastSeenText { get; set; }
     }
 }

@@ -10,7 +10,6 @@ window.onload = function () {
     currentUrl = document.location.href;
     fullHeight = parseInt(window.innerHeight);
     fullWidth = parseInt(window.innerWidth);
-
     if ($("#AvatarSticker_Hdn_Val").val() != "") {
         $(".unpictured-container-label").html($("#AvatarSticker_Hdn_Val").val());
         $(".unpictured-container-label-sm").html($("#AvatarSticker_Hdn_Val").val());
@@ -33,7 +32,7 @@ window.onload = function () {
         else animatedOpen(false, "Preloaded_Container", true, false);
     }, 300);
 
-    if (currentUrl.toLowerCase().includes("/discuss")) {
+    if (currentUrl.toLowerCase().includes("/discuss") || currentUrl.toLowerCase().includes("/chat/c")) {
         botNavbarClose(true, null);
         insideBoxOpen("PreloadedInside_Box", true);
         botNavbarOpen("Preloaded_BotOffNavbar");
@@ -45,7 +44,7 @@ window.onload = function () {
         }, standardTimeout);
     }
     else if (currentUrl.toLowerCase().includes("/page")) {
-        statusSlider("StatusBar_Lbl", 1);
+        statusSlider("StatusBar_Lbl", 2);
         botNavbarOpen("MainBotOffNavbar", null, null);
     }
     else {
@@ -58,6 +57,42 @@ window.onresize = function () {
     displayCorrect(fullWidth);
     additionalBtnSelector(fullWidth);
 }
+$(window).on("blur", function () {
+    $("#SetLastSeen_Form").submit();
+});
+
+$("#SetLastSeen_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+    });
+});
+
+$("#CheckAccountCredentials_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            if (currentUrl.toLowerCase().includes("/linkedaccounts")) {
+                $("#LinkAccountInfo_Span").text(response.account);
+                $("#SARC_Id_Val").val(response.id);
+                $("#LinkAccount_Box-NextSlide").click();
+            }
+            alert('<i class="fa-solid fa-check-double fa-bounce text-primary" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+        }
+        else {
+            if (currentUrl.toLowerCase().includes("/linkedaccounts")) {
+                $("#UserName").val("");
+                $("#Password").val("");
+            }
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.1s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+        }
+    });
+});
 
 $("#SignUp_Form").on("submit", function (event) {
     event.preventDefault();
@@ -728,6 +763,319 @@ $("#DeleteNotification_Form").on("submit", function (event) {
     });
 });
 
+//Chats start//
+$("#ChatShortname_Val").on("change", function (event) {
+    let value = $(this).val();
+    if (value != null && value.length <= 24) {
+        $("#CSA_Value_Val").val(value);
+        $("#ChatShortnameAvailabilityCheck_Form").submit();
+    }
+    else {
+        $("#EditChatSbmt_Btn").attr("disabled", false);
+        $("#CSA_Value_Val").val("");
+    }
+});
+$("#ChatShortnameAvailabilityCheck_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            $("EditChatSbmt_Btn").attr("disabled", false);
+            $("#ShortnameDescription_Lbl").html("<span class='text-primary'>Shortname is free to use</span>");
+        }
+        else {
+            $("#EditChatSbmt_Btn").attr("disabled", true);
+            $("#ShortnameDescription_Lbl").html("<span class='text-danger'>Shortname has been already taken</span>");
+        }
+
+        setTimeout(function () {
+            $("#ShortnameDescription_Lbl").text("Shortname must be unique. May container up to 24 characters with these criteries: [A-Z, a-z], [0-9] and underscore");
+        }, 4500);
+    });
+});
+
+$("#MuteTheChat_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#" + response.id + "-ChatMuted_Icon").slideDown(250);
+            $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell'></i> Unmute");
+            $("#" + response.id + "-ChatMuteOrUnmute").removeClass("mute-the-chat");
+            $("#" + response.id + "-ChatMuteOrUnmute").addClass("unmute-the-chat");
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.25);
+    });
+});
+$("#UnmuteTheChat_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#" + response.id + "-ChatMuted_Icon").slideUp(250);
+            $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell-slash'></i> Mute");
+            $("#" + response.id + "-ChatMuteOrUnmute").addClass("mute-the-chat");
+            $("#" + response.id + "-ChatMuteOrUnmute").removeClass("unmute-the-chat");
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.25);
+    });
+});
+$("#PinTheChat_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#" + response.id + "-ChatPinned_Icon").slideDown(250);
+            $("#" + response.id + "-ChatPinOrUnpin").removeClass("pin-the-chat");
+            $("#" + response.id + "-ChatPinOrUnpin").addClass("unpin-the-chat");
+            $("#" + response.id + "-ChatPinOrUnpin").html(' <i class="fa-solid fa-link-slash"></i> Unpin');
+            alert('<i class="fa-solid fa-thumbtack fa-bounce text-primary" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Done", null, 0, null, null, null, 3.5);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.25);
+        }
+    });
+});
+$("#UnpinTheChat_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#" + response.id + "-ChatPinned_Icon").slideUp(250);
+            $("#" + response.id + "-ChatPinOrUnpin").removeClass("unpin-the-chat");
+            $("#" + response.id + "-ChatPinOrUnpin").addClass("pin-the-chat");
+            $("#" + response.id + "-ChatPinOrUnpin").html(' <i class="fa-solid fa-thumbtack"></i> Pin');
+            alert('<i class="fa-solid fa-link-slash"></i>', response.alert, "Done", null, 0, null, null, null, 3.5);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.25);
+        }
+    });
+});
+$("#RestoreTheChat_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            document.location.href = "/Chat/C/" + response.result;
+        }
+        else alert('<i class="fa-regular fa-circle-xmark text-danger fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 3;"></i>', response.alert, "Close", null, 0, null, null, null, 3.25);
+    });
+});
+$(document).on("click", ".mute-the-chat", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId > 0) {
+        $("#MuteTheChat_Id_Val").val(trueId);
+        $("#MuteTheChat_Form").submit();
+    }
+    else {
+        $("#MuteTheChat_Id_Val").val(0);
+    }
+});
+$(document).on("click", ".unmute-the-chat", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId > 0) {
+        $("#UnmuteTheChat_Id_Val").val(trueId);
+        $("#UnmuteTheChat_Form").submit();
+    }
+    else {
+        $("#UnmuteTheChat_Id_Val").val(0);
+    }
+});
+$(document).on("click", ".pin-the-chat", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        $("#PinTheChat_Id_Val").val(trueId);
+        $("#PinTheChat_Form").submit();
+    }
+    else {
+        $("#PinTheChat_Id_Val").val(0);
+    }
+});
+$(document).on("click", ".unpin-the-chat", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        $("#UnpinTheChat_Id_Val").val(trueId);
+        $("#UnpinTheChat_Form").submit();
+    }
+    else {
+        $("#UnpinTheChat_Id_Val").val(0);
+    }
+});
+$(document).on("click", ".restore-the-chat", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        $("#RestoreTheChat_Id_Val").val(trueId);
+        $("#RestoreTheChat_Form").submit();
+    }
+    else {
+        $("#RestoreTheChat_Id_Val").val(0);
+    }
+});
+$("#GetChats_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            $("#Chats_Container-Box").empty();
+            $("#ChatsCount_Span").text(response.count);
+            animatedClose(true, "smallside-box-container", true, true);
+            $.each(response.result, function (index) {
+                let div = $("<div class='box-container bg-light p-2 mt-2'></div>");
+                let avatarDiv = $("<div class='image-picture-none-container-sm text-center bg-white d-inline-block me-2'></div>");
+                let name = $("<span class='h5 text-truncate'></span>");
+                let separatorZero = $("<div></div>");
+                let lastMessage = $("<small class='card-text ms-2'>No sent messages</small>");
+                let isMutedIcon = $('<small class="card-text text-orange float-end ms-2 mt-1" style="display: none;"> <i class="fa-regular fa-bell-slash"></i> </small>');
+                let isPinnedIcon = $("<small class='card-text float-end ms-2 mt-1' style='display: none;'> <i class='fa-solid fa-thumbtack'></i> </small>");
+                let noAvatarLbl = $("<div class='unpictured-container-label-sm text-dark'></div>");
+
+                let dropdownDiv = $("<div class='dropdown'></div>");
+                let dropdownBtn = $("<button type='button' class='btn btn-standard btn-sm float-end ms-2' data-bs-toggle='dropdown' aria-expanded='false'> <i class='fa-solid fa-ellipsis-h'></i> </button>");
+                let dropdownUl = $("<ul class='dropdown-menu shadow-sm p-1'></ul>");
+                let dropdownLi0 = $("<li class='text-center mb-1'></li>");
+                let dropdownLi1 = $("<li></li>");
+                let dropdownLi2 = $("<li></li>");
+                let dropdownLi3 = $("<li></li>");
+                let dropdownLi4 = $("<li></li>");
+                let dropdownHeader = $("<small class='card-text text-muted'></small>");
+                let dropdownBtn1 = $("<a href='#' class='dropdown-item mb-1'> <i class='fa-solid fa-up-right-from-square'></i> Chat</a>");
+                let dropdownBtn2 = $("<button type='button' class='dropdown-item mb-1'></button>");
+                let dropdownBtn3 = $("<button type='button' class='dropdown-item'></button>");
+                let dropdownBtn4 = $("<button type='button' class='dropdown-item mt-1'></button>");
+                dropdownLi0.append(dropdownHeader);
+                dropdownLi1.append(dropdownBtn1);
+                dropdownLi2.append(dropdownBtn2);
+                dropdownLi3.append(dropdownBtn3);
+                dropdownLi4.append(dropdownBtn4);
+                dropdownUl.append(dropdownLi0);
+                dropdownUl.append(dropdownLi1);
+                dropdownUl.append(dropdownLi2);
+                dropdownUl.append(dropdownLi3);
+                dropdownUl.append(dropdownLi4);
+                dropdownDiv.append(dropdownBtn);
+                dropdownDiv.append(dropdownUl);
+
+                name.attr("id", response.result[index].chatId + "-ChatName_Lbl");
+                dropdownBtn2.attr("id", response.result[index].chatId + "-ChatPinOrUnpin");
+                dropdownBtn3.attr("id", response.result[index].chatId + "-ChatMuteOrUnmute");
+                isPinnedIcon.attr("id", response.result[index].chatId + "-ChatPinned_Icon");
+                isMutedIcon.attr("id", response.result[index].chatId + "-ChatMuted_Icon");
+
+                if (response.result[index].chatName != null) {
+                    if (response.result[index].chatName.length > 24) {
+                        name.html(response.result[index].chatName.substring(0, 24) + "...");
+                    }
+                    else name.html(response.result[index].chatName);
+                    noAvatarLbl.html(response.result[index].chatName[0]);
+                }
+                else {
+                    name.html("New Chat");
+                    noAvatarLbl.html("N");
+                }
+                avatarDiv.append(noAvatarLbl);
+
+                if (response.result[index].isPinned) {
+                    isPinnedIcon.fadeIn(0);
+                    dropdownBtn2.addClass("unpin-the-chat");
+                    dropdownBtn2.html(' <i class="fa-solid fa-link-slash"></i> Unpin');
+                }
+                else {
+                    dropdownBtn2.addClass("pin-the-chat");
+                    dropdownBtn2.html(' <i class="fa-solid fa-thumbtack"></i> Pin');
+                }
+                if (response.result[index].isMuted) {
+                    isMutedIcon.fadeIn(0);
+                    dropdownBtn3.addClass("unmute-the-chat");
+                    dropdownBtn3.html(' <i class="fa-regular fa-bell"></i> Unmute');
+                }
+                else {
+                    dropdownBtn3.addClass("mute-the-chat");
+                    dropdownBtn3.html(' <i class="fa-regular fa-bell-slash"></i> Mute');
+                }
+
+                if (response.result[index].deletedAt != null) {
+                    div.css("border", "1px solid red");
+                    dropdownLi1.fadeOut(0);
+                    dropdownHeader.html("deleted " + dateAndTimeTranslator(response.result[index].deletedAt));
+                    dropdownBtn4.addClass("text-danger");
+                    dropdownBtn4.addClass("restore-the-chat");
+                    dropdownBtn4.attr("id", response.result[index].chatId + "-RestoreTheChat");
+                    dropdownBtn4.html(' <i class="fa-solid fa-trash-arrow-up"></i> Restore');
+                    lastMessage.html("<small class='badge bg-danger rounded-pill text text-light'>Deleted</small> No Sent Messages");
+                }
+                else {
+                    dropdownBtn1.attr("href", "/Chat/C/" + response.result[index].chatId);
+                    name.addClass("relocate-to-chat");
+                    dropdownLi4.fadeOut(0);
+                    dropdownLi0.fadeOut(0);
+                }
+
+                div.append(dropdownDiv);
+                div.append(isPinnedIcon);
+                div.append(isMutedIcon);
+                div.append(avatarDiv);
+                div.append(name);
+                div.append(separatorZero);
+                div.append(lastMessage);
+
+                $("#Chats_Container-Box").append(div);
+            });
+
+            setTimeout(function () {
+                openSidebar();
+                animatedOpen(false, "Chats_Container", true, false);
+            }, 350);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Close", null, 0, null, null, null, 3.25);
+        }
+    });
+});
+
+$("#EditChat_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+
+        }
+        else {
+        }
+    });
+});
+$("#ClearChatHistory_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+
+        }
+        else {
+
+        }
+    });
+});
+//Chats ending//
+
 $("#CreateDiscussion_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -1006,7 +1354,7 @@ $("#GetDiscussions_Form").on("submit", function (event) {
 
                     let dropdownDiv = $("<div class='dropdown'></div>");
                     let dropdownBtn = $("<button type='button' class='btn btn-standard btn-sm float-end ms-2' data-bs-toggle='dropdown' aria-expanded='false'> <i class='fa-solid fa-ellipsis-h'></i> </button>");
-                    let dropdownUl = $("<ul class='dropdown-menu p-1'></ul>");
+                    let dropdownUl = $("<ul class='dropdown-menu shadow-sm p-1'></ul>");
                     let dropdownLi1 = $("<li></li>");
                     let dropdownLi2 = $("<li></li>");
                     let dropdownLi3 = $("<li></li>");
@@ -1707,15 +2055,14 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
                 statsBox.attr("id", response.trueId + "-DiscussionMsgStatsBox");
                 dateAndTime.attr("id", response.trueId + "-DiscussionMsgDateNTimeInfo_Lbl");
 
-                let date = new Date(response.result.sentAt);
-                let hrs = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
-                let mins = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
-
-                replaceAllUsersInText(response.result.text);
-                let decodedText = textDecoder(response.result.text, null);
-                mainText.html(decodedText);
-                isChecked.html(' <i class="fa-solid fa-check text-muted"></i> ');
-                dateAndTime.text(hrs + ":" + mins);
+                if (response.result.text != null) {
+                    replaceAllUsersInText(response.result.text);
+                    let decodedText = textDecoder(response.result.text, null);
+                    mainText.html(decodedText);
+                }
+                else {
+                    mainText.text("");
+                }
 
                 if (parseInt(response.result.isAutoDeletable) > 0) {
                     isAutodeletableSmall.html(' <i class="fa-solid fa-clock-rotate-left"></i> ' + dateAndTimeTranslatorFromMins(response.result.isAutoDeletable));
@@ -1725,15 +2072,21 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
                     let imgSeparator = $("<div></div>");
                     imgTag.attr("src", "/DiscussionMessageImages/" + response.imgUrl);
                     imgBox.append(imgTag);
-                    imgsLinkBtn.html(response.imgsCount + " Images in Pack <i class='fa-solid fa-angle-right'></i> ");
-                    imgsLinkBtn.attr("id", response.trueId + "-MsgImgsLinkBtn");
+                    imgsLinkBtn.html(response.imgsCount + " Images in Stack <i class='fa-solid fa-angle-right'></i> ");
+                    imgsLinkBtn.attr("id", response.trueId + "-GetDiscussionInitialMsg_Btn");
                     imgBox.attr("id", response.trueId + "-MsgImgBox");
-                    imgTag.attr("id", response.trueId + "-MsgImgTag");
+                    imgTag.attr("id", response.trueId + "-DiscussionMsg_Img");
 
                     styleBox.append(imgSeparator);
                     styleBox.append(imgsLinkBtn);
                     styleBox.append(imgBox);
                 }
+                let date = new Date(response.result.sentAt);
+                let hrs = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
+                let mins = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+                isChecked.html(' <i class="fa-solid fa-check text-muted"></i> ');
+                dateAndTime.text(hrs + ":" + mins);
+
                 styleBox.append(mainText);
                 statsBox.append(isChecked);
                 statsBox.append(dateAndTime);
@@ -1742,7 +2095,6 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
                 messageNotMainBox.append(statsBox);
                 messageMainBox.append(messageNotMainBox);
 
-                textDecoder(response.result.text, response.trueId + "-DiscussionOptionMsgText_Lbl");
                 if (sentMessagesCount <= 0) {
                     setTimeout(function () {
                         $("#DiscussionMessages_MainBox").append(messageMainBox);
@@ -1757,9 +2109,15 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
                     $("#SendMessage_SbmtBtn").attr("disabled", false);
                 }, 800);
 
+                $("#PreviewTheMessage_Btn").fadeOut(250);
                 $("#SendMessage_Images_Val").val(null);
                 $("#EditingOrReplying_Box").slideUp(250);
                 slideToTheBottom("Preloaded_Container");
+
+                animatedClose(false, "MessagePreview_Container", true, true);
+                insideBoxClose(false, "MainTextEditor_Box");
+                let preloadedDiv_Bottom = parseInt($("#Preloaded_Container").css("bottom"));
+                if (preloadedDiv_Bottom < 0) animatedOpen(false, "Preloaded_Container", true, true);
             }
             else {
                 alert('<i class="fa-regular fa-circle-xmark text-warning"></i>', response.alert, "Got It", null, 0, null, null, null, 3.25);
@@ -1767,7 +2125,6 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
 
             $(".set-autodelete-duration").addClass("bg-white");
             $(".set-autodelete-duration").removeClass("bg-primary text-light");
-            insideBoxClose(false, "MainTextEditor_Box");
         }
     });
 });
@@ -1813,7 +2170,7 @@ $(document).on("submit", "#SendDiscussionReply_Form", function (event) {
                 let isChecked = $("<small class='card-text text-primary'></small>");
                 let dateAndTime = $("<small class='card-text text-muted'></small>");
                 let isEdited = $("<small class='card-text text-muted' style='display: none;'></small>");
-                let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+                let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm btn-get-message-image'></button>");
                 let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
                 let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
 
@@ -1829,27 +2186,26 @@ $(document).on("submit", "#SendDiscussionReply_Form", function (event) {
                 repliedTo_Icon.attr("data-bs-msg-id", response.result.messageId);
                 replyText.attr("data-bs-msg-id", response.result.messageId);
 
-                replaceAllUsersInText(response.result.replyText);
-                replyText.html(response.result.replyText);
-
                 isReplyBox.append(repliedTo_Icon);
                 isReplyBox.append(replyText);
                 styleBox.append(isReplyBox);
 
-                textDecoder(response.result.replyText, response.trueId + "-DiscussionMsgReplyText");
                 mainText.attr("id", response.trueId + "-DiscussionOptionMsgText_Lbl");
                 statsBox.attr("id", response.trueId + "-DiscussionMsgStatsBox");
                 dateAndTime.attr("id", response.trueId + "-DiscussionMsgDateNTimeInfo_Lbl");
 
-                let date = new Date(response.result.sentAt);
-                let hrs = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
-                let mins = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
-
-                replaceAllUsersInText(response.result.text);
-                let decodedText = textDecoder(response.result.text, null);
-                mainText.html(decodedText);
-                isChecked.html(' <i class="fa-solid fa-check text-muted"></i> ');
-                dateAndTime.text(hrs + ":" + mins);
+                if (response.result.text != null) {
+                    replaceAllUsersInText(response.result.text);
+                    let decodedText = textDecoder(response.result.text, null);
+                    mainText.html(decodedText);
+                }
+                else {
+                    mainText.html("");
+                }
+                if (response.result.replyText != null) {
+                    replaceAllUsersInText(response.result.replyText);
+                    textDecoder(response.result.replyText, response.trueId + "-DiscussionMsgReplyText");
+                }
 
                 if (parseInt(response.result.isAutoDeletable) > 0) {
                     isAutodeletableSmall.html(' <i class="fa-solid fa-clock-rotate-left"></i> ' + response.result.isAutoDeletable + " mins");
@@ -1859,15 +2215,21 @@ $(document).on("submit", "#SendDiscussionReply_Form", function (event) {
                     let imgSeparator = $("<div></div>");
                     imgTag.attr("src", "/DiscussionMessageImages/" + response.imgUrl);
                     imgBox.append(imgTag);
-                    imgsLinkBtn.html(response.imgsCount + " Images in Pack <i class='fa-solid fa-angle-right'></i> ");
-                    imgsLinkBtn.attr("id", response.trueId + "-MsgImgsLinkBtn");
+                    imgsLinkBtn.html(response.imgsCount + " Images in Stack <i class='fa-solid fa-angle-right'></i> ");
+                    imgsLinkBtn.attr("id", response.trueId + "-GetDiscussionInitialMsg_Btn");
                     imgBox.attr("id", response.trueId + "-MsgImgBox");
-                    imgTag.attr("id", response.trueId + "-MsgImgTag");
+                    imgTag.attr("id", response.trueId + "-DiscussionMsg_Img");
 
                     styleBox.append(imgSeparator);
                     styleBox.append(imgsLinkBtn);
                     styleBox.append(imgBox);
                 }
+                let date = new Date(response.result.sentAt);
+                let hrs = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
+                let mins = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+                isChecked.html(' <i class="fa-solid fa-check text-muted"></i> ');
+                dateAndTime.text(hrs + ":" + mins);
+
                 styleBox.append(isReplyBox);
                 styleBox.append(mainText);
                 statsBox.append(isChecked);
@@ -1877,7 +2239,6 @@ $(document).on("submit", "#SendDiscussionReply_Form", function (event) {
                 messageNotMainBox.append(statsBox);
                 messageMainBox.append(messageNotMainBox);
 
-                textDecoder(response.result.text, response.trueId + "-DiscussionOptionMsgText_Lbl");
                 if (sentMessagesCount <= 0) {
                     setTimeout(function () {
                         $("#DiscussionMessages_MainBox").append(messageMainBox);
@@ -1896,6 +2257,10 @@ $(document).on("submit", "#SendDiscussionReply_Form", function (event) {
                 $("#SendMessage_Text_Val").val("");
                 $("#SendMessage_SbmtBtn").attr("disabled", true);
                 slideToTheBottom("Preloaded_Container");
+                $("#PreviewTheMessage_Btn").fadeOut(250);
+
+                let preloadedDiv_Bottom = parseInt($("#Preloaded_Container").css("bottom"));
+                if (preloadedDiv_Bottom < 0) animatedOpen(false, "Preloaded_Container", true, true);
                 setTimeout(function () {
                     $("#SendMessage_SbmtBtn").attr("disabled", false);
                 }, 500);
@@ -1935,6 +2300,73 @@ $(document).on("submit", "#EditMessage_Form", function (event) {
     });
 });
 
+$("#PreviewTheMessage_Btn").on("click", function () {
+    $("#MessagePreview_Box").empty();
+
+    let text = textDecoder($("#SendMessage_Text_Val").val(), null);
+    let isAutodeletable = $("#SendMessage_IsAutoDeletable").val();
+    let isReplied = $("#RM_ReplyId_Val").val();
+    let files = $("#SendMessage_Images_Val").get(0).files;
+
+    let messageMainBox = $("<div class='message-box'></div>");
+    let messageNotMainBox = $("<div class='cur-user-msg-box'></div>");
+    let styleBox = $("<div class='cur-user-styled-msg-box p-2'></div>");
+    let isAutodeletableSmall = $("<small class='card-text'></small>");
+    let mainText = $("<p class='card-text white-space-on message-label discussion-options'></p>");
+    let statsBox = $("<div class='discussion-options float-end me-1'></div>");
+    let isChecked = $("<small class='card-text text-primary'> <i class='fa-solid fa-check text-muted'></i> </small>");
+    let dateAndTime = $("<small class='card-text text-muted'></small>");
+
+    mainText.html(text);
+    dateAndTime.text("waiting to be sent...");
+    if (parseInt(isAutodeletable) > 0) {
+        isAutodeletableSmall.html(' <i class="fa-solid fa-clock-rotate-left"></i> ' + dateAndTimeTranslatorFromMins(isAutodeletable));
+        styleBox.append(isAutodeletableSmall);
+    }
+    if (files.length > 0) {
+        let filesLength = files.length;
+        filesLength = filesLength > 6 ? 6 : filesLength;
+
+        let imgSeparatorZero = $("<div></div>");
+        let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+        let imgBox = $("<div class='box-container bg-light mb-1 mt-1 p-2 pt-4 pb-4 text-primary text-center'></div>");
+
+        imgsLinkBtn.html(filesLength + " Images in Stack <i class='fa-solid fa-angle-right'></i>");
+        if (filesLength == 1) imgBox.html("<small class='card-text fw-500'><h3 class='h3 text-primary'> <i class='fa-regular fa-images'></i> </h3> one image would be shown here");
+        else imgBox.html("<small class='card-text fw-500'><h3 class='h3 text-primary'> <i class='fa-regular fa-images'></i> </h3>" + filesLength + " images would be shown here");
+        styleBox.append(imgSeparatorZero);
+        styleBox.append(imgsLinkBtn);
+        styleBox.append(imgBox);
+    }
+    
+    if (parseInt(isReplied) > 0) {
+        let replyText = textDecoder($("#RM_ReplyText_Val").val(), null);
+        let isReplyBox = $("<div class='cur-user-reply-container mb-1 discussion-options reply-element'></div>");
+        let repliedTo_Icon = $("<small class='card-text fw-500 discussion-options reply-element'> <i class='fa-solid fa-reply'></i> Replied to </small>");
+        let replyText_Lbl = $("<p class='card-text white-space-on discussion-options reply-element'></p>");
+
+        replyText_Lbl.html(replyText);
+        isReplyBox.append(repliedTo_Icon);
+        isReplyBox.append(replyText_Lbl);
+
+        styleBox.append(isReplyBox);
+    }
+    styleBox.append(mainText);
+    statsBox.append(isChecked);
+    statsBox.append(dateAndTime);
+    messageNotMainBox.append(styleBox);
+    messageNotMainBox.append(statsBox);
+    messageMainBox.append(messageNotMainBox);
+
+    $("#EditingOrReplying_Box").slideUp(250);
+    $("#MessagePreview_Box").append(messageMainBox);
+
+    if (text.length > 0 && text.length <= 3400) $("#SendPreviewedMessage_Btn").attr("disabled", false);
+    else $("#SendPreviewedMessage_Btn").attr("disabled", true);
+
+    animatedOpen(false, "MessagePreview_Container", true, true);
+});
+
 $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -1970,13 +2402,13 @@ $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
                     isChecked = $("<small class='card-text text-primary'></small>");
                     dateAndTime = $("<small class='card-text text-muted'></small>");
                     isEdited = $("<small class='card-text text-muted' style='display: none;'></small>");
-                    imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+                    imgsLinkBtn = $("<button type='button' class='btn btn-link btn-get-message-image btn-sm'></button>");
                     imgBox = $("<div class='box-container mt-1 mb-1'></div>");
                     imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
 
                     if (response.result[index].repliedMessageId > 0) {
                         isReplyBox = $("<div class='cur-user-reply-container mb-1 reply-element'></div>");
-                        repliedTo_Icon = $("<small class='card-text fw-500 reply-element'> <i class='fa-solid fa-reply'></i> Replied to </small>");
+                        repliedTo_Icon = $("<small class='card-text fw-500 reply-element'> <i class='fa-solid fa-reply'></i> Replied to</small>");
                         replyText = $("<p class='card-text white-space-on discussion-options reply-element'></p>");
                         replaceAllUsersInText(response.result[index].repliesMsgShortText);
                         let replyDecodedText = textDecoder(response.result[index].repliesMsgShortText, null);
@@ -2002,7 +2434,7 @@ $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
                     isChecked = $("<small class='card-text text-primary'></small>");
                     dateAndTime = $("<small class='card-text text-muted'></small>");
                     isEdited = $("<small class='card-text text-muted' style='display: none;'></small>");
-                    imgsLinkBtn = $("<button type='button' class='btn btn-link-opp btn-sm'></button>");
+                    imgsLinkBtn = $("<button type='button' class='btn btn-link-opp btn-get-message-image btn-sm'></button>");
                     imgBox = $("<div class='box-container mt-1 mb-1'></div>");
                     imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
 
@@ -2062,10 +2494,10 @@ $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
                     let imgSeparator = $("<div></div>");
                     imgTag.attr("src", "/DiscussionMessageImages/" + response.result[index].imgUrl);
                     imgBox.append(imgTag);
-                    imgsLinkBtn.html("More Images in Pack <i class='fa-solid fa-angle-right'></i> ");
-                    imgsLinkBtn.attr("id", response.result[index].id + "-MsgImgsLinkBtn");
+                    imgsLinkBtn.html("More Images in Stack <i class='fa-solid fa-angle-right'></i> ");
                     imgBox.attr("id", response.result[index].id + "-MsgImgBox");
-                    imgTag.attr("id", response.result[index].id + "-MsgImgTag");
+                    imgsLinkBtn.attr("id", response.result[index].id + "-GetDiscussionInitialMsg_Btn");
+                    imgTag.attr("id", response.result[index].id + "-DiscussionMsg_Img");
 
                     styleBox.append(imgSeparator);
                     styleBox.append(imgsLinkBtn);
@@ -3088,6 +3520,74 @@ $("#DI_LoadAdditionalInfo_Btn").on("click", function () {
     slideToRight("DiscussionAdditionalInfo_Container");
 });
 
+//Chat Messages//
+$("#GetChatMessageInfo_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            $("#EditingOrReplying_Box").slideUp(250);
+
+            textDecoder(response.result.text, "ChatOptionMessageText_Lbl");
+            $("#CurrentGotChatMsg_Id_Val").val(response.result.id);
+            if (response.result.isEdited) $("#ChatMsgOptionAdditionalInfo_Lbl").text(dateAndTimeTranslator(response.result.sentAt) + ", edited");
+            else $("#ChatMsgOptionAdditionalInfo_Lbl").text(dateAndTimeTranslator(response.result.sentAt));
+            if (response.result.userId == response.userId) {
+                $("#EditChatMsg_Col").fadeIn(150);
+                $("#DeleteChatMsg_Col").fadeIn(150);
+                if (response.isEditable) {
+                    $("#EditChatMessage_Btn").attr("disabled", false);
+                }
+                else $("#EditChatMessage_Btn").attr("disabled", true);
+
+            }
+            else {
+                $("#EditChatMsg_Col").fadeOut(150);
+                $("#DeleteChatMsg_Col").fadeOut(150);
+            }
+
+            setTimeout(function () {
+                insideBoxOpen("ChatMessageOptions_Box");
+            }, 250);
+        }
+        else {
+            $("#CurrentGotChatMsg_Id_Val").val(0);
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+        }
+    });
+});
+
+$("#CancelChatMessageSettings_Btn").on("click", function () {
+    $("#EM_Id_Val").val(0);
+    $("#RM_Id_Val").val(0);
+    $("#RM_ReplyText_Val").val("");
+    $("#EditingOrReplying_Box").slideUp(250);
+});
+$("#EditChatMessage_Btn").on("click", function () {
+    let trueId = $("#CurrentGotChatMsg_Id_Val").val();
+    if (trueId != "" && parseInt(trueId) > 0) {
+        let messageText = $("#" + trueId + "-ChatOptionMsgText_Lbl").text();
+        messageText = textUncoder(messageText);
+        $("#EM_Id_Val").val(trueId);
+        $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-regular fa-pen-to-square"></i> ');
+        $("#EditingOrReplyingMsgStatus_Lbl").text("Edit Message");
+        $("#EditingOrReplyingMsgText_Lbl").html(messageText);
+        $("#SendMessage_Text_Val").val(messageText);
+
+        insideBoxClose(false, "ChatMessageOptions_Box");
+        setTimeout(function () {
+            $("#EditingOrReplying_Box").slideDown(250);
+        }, 450);
+    }
+    else {
+        $("#EM_Id_Val").val(0);
+        $("#CurrentGotChatMsg_Id_Val").val(0);
+    }
+});
+//Chat Messages//
+
 $(document).on("click", ".btn-get-discussion-info", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
@@ -3198,6 +3698,12 @@ $(document).on("click", ".relocate-to-discussion", function (event) {
         document.location.href = "/Discussion/Discuss/" + trueId
     }
 });
+$(document).on("click", ".relocate-to-chat", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        document.location.href = "/Chat/C/" + trueId;
+    }
+});
 
 $(document).on("click", ".discussion-options", function (event) {
     let trueId = getTrueId(event.target.id);
@@ -3306,28 +3812,24 @@ $(document).on("click", ".delete-notification", function (event) {
     else $("#DN_Id_Val").val(0);
 });
 
-//$(document).on("click", ".auto-delete-on", function (event) {
-//    let trueId = getTrueId(event.target.id);
-//    if (trueId != null) {
-//        $(this).addClass("auto-delete-off");
-//        $(this).removeClass("auto-delete-on");
-//    }
-//});
-//$(document).on("click", ".auto-delete-off", function (event) {
-//    let trueId = getTrueId(event.target.id);
-//    if (trueId != null) {
-//        $("#" + trueId).val(0);
-//        $(this).addClass("auto-delete-on");
-//        $(this).removeClass("auto-delete-off");
-//        $(".set-autodelete-duration").removeClass("bg-primary text-light");
-//        $(".set-autodelete-duration").addClass("bg-white");
-//    }
-//    else $("#" + trueId).val(false);
-//});
+//Chat Message Options//
+$(document).on("click", ".chat-options", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $("#CurrentGotChatMsg_Id_Val").val(trueId);
+        $("#CGMI_Id_Val").val(trueId);
+        $("#GetChatMessageInfo_Form").submit();
+    }
+    else {
+        $("#CurrentGotChatMsg_Id_Val").val(0);
+        $("#CGMI_Id_Val").val(0);
+    }
+});
+//Chat MessageOptions//
+
 $(document).on("click", ".set-autodelete-duration", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
-        //SendMessage_IsAutoDeletable-TurnOnOrOff
         $("#SendMessage_IsAutoDeletable").val(trueId);
         $(".set-autodelete-duration").removeClass("bg-primary text-light");
         $(".set-autodelete-duration").addClass("bg-white");
@@ -3601,6 +4103,20 @@ $(document).on("click", ".delete-message-options", function (event) {
     }
 });
 
+$(document).on("click", ".set-disable-duration", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $(".set-disable-duration").removeClass("border-primary");
+        $(this).addClass("border-primary");
+        $("#DC_DurationInMins_Val").val(trueId);
+        $("#DisableChatSbmt_Btn").attr("disabled", false);
+    }
+    else {
+        $("#DC_DurationInMins_Val").val(0);
+        $("#DisableChatSbmt_Btn").attr("disabled", true);
+    }
+});
+
 $("#SetDefaultColors_Btn").on("click", function () {
     $("#AvatarBgColor_Val").val("f8f9fa");
     $("#AvatarFgColor_Val").val("000000");
@@ -3840,6 +4356,10 @@ $(document).on("click", ".btn-hide", function (event) {
 $(document).on("keyup", ".send-message-form-control", function () {
     let value = $(this).val();
     if (value[0] == "/") $("#SendMessage_SbmtBtn").attr("disabled", true);
+    if (value.length > 0) {
+        $("#PreviewTheMessage_Btn").fadeIn(250);
+    }
+    else $("#PreviewTheMessage_Btn").fadeOut(250);
     textEditorIndicators(value, "TextEditorIndicators_Box");
 });
 $(document).on("change", ".send-message-form-control", function (event) {
@@ -4016,6 +4536,7 @@ function headerTransform(element) {
     $(".special-container-header").slideUp(300);
     $(".postheader-container").slideUp(240);
     $(".discussion-box").slideUp(300);
+    insideBoxClose(true, null);
     setTimeout(function () {
         $("#" + element).fadeIn(0);
         $("#" + element).css("margin-left", 0);
