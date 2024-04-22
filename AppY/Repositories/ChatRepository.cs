@@ -212,6 +212,12 @@ namespace AppY.Repositories
             return 0;
         }
 
+        public async Task<bool> IsChatMutedAsync(int Id, int UserId)
+        {
+            if (Id > 0 && UserId > 0) return await _context.ChatUsers.AsNoTracking().AnyAsync(c => c.UserId == UserId && c.ChatId == Id && !c.IsDeleted && c.IsMuted);
+            else return false;
+        }
+
         public async Task<int> MuteTheChatAsync(int Id, int UserId)
         {
             if (Id > 0 && UserId > 0)

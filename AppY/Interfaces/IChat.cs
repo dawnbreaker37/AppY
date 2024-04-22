@@ -12,6 +12,7 @@ namespace AppY.Interfaces
         public Task<int> RestoreChatAsync(int Id, int UserId);
         public Task<int> PinTheChatAsync(int Id, int UserId);
         public Task<int> UnpinTheChatAsync(int Id, int UserId);
+        public Task<bool> IsChatMutedAsync(int Id, int UserId);
         public Task<int> MuteTheChatAsync(int Id, int UserId);
         public Task<int> UnmuteTheChatAsync(int Id, int UserId);
         public Task<bool> CheckShortnameAvailability(int Id, string? Shortname);

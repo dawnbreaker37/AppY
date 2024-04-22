@@ -26,17 +26,15 @@ namespace AppY.Repositories
 
         public IQueryable<LinkedAccount_ViewModel>? GetLinkedAccounts(int Id)
         {
-            if (Id > 0) return _context.LinkedAccounts.AsNoTracking().Where(l => l.UserId == Id && !l.IsDeleted).Select(l => new LinkedAccount_ViewModel { Id = l.UserId, CodeName = l.CodeName,  Pseudoname = l.User!.PseudoName, Shortname = l.User!.ShortName, LastSeen = l.User!.LastSeen });
+            if (Id > 0) return _context.LinkedAccounts.AsNoTracking().Where(l => l.UserId == Id && !l.IsDeleted).Select(l => new LinkedAccount_ViewModel { Id = l.LinkedUserId, CodeName = l.CodeName,  Pseudoname = l.User!.PseudoName, LastSeen = l.User!.LastSeen });
             else return null;
         }
 
-        public async Task<int> CheckAccountCredentialsAsync(string? Username, string? Password)
+        public async Task<int> CheckAccountCredentialsAsync(string? Email, string? Password)
         {
-            if(!String.IsNullOrWhiteSpace(Username) && !String.IsNullOrWhiteSpace(Password))
+            if(!String.IsNullOrWhiteSpace(Email) && !String.IsNullOrWhiteSpace(Password))
             {
-                User? UserInfo = null;
-                UserInfo = await _userManager.FindByEmailAsync(Username);
-                if (UserInfo == null) UserInfo = await _userManager.FindByNameAsync(Username);
+                User? UserInfo = await _userManager.FindByEmailAsync(Email);
                 if(UserInfo != null)
                 {
                     bool Result = await _userManager.CheckPasswordAsync(UserInfo, Password);
@@ -150,6 +148,73 @@ namespace AppY.Repositories
                         await _context.Users.AsNoTracking().Where(u => u.Email == Model.Email && !u.IsDisabled).ExecuteUpdateAsync(u => u.SetProperty(u => u.PasswordChanged, DateTime.Now));
                         await _context.SaveChangesAsync();
 
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public async Task<User?> LinkAccountsAsync(int Id1, int Id2, string? Codename)
+        {
+            if(Id1 > 0 && Id2 > 0)
+            {
+                bool CheckAvailability = await _context.LinkedAccounts.AsNoTracking().AnyAsync(l => l.UserId == Id1 && l.LinkedUserId == Id2);
+                bool CheckSecondAccAvailability = await _context.LinkedAccounts.AsNoTracking().AnyAsync(l => l.UserId == Id2 && l.LinkedUserId == Id1);
+                if (CheckAvailability || CheckAvailability) return null;
+                else
+                {
+                    LinkedAccount linkedAccount = new LinkedAccount
+                    {
+                        UserId = Id2,
+                        LinkedUserId = Id1,
+                        IsDeleted = false,
+                        CodeName = Codename
+                    };
+                    LinkedAccount linkedAccount2 = new LinkedAccount
+                    {
+                        UserId = Id1,
+                        LinkedUserId = Id2,
+                        IsDeleted = false,
+                        CodeName = Codename
+                    };
+
+                    await _context.AddAsync(linkedAccount);
+                    await _context.AddAsync(linkedAccount2);
+                    await _context.SaveChangesAsync();
+
+                    return await _context.Users.AsNoTracking().Where(u => u.Id == Id2).Select(u => new User { Id = u.Id, PseudoName = u.PseudoName, LastSeen = u.LastSeen }).FirstOrDefaultAsync();
+                }
+            }
+            return null;
+        }
+
+        public async Task<int> UnlinkAccountsAsync(int Id1, int Id2)
+        {
+            if(Id1 > 0 && Id2 > 0)
+            {
+                int Result = await _context.LinkedAccounts.AsNoTracking().Where(l => l.UserId == Id1 && l.LinkedUserId == Id2).ExecuteDeleteAsync();
+                if(Result > 0)
+                {
+                    await _context.LinkedAccounts.AsNoTracking().Where(l => l.UserId == Id2 && l.LinkedUserId == Id1).ExecuteDeleteAsync();
+                    return Id2;
+                }
+            }
+            return 0;
+        }
+
+        public async Task<bool> EasyEntryAsync(int Id1, int Id2)
+        {
+            if(Id1 > 0 && Id2 > 0)
+            {
+                bool CheckAccountsLinkInfo = await _context.LinkedAccounts.AnyAsync(l => l.UserId == Id1 && l.LinkedUserId == Id2);
+                bool CheckSecondAccountAvailability = await _context.LinkedAccounts.AnyAsync(l => l.UserId == Id2 && l.LinkedUserId == Id1);
+                if(CheckAccountsLinkInfo && CheckSecondAccountAvailability)
+                {
+                    User? UserInfo = await _userManager.FindByIdAsync(Id2.ToString());
+                    if(UserInfo != null)
+                    {
+                        await _signInManager.SignInAsync(UserInfo, true);
                         return true;
                     }
                 }

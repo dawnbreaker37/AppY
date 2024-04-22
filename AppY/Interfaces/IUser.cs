@@ -29,7 +29,7 @@ namespace AppY.Interfaces
         public Task<bool> SubmitReserveCodeAsync(string UsernameOrEmail, string? Code);
         public IQueryable<User>? FindUsers(string? Keyword);
         public string? UnpicturedAvatarSelector(User? UserInfo);
-        public string? SetLastSeenText(DateTime LastSeen);
+        public string? SetLastSeenText(DateTime? LastSeen);
         public string? AutodeleteDelay(double MinsValue);
     }
 }

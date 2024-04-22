@@ -412,6 +412,21 @@ body {
     background-color: #f8f9fa;
 }
 
+.yt-mini-player {
+    width: 100%;
+    height: 345px;
+    border-radius: 8px;
+    transition: all ease 0.3s;
+}
+
+.smallside-bot-navbar {
+    bottom: 0;
+    position: fixed;
+    border-radius: 8px 8px 1px 1px;
+    overflow: hidden;
+    transition: all ease 0.3s;
+}
+
 .images-background-container {
     background-color: black;
     height: 100%;

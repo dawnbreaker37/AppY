@@ -224,17 +224,21 @@ namespace AppY.Repositories
             else return Math.Round(MinsValue, 0) + " min(s)";
         }
 
-        public string? SetLastSeenText(DateTime LastSeen)
+        public string? SetLastSeenText(DateTime? LastSeen)
         {
             DateTime Current = DateTime.Now;
-            double DaysBetween = Current.Subtract(LastSeen).TotalDays;
+            if (LastSeen.HasValue)
+            {
+                double DaysBetween = Current.Subtract(LastSeen.Value).TotalDays;
 
-            if (DaysBetween >= 370) return "last seen over a year ago";
-            else if (DaysBetween >= 31 && DaysBetween < 370) return "last seen over a month ago";
-            else if (DaysBetween > 7 && DaysBetween < 31) return "last seen within a month";
-            else if (DaysBetween > 1 && DaysBetween < 7) return "last seen " + Math.Round(DaysBetween, 0) + " days ago, at " + LastSeen.ToShortTimeString();
-            else if (DaysBetween == 1) return "last seen yesterday, at " + LastSeen.ToShortTimeString();
-            else return "last seen today, at " + LastSeen.ToShortTimeString();
+                if (DaysBetween >= 370) return "last seen over a year ago";
+                else if (DaysBetween >= 31 && DaysBetween < 370) return "last seen over a month ago";
+                else if (DaysBetween > 7 && DaysBetween < 31) return "last seen within a month";
+                else if (DaysBetween > 1 && DaysBetween < 7) return "last seen " + Math.Round(DaysBetween, 0) + " days ago, at " + LastSeen.Value.ToShortTimeString();
+                else if (DaysBetween == 1) return "last seen yesterday, at " + LastSeen.Value.ToShortTimeString();
+                else return "last seen today, at " + LastSeen.Value.ToShortTimeString();
+            }
+            else return "last seen recently";
         }
 
         public async Task<int> SetLastSeenAsync(int Id)

@@ -71,6 +71,22 @@ namespace AppY.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> EasyEntry(int Id)
+        {
+            if(Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId = Request.Cookies["CurrentUserId"];
+                bool TryParse = Int32.TryParse(CurrentUserId, out int UserId);
+                if (TryParse)
+                {
+                    bool Result = await _account.EasyEntryAsync(UserId, Id);
+                    if (Result) return RedirectToAction("Account", "User");
+                }
+            }
+            return RedirectToAction("Index", "Home");
+        }
+
+        [HttpPost]
         public async Task<IActionResult> SendSingleUseCode(string Email)
         {
             if(ModelState.IsValid)
@@ -186,12 +202,46 @@ namespace AppY.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> CheckAccountCredentials(string? Username, string? Password, int CurrentUserId)
+        public async Task<IActionResult> CheckAccountCredentials(string? Email, string? Password, int CurrentUserId)
         {
-            int Result = await _account.CheckAccountCredentialsAsync(Username, Password);
-            if (Result > 0 && Result != CurrentUserId) return Json(new { success = true, account = Username, id = Result, alert = "Account credentials are true. Let's get to the next step" });
+            int Result = await _account.CheckAccountCredentialsAsync(Email, Password);
+            if (Result > 0 && Result != CurrentUserId) return Json(new { success = true, account = Email, id = Result, alert = "Account credentials are true. Let's get to the next step" });
             else return Json(new { success = false, alert = "Account credentials are wrong" });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> LinkAccounts(int Id, string? Codename)
+        {
+            if(Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId = Request.Cookies["CurrentUserId"];
+                bool TryParse = Int32.TryParse(CurrentUserId, out int Id1);
+                if(TryParse)
+                {
+                    User? Result = await _account.LinkAccountsAsync(Id1, Id, Codename);
+                    if (Result != null) return Json(new { success = true, result = Result, alert = "Accounts has been successfully linked to each other" });
+                    else return Json(new { success = false, alert = "Sorry, but these accounts're already linked to each other" });
+                }
+            }
+            return Json(new { success = false, alert = "Sorry, but an unexpected error has been occured. Please, try to link your accounts again later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Unlink(int Id)
+        {
+            if (Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId = Request.Cookies["CurrentUserId"];
+                bool TryParse = Int32.TryParse(CurrentUserId, out int Id1);
+                if(TryParse)
+                {
+                    int Result = await _account.UnlinkAccountsAsync(Id1, Id);
+                    if (Result > 0) return Json(new { success = true, id = Id, alert = "Accounts has been successfully unlinked" });
+                    else return Json(new { success = false, alert = "You can't unlink these accounts" });
+                }
+            }
+            return Json(new { success = false, alert = "We're sorry, but something went wrong. Please, try to unlink your accounts later" });
+         }
 
         public async Task<IActionResult> LinkedAccounts()
         {
@@ -211,6 +261,7 @@ namespace AppY.Controllers
                                 List<LinkedAccount_ViewModel>? LinkedAccounts = null;
                                 IQueryable<LinkedAccount_ViewModel>? LinkedAccounts_Preview = _account.GetLinkedAccounts(CurrentUserId);
                                 if (LinkedAccounts_Preview != null) LinkedAccounts = await LinkedAccounts_Preview.ToListAsync();
+                                if (LinkedAccounts != null) LinkedAccounts.ForEach(l => l.LastSeenText = _user.SetLastSeenText(l.LastSeen));
 
                                 ViewBag.UserInfo = UserInfo;
                                 ViewBag.LinkedAccounts = LinkedAccounts;

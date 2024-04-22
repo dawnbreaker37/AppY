@@ -44,15 +44,24 @@ namespace AppY.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetDiscussions(int Id)
+        public async Task<IActionResult> GetDiscussions()
         {
-            IQueryable<DiscussionShortInfo>? Discussion_Preview = _discussion.GetUserDiscussions(Id);
-            if(Discussion_Preview != null)
+            if (Request.Cookies.ContainsKey("CurrentUserId"))
             {
-                List<DiscussionShortInfo>? Discussions = await Discussion_Preview.ToListAsync();
-                if (Discussions != null) return Json(new { success = true, result = Discussions, count = Discussions.Count });
+                string? Id_Str = Request.Cookies["CurrentUserId"];
+                bool TryParse = Int32.TryParse(Id_Str, out int Id);
+                if (TryParse)
+                {
+                    IQueryable<DiscussionShortInfo>? Discussion_Preview = _discussion.GetUserDiscussions(Id);
+                    if (Discussion_Preview != null)
+                    {
+                        List<DiscussionShortInfo>? Discussions = await Discussion_Preview.ToListAsync();
+                        if (Discussions != null) return Json(new { success = true, result = Discussions, count = Discussions.Count });
+                    }
+                    return Json(new { success = false, count = 0 });
+                }
             }
-            return Json(new { success = false, count = 0 });
+            return Json(new { success = false, alert = "No discussions found", count = 0 });
         }
 
         [HttpGet]

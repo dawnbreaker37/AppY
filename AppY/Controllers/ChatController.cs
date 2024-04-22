@@ -48,6 +48,7 @@ namespace AppY.Controllers
                                         List<IGrouping<DateTime, DiscussionMessage>>? Messages = null;
                                         int SentMessagesCount = await _messages.SentMessagesCountAsync(Id);
                                         int SecondUserId = await _chat.ChatSecondUserIdAsync(Id, CurrentUserId);
+                                        bool IsMuted = await _chat.IsChatMutedAsync(Id, CurrentUserId);
                                         User? SecondUserInfo = await _user.GetUserSuperShortInfoEvenIfPrivateAsync(SecondUserId);
                                         ChatInfo.Name = ChatInfo.Name == null ? "New Chat" : ChatInfo.Name;
 
@@ -60,6 +61,7 @@ namespace AppY.Controllers
                                         ViewBag.UserInfo = UserInfo;
                                         ViewBag.SecondUserInfo = SecondUserInfo;
                                         ViewBag.ChatInfo = ChatInfo;
+                                        ViewBag.IsMuted = IsMuted;
                                         ViewBag.DisabledTimeLeft = DisabledTimeLeft;
                                         ViewBag.Messages = Messages;
                                         ViewBag.MessagesCount = SentMessagesCount;
@@ -136,13 +138,21 @@ namespace AppY.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetChats(int Id)
+        public async Task<IActionResult> GetChats()
         {
-            IQueryable<ChatUsers>? Result_Preview = _chat.GetUserChats(Id);
-            if(Result_Preview != null)
+            if(Request.Cookies.ContainsKey("CurrentUserId"))
             {
-                List<ChatUsers>? Result = await Result_Preview.ToListAsync();
-                if (Result != null) return Json(new { success = true, result = Result, count = Result.Count });
+                string? Id_Str = Request.Cookies["CurrentUserId"];
+                bool TryParse = Int32.TryParse(Id_Str, out int Id);
+                if(TryParse)
+                {
+                    IQueryable<ChatUsers>? Result_Preview = _chat.GetUserChats(Id);
+                    if (Result_Preview != null)
+                    {
+                        List<ChatUsers>? Result = await Result_Preview.ToListAsync();
+                        if (Result != null) return Json(new { success = true, result = Result, count = Result.Count });
+                    }
+                }
             }
             return Json(new { success = false, alert = "No chats to load" });
         }

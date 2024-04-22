@@ -35,7 +35,7 @@ namespace AppY.Controllers
         public async Task<IActionResult> Account()
         {
             if (User.Identity.IsAuthenticated)
-            {
+            {                
                 string? CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 bool ParseResult = Int32.TryParse(CurrentUserId, out int UserId);
                 if (ParseResult)
@@ -43,6 +43,13 @@ namespace AppY.Controllers
                     User? UserInfo = await _user.GetMainUserInfoAsync(UserId);
                     if (UserInfo != null)
                     {
+                        if (Request.Cookies.ContainsKey("CurrentUserId"))
+                        {
+                            HttpContext.Response.Cookies.Delete("CurrentUserId");
+                            HttpContext.Response.Cookies.Append("CurrentUserId", UserInfo.Id.ToString());
+                        }
+                        else HttpContext.Response.Cookies.Append("CurrentUserId", UserInfo.Id.ToString());
+
                         string? DaysPassedString = null;
                         bool IsPasswordChangeAllowed = false;
                         TimeSpan? DaysPassed;
@@ -239,6 +246,14 @@ namespace AppY.Controllers
             User? UserSuperShortInfo = await _user.GetUserSuperShortInfoAsync(Id);
             if (UserSuperShortInfo != null) return Json(new { success = true, result = UserSuperShortInfo });
             else return Json(new { success = false, alert = "Unfortunately, we haven't found any user with that Identifier, or selected user has private account so we can't get any additional info about him" });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SubmitReserveCode(int Id, string? ReserveCode)
+        {
+            bool Result = await _user.SubmitReserveCodeAsync(Id, ReserveCode);
+            if (Result) return Json(new { success = true, alert = "Reserve code submitted", id = Id });
+            else return Json(new { success = false, alert = "Entered reserve code was wrong" });
         }
 
         [HttpPost]

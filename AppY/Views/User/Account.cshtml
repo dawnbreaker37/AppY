@@ -773,7 +773,9 @@
         </div>
         <div class="mt-3">
             <a asp-controller="Account" asp-action="LinkedAccounts" class="btn btn-group-member w-100"> <i class="fa-solid fa-folder-tree"></i> Linked Accounts</a>
-            <small class="card-text text-muted ms-1">Linked accounts give you access to switch faster and easier between your multiply accounts. More information at <span class="fw-500">linked accounts</span> page</small>
+            <div class="ms-1">
+                <small class="card-text text-muted">Linked accounts give you access to switch faster and easier between multiple accounts. More information at <span class="fw-500">linked accounts</span> page</small>
+            </div>
         </div>
         <div class="mt-3">
             <div class="btn-group-vertical w-100" role="group" aria-label="vertical btn-group">
@@ -786,22 +788,12 @@
             <div class="btn-group-vertical w-100" role="group" aria-label="vertical btn-group">
                 <div class="w-100">
                     <form method="get" asp-controller="Chat" asp-action="GetChats" id="GetChats_Form">
-                        <div class="d-none">
-                            <input type="hidden" name="Id" value="@UserInfo.Id" />
-                        </div>
-                        <div>
-                            <button type="submit" class="btn btn-group-member btn-top-rounded w-100"> <i class="fa-regular fa-comments"></i> Chats</button>
-                        </div>
+                        <button type="submit" class="btn btn-group-member btn-top-rounded w-100"> <i class="fa-regular fa-comments"></i> Chats</button>
                     </form>
                 </div>
                 <div class="w-100">
                     <form method="get" asp-controller="Discussion" asp-action="GetDiscussions" id="GetDiscussions_Form">
-                        <div class="d-none">
-                            <input type="hidden" name="Id" value="@UserInfo.Id" />
-                        </div>
-                        <div>
-                            <button type="submit" class="btn btn-group-member border-radius-sharp w-100"> <i class="fa-solid fa-quote-right"></i> Discussions</button>
-                        </div>
+                        <button type="submit" class="btn btn-group-member border-radius-sharp w-100"> <i class="fa-solid fa-quote-right"></i> Discussions</button>
                     </form>
                 </div>
                 @if(DeletedDiscussionsCount > 0)

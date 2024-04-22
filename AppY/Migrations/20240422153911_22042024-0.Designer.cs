@@ -4,6 +4,7 @@ using AppY.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppY.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20240422153911_22042024-0")]
+    partial class _220420240
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -445,7 +448,7 @@ namespace AppY.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LinkedUserId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("LinkedAccounts");
                 });
@@ -989,7 +992,7 @@ namespace AppY.Migrations
                 {
                     b.HasOne("AppY.Models.User", "User")
                         .WithMany("LinkedAccounts")
-                        .HasForeignKey("LinkedUserId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

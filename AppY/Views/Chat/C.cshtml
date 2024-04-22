@@ -6,6 +6,7 @@
     User? SecondUserInfo = ViewBag.SecondUserInfo;
     Chat? ChatInfo = ViewBag.ChatInfo;
     List<IGrouping<DateTime, DiscussionMessage>>? ChatMessages = ViewBag.Messages;
+    bool IsMuted = ViewBag.IsMuted;
 }
 
 <div class="main-sidebar" id="Main_SideBar">
@@ -20,6 +21,60 @@
             <input type="hidden" name="Id" id="CGMI_Id_Val" value="0" />
             <input type="hidden" name="UserId" value="@UserInfo.Id" />
         </form>
+    </div>
+    
+    <div class="smallside-box-container shadow-standard overflow-hidden" id="YoutubeMiniPlayer_Container">
+        <div class="box-container p-2">
+            <div class="box-container">
+                <div class="hstack gap-3">
+                    <input type="text" class="form-control bg-light shadow-none w-100" placeholder="Enter any youtube link here..." id="YTMiniPlayer_Search" />
+                    <button type="button" class="btn btn-close btn-sm rounded-circle" id="YoutubeMiniPlayer_Container-Close"></button>
+                </div>
+            </div>
+            <div class="box-container text-center mt-1" id="YTMiniPlayer_Box" style="display: none;">
+                <iframe class="yt-mini-player" src="" title="YouTube Mini Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen id="YoutubeMiniPlayer_Frame"></iframe>
+            </div>
+            <div class="bordered-container text-center mt-1 p-3" id="YTNoCurrentView_Box">
+                <h2 class="h2 text-danger"> <i class="fa-brands fa-youtube"></i> </h2>
+                <h4 class="h4">No Video</h4>
+                <small class="card-text text-muted">paste your link or enter it to show the video</small>
+            </div>
+            <div class="box-container bg-light text-center mt-1 mw-99">
+                <div class="row">
+                    <div class="col">
+                        <button type="button" class="btn btn-standard w-100 btn-sm"> <i class="fa-regular fa-copy"></i> Copy</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard btn-mute w-100 btn-sm"> <i class="fa-solid fa-volume-xmark"></i> Mute</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard btn-forward-yt-video-to-chat w-100 btn-sm"> <i class="fa-solid fa-circle-chevron-right"></i> To Chat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="Discussions_Container">
+        <div class="header-container p-2 pb-0 text-center" id="Discussions_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Discussions_Container-Close"></button>
+            <span class="h5 text-truncate p-1" id="Discussions_Container_Header">Discussions</span>
+            <div></div>
+            <small class="card-text text-muted" id="DiscussionsCount_Lbl"><span id="DiscussionsCount_Span">0</span> discussion(s)</small>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="Discussions_Container-Box">
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="Chats_Container">
+        <div class="header-container p-2 pb-0 text-center" id="Chats_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Chats_Container-Close"></button>
+            <span class="h5 text-truncate p-1" id="Chats_Container_Header">Chats</span>
+            <div></div>
+            <small class="card-text text-muted" id="ChatsCount_Lbl"><span id="ChatsCount_Span">0</span> chat(s)</small>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="Chats_Container-Box">
+        </div>
     </div>
 
     <div class="smallside-box-container shadow-standard overflow-hidden" id="DeleteChat_Container">
@@ -91,67 +146,26 @@
         </div>
     </div>
 
-    <div class="smallside-box-container shadow-standard on-start-position" style="bottom: 0; display: block;" id="ChatInfoTooltips_Container">
-        <div class="box-container p-3">
-            <div class="slider-container" id="ChatInfoTooltips_Box-Part0">
-                <div class="row">
-                    <div class="col col-2 text-center">
-                        <h1 class="h1 text-primary"> <i class="fa-regular fa-comments"></i> </h1>
-                        <small class="card-text text-muted fw-500">1/9</small>
-                    </div>
-                    <div class="col col-10">
-                        <h5 class="h5">Welcome to Chats!</h5>
-                        <small class="card-text text-muted">We're happy to introducre you to Chats! The easiest and fastest way to communicate with your discussors. Please, slide to next card so we can introduce you to all features of chats</small>
-                        <div class="mt-2">
-                            <button type="button" class="btn btn-light btn-standard-asset btn-sm" onclick="animatedClose(false, 'ChatInfoTooltips_Container', true, true);">Ignore and Close</button>
-                        </div>
+    <div class="smallside-bot-navbar shadow-standard" style="display: none; bottom: -300px;" id="SmallsideBotNavbar">
+        <div class="box-container p-2">
+            <div class="row">
+                <div class="col">
+                    <div>
+                        <form method="get" asp-controller="Chat" asp-action="GetChats" id="GetChats_Form">
+                            <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-regular fa-comments"></i> <br />Chats</button>
+                        </form>
                     </div>
                 </div>
-            </div>
-            <div class="slider-container" id="ChatInfoTooltips_Box-Part1" style="display: none;">
-                <div class="row">
-                    <div class="col col-2 text-center">
-                        <h1 class="h1 text-neon-purple"> <i class="fa-solid fa-arrows-spin fa-spin"></i> </h1>
-                        <small class="card-text text-muted fw-500">2/9</small>
-                    </div>
-                    <div class="col col-10">
-                        <h5 class="h5">Real-Time Messaging</h5>
-                        <small class="card-text text-muted">Chats are real-time. It means that every action that you do here will be instantly shown to your discussor so that you and your friend would no miss any event</small>
-                        <div class="mt-2">
-                            <button type="button" class="btn btn-light btn-standard-asset btn-sm" onclick="animatedClose(false, 'ChatInfoTooltips_Container', true, true);">Ignore and Close</button>
-                        </div>
+                <div class="col">
+                    <div>
+                        <form method="get" asp-controller="Discussion" asp-action="GetDiscussions" id="GetDiscussions_Form">
+                            <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-quote-right"></i> <br />Discussions</button>
+                        </form>
                     </div>
                 </div>
-            </div>
-            <div class="slider-container" id="ChatInfoTooltips_Box-Part2" style="display: none;">
-                <div class="row">
-                    <div class="col col-2 text-center">
-                        <h1 class="h1 vanish-animation"> <i class="fa-solid fa-barcode"></i> </h1>
-                        <small class="card-text text-muted fw-500">3/9</small>
-                    </div>
-                    <div class="col col-10">
-                        <h5 class="h5">Secured means Encrypted</h5>
-                        <small class="card-text text-muted">All your sent messages will be instantly encrypted so no one can have access to its text. Encryption is done by our own specific codes so that no one has access to them and so, your messages are fully secured</small>
-                        <div class="mt-2">
-                            <button type="button" class="btn btn-light btn-standard-asset btn-sm" onclick="animatedClose(false, 'ChatInfoTooltips_Container', true, true);">Ignore and Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="border-top mt-1 p-1 w-100">
-            <div class="w-75 text-center mx-auto">
-                <div class="d-none">
-                    <input type="hidden" id="ChatInfoTooltips_Box-StepVal" value="0" />
-                    <input type="hidden" id="ChatInfoTooltips_Box-MaxStepVal" value="6" />
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <button type="button" class="btn btn-standard btn-sm btn-slide-to-prev w-100" id="ChatInfoTooltips_Box-PrevSlide" disabled> <i class="fa-solid fa-arrow-left"></i> Previous</button>
-                    </div>
-                    <div class="col">
-                        <button type="button" class="btn btn-standard btn-sm btn-slide-to-next w-100" id="ChatInfoTooltips_Box-NextSlide">Next <i class="fa-solid fa-arrow-right"></i> </button>
+                <div class="col">
+                    <div>
+                        <button type="button" class="btn btn-standard btn-sm w-100 btn-smallside-open-container" id="YoutubeMiniPlayer_Container-Open"> <i class="fa-brands fa-youtube text-danger"></i> <br />Youtube Mini</button>
                     </div>
                 </div>
             </div>
@@ -175,7 +189,14 @@
         <div class="box-container mt-4">
             <div class="row">
                 <div class="col">
-                    <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell-slash text-primary"></i> <br />Mute</button>
+                    @if(!IsMuted)
+                    {
+                        <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell-slash text-primary"></i> <br />Mute</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell text-primary"></i> <br />Unmute</button>
+                    }
                 </div>
                 <div class="col">
                     <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-solid fa-fingerprint text-primary"></i> <br />Security</button>

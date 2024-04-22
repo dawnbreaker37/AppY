@@ -21,13 +21,11 @@ window.onload = function () {
 
         if (fullWidth >= 768) {
             animatedOpen(false, "SmallsidePreloaded_Container", true, false);
-            if ($("#SmallsidePreloaded_Container").css("display") == "block") {
-                standardTimeout += 650;
-                setTimeout(function () {
-                    animatedOpen(false, "Preloaded_Container", true, false);
-                }, 650);
-            }
-            else animatedOpen(false, "Preloaded_Container", true, false);
+            standardTimeout += 350;
+            setTimeout(function () {
+                animatedOpen(false, "Preloaded_Container", true, false);
+                $("#MainTopOffNavbar").slideDown(300);
+            }, 350);
         }
         else animatedOpen(false, "Preloaded_Container", true, false);
     }, 300);
@@ -79,16 +77,166 @@ $("#CheckAccountCredentials_Form").on("submit", function (event) {
         if (response.success) {
             if (currentUrl.toLowerCase().includes("/linkedaccounts")) {
                 $("#LinkAccountInfo_Span").text(response.account);
+                $("#LinkAccountInfo2_Span").text(response.account);
                 $("#SARC_Id_Val").val(response.id);
+                $("#SRCVE_Email_Val").val(response.account);
                 $("#LinkAccount_Box-NextSlide").click();
             }
             alert('<i class="fa-solid fa-check-double fa-bounce text-primary" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
         }
         else {
             if (currentUrl.toLowerCase().includes("/linkedaccounts")) {
-                $("#UserName").val("");
+                $("#Email").val("");
                 $("#Password").val("");
             }
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.1s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+        }
+    });
+});
+
+$("#LinkAccounts_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let linkedAccountsCount = parseInt($("#LinkedAccountsCount_Val").val());
+
+            let div = $("<div class='box-container bg-light p-2 mt-1 mb-1'></div>");
+            let accountName = $("<span class='h6'></span>");
+            let separatorDiv = $("<div></div>");
+            let lastSeenInfo = $("<small class='card-text text-muted'></small>");
+            let enterToAcc_Btn = $("<button type='button' class='btn btn-sm btn-standard text-primary float-end ms-1 easy-entry-to-acc'>Enter</button>");
+            accountName.html(response.result.pseudoName);
+            lastSeenInfo.html("last seen " + dateAndTimeTranslator(response.result.lastSeen));
+            enterToAcc_Btn.attr("id", response.result.id + "-EasyEntryToAcc_Btn");
+            div.attr("id", response.result.id + "-LinkedAccount_Box");
+            div.append(enterToAcc_Btn);
+            div.append(accountName);
+            div.append(separatorDiv);
+            div.append(lastSeenInfo);
+
+            if (linkedAccountsCount <= 0) {
+                $("#LinkedAccounts_Box").removeClass("text-center");
+                $("#LinkedAccounts_Box").empty();
+                $("#LinkedAccounts_Box").append(div);
+            }
+            else {
+                $("#LinkedAccounts_Box").append(div);
+            }
+
+            linkedAccountsCount++;
+            $("#LinkedAccountsCount_Val").val(linkedAccountsCount);
+            $("#LinkedAccountsCount_Span").text(linkedAccountsCount);
+
+            $("#ALA_Id_Val").val(0);
+            $("#SARC_Id_Val").val(0);
+            $("#ReserveCode").val("");
+            $("#Email").val("");
+            $("#Password").val("");
+            $("#LinkAccount_Box-PrevSlide").click();
+            setTimeout(function () {
+                $("#LinkAccount_Box-PrevSlide").click();
+            }, 350);
+            alert('<i class="fa-solid fa-check-double fa-bounce text-primary" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.1s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+        }
+    });
+});
+$("#UnlinkAccounts_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let linkedAccountsCount = parseInt($("#LinkedAccountsCount_Val").val());
+            linkedAccountsCount--;
+            $("#LinkedAccountsCount_Span").text(linkedAccountsCount);
+            $("#LinkedAccountsCount_Val").val(linkedAccountsCount);
+
+            slideToLeft(response.id + "-LinkedAccount_Box");
+            setTimeout(function () {
+                $("#" + response.id + "-LinkedAccount_Box").fadeOut(0);
+            }, 350);
+            setTimeout(function () {
+                $("#" + response.id + "-LinkedAccount_Box").empty();
+                if (linkedAccountsCount <= 0) {
+                    $("#LinkedAccounts_Box").empty();
+                    $("#LinkedAccounts_Box").addClass("text-center");
+                    let icon = $('<h2 class="h2"> <i class="fa-solid fa-link-slash"></i> </h2>');
+                    let title = $('<h4 class="h4">No Linked Accounts Yet</h4>');
+                    let description = $('<small class="card-text text-muted">link any other your account (if you got another one) to this to make switching between them much easier and quickier</small>');
+                    $("#LinkedAccounts_Box").append(icon);
+                    $("#LinkedAccounts_Box").append(title);
+                    $("#LinkedAccounts_Box").append(description);
+                }
+            }, 375);
+            alert('<i class="fa-solid fa-check-double fa-bounce text-primary" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.1s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.25);
+        }
+    });
+});
+
+$(document).on("click", ".easy-entry-to-acc", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        $("#EasyEntry_Id_Val").val(trueId);
+        $("#EasyEntry_Form").submit();
+    }
+    else {
+        $("#EasyEntry_Id_Val").val(0);
+    }
+});
+$(document).on("click", ".delete-easy-entry", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        $("#UnlinkingAccount_Id_Val").val(trueId);
+        $("#UnlinkAccounts_Form").submit();
+    }
+    else {
+        $("#UnlinkingAccount_Id_Val").val(0);
+    }
+});
+$(document).on("click", "#SendReserveCodeMediated_Btn", function () {
+    let emailValue = $("#SRCVE_Email_Val").val();
+    if (emailValue != "") {
+        $("#SendReserveCodeViaEmail_Form").submit();
+    }
+});
+$("#SendReserveCodeViaEmail_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#SendReserveCodeMediated_Btn").attr("disabled", true);
+            alert('<i class="fa-regular fa-envelope fa-beat-fade text-primary"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.1s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.25);
+        }
+    });
+});
+
+$("#SubmitAccountReserveCode_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            $("#ALA_Id_Val").val(response.id);
+            $("#LinkAccount_Box-NextSlide").click();
+        }
+        else {
+            $("#ReserveCode").val("");
             alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.1s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
         }
     });
@@ -422,7 +570,7 @@ $("#IsEmailUnique_Form").on("submit", function (event) {
             $("#EmailStatus_Lbl").html(' <i class="fa-regular fa-circle-xmark text-danger"></i> This email address is busy');
         }
     });
-}); //SendMessage_Images_Val
+}); 
 $("#IsUsernameUnique_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -940,8 +1088,8 @@ $("#GetChats_Form").on("submit", function (event) {
                 let name = $("<span class='h5 text-truncate'></span>");
                 let separatorZero = $("<div></div>");
                 let lastMessage = $("<small class='card-text ms-2'>No sent messages</small>");
-                let isMutedIcon = $('<small class="card-text text-orange float-end ms-2 mt-1" style="display: none;"> <i class="fa-regular fa-bell-slash"></i> </small>');
-                let isPinnedIcon = $("<small class='card-text float-end ms-2 mt-1' style='display: none;'> <i class='fa-solid fa-thumbtack'></i> </small>");
+                let isMutedIcon = $('<small class="card-text text-orange float-end me-2 mt-1" style="display: none;"> <i class="fa-regular fa-bell-slash"></i> </small>');
+                let isPinnedIcon = $("<small class='card-text float-end me-2 mt-1' style='display: none;'> <i class='fa-solid fa-thumbtack'></i> </small>");
                 let noAvatarLbl = $("<div class='unpictured-container-label-sm text-dark'></div>");
 
                 let dropdownDiv = $("<div class='dropdown'></div>");
@@ -1025,7 +1173,9 @@ $("#GetChats_Form").on("submit", function (event) {
                     dropdownLi0.fadeOut(0);
                 }
 
-                div.append(dropdownDiv);
+                if (!currentUrl.toLowerCase().includes("/discuss") && !currentUrl.toLowerCase().includes("/chat")) {
+                    div.append(dropdownDiv);
+                }
                 div.append(isPinnedIcon);
                 div.append(isMutedIcon);
                 div.append(avatarDiv);
@@ -1349,8 +1499,8 @@ $("#GetDiscussions_Form").on("submit", function (event) {
                     let separatorZero = $("<div></div>");
                     let lastMessage = $("<small class='card-text'></small>");
                     let joinedAndCreated = $("<small class='card-text text-muted'></small>");
-                    let isMutedIcon = $('<small class="card-text text-orange float-end ms-2 mt-1"> <i class="fa-regular fa-bell-slash"></i> </small>');
-                    let isPinnedIcon = $("<small class='card-text float-end ms-2 mt-1'> <i class='fa-solid fa-thumbtack'></i> </small>");
+                    let isMutedIcon = $('<small class="card-text text-orange float-end me-2 mt-1"> <i class="fa-regular fa-bell-slash"></i> </small>');
+                    let isPinnedIcon = $("<small class='card-text float-end me-2 mt-1'> <i class='fa-solid fa-thumbtack'></i> </small>");
 
                     let dropdownDiv = $("<div class='dropdown'></div>");
                     let dropdownBtn = $("<button type='button' class='btn btn-standard btn-sm float-end ms-2' data-bs-toggle='dropdown' aria-expanded='false'> <i class='fa-solid fa-ellipsis-h'></i> </button>");
@@ -1420,7 +1570,9 @@ $("#GetDiscussions_Form").on("submit", function (event) {
                         dropdownBtn3.html(' <i class="fa-solid fa-thumbtack"></i> Pin');
                     }
 
-                    div.append(dropdownDiv);
+                    if (!currentUrl.toLowerCase().includes("/discuss") && !currentUrl.toLowerCase().includes("/chat")) {
+                        div.append(dropdownDiv);
+                    }
                     div.append(isPinnedIcon);
                     div.append(isMutedIcon);
                     div.append(avatarDiv);
@@ -3741,7 +3893,7 @@ $(document).on("click", ".btn-delete-user-from-discussion", function (event) {
         $("#DeleteUserFromDiscussion_Form").submit();
     }
     else $("#DUFD_Id_Val").val(0);
-})
+});//GetChats_Form
 $(document).on("click", ".btn-edit-access-level", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
@@ -4478,20 +4630,57 @@ function getTrueId(name) {
 
 function openSidebar() {
     if (fullWidth < 768) {
+        $(".smallside-bot-navbar").css("bottom", "-300px");
+        $(".smallside-bot-navbar").fadeIn(0);
         $(".btn-fixed-close-sidebar").fadeIn(300);
         $("#Main_SideBar").fadeIn(250);
         $("#Main_SideBar").css("left", 0);
+        setTimeout(function () {
+            $(".smallside-bot-navbar").css("bottom", 0);
+        }, 300);
     }
 }
 
 function closeSidebar() {
     if (fullWidth < 768) {
+        $(".smallside-bot-navbar").css("bottom", "-300px");
         animatedClose(true, "smallside-box-container ", true, true);
         $(".btn-fixed-close-sidebar").fadeOut(300);
         setTimeout(function () {
             $("#Main_SideBar").fadeOut(350);
             $("#Main_SideBar").css("left", "-1200px");
+            $(".smallside-bot-navbar").fadeOut(0);
         }, 550);
+    }
+}
+
+$("#YTMiniPlayer_Search").on("change", function () {
+    ytVideoOptimizer($(this).val());
+});
+function ytVideoOptimizer(link) {
+    let trueLink;
+    if (link != null) {
+        if (link.toLowerCase().includes("/embed")) {
+            trueLink = link;
+        }
+        else if (link.toLowerCase().includes("watch")) {
+            if (link.includes("&")) link = link.substring(link.indexOf("?") + 3, link.indexOf("&"));
+            else link = link.substring(link.indexOf("?") + 3);
+            trueLink = "https://www.youtube.com/embed/" + link;
+        }
+        else {
+            link = link.substring(link.lastIndexOf("/") + 1);
+            trueLink = "https://www.youtube.com/embed/" + link;
+        }
+
+        $("#YoutubeMiniPlayer_Frame").attr("src", trueLink);
+        $("#YTNoCurrentView_Box").fadeOut(0);
+        $("#YTMiniPlayer_Box").fadeIn(0);
+    }
+    else {
+        $("#YoutubeMiniPlayer_Frame").attr("src", null);
+        $("#YTNoCurrentView_Box").fadeIn(0);
+        $("#YTMiniPlayer_Box").fadeOut(0);
     }
 }
 
@@ -5254,16 +5443,17 @@ function animatedOpen(forAll, element, sticky, closeAllOtherContainers) {
         let botOffNavbarAdditionalValue = botOffNavbarH;
         if ($("#" + element).hasClass("smallside-box-container")) {
             botOffNavbarH = 0;
+            sticky = false;
         }
 
         if (!closeAllOtherContainers) {
-            $("." + element).fadeIn(300);
+            $("." + element).fadeIn(200);
             if (sticky) {
                 $("." + element).css("bottom", botOffNavbarH + 18 + "px");
                 setTimeout(function () {
                     $("." + element).css("bottom", botOffNavbarH + 2 + "px");
                     botOffNavbarH = botOffNavbarAdditionalValue;
-                }, 650);
+                }, 600);
             }
             else {
                 $("." + element).css("bottom", botOffNavbarH + 2 + "px");
@@ -5273,34 +5463,35 @@ function animatedOpen(forAll, element, sticky, closeAllOtherContainers) {
         else {
             animatedClose(true, "main-container", true, true);
             setTimeout(function () {
-                $("." + element).fadeIn(300);
+                $("." + element).fadeIn(200);
                 if (sticky) {
                     $("." + element).css("bottom", botOffNavbarH + 18 + "px");
                     setTimeout(function () {
                         $("." + element).css("bottom", botOffNavbarH + 2 + "px");
-                    }, 650);
+                    }, 600);
                 }
                 else {
                     $("." + element).css("bottom", botOffNavbarH + 2 + "px");
                 }
-            }, 350);
+            }, 300);
         }
     }
     else {
         let botOffNavbarAdditionalValue = botOffNavbarH;
         if ($("#" + element).hasClass("smallside-box-container")) {
             botOffNavbarH = 0;
+            sticky = false;
         }
 
         if (!closeAllOtherContainers) {
 
-            $("#" + element).fadeIn(300);
+            $("#" + element).fadeIn(200);
             if (sticky) {
                 $("#" + element).css("bottom", botOffNavbarH + 18 + "px");
                 setTimeout(function () {
                     $("#" + element).css("bottom", botOffNavbarH + 2 + "px");
                     botOffNavbarH = botOffNavbarAdditionalValue;
-                }, 650);
+                }, 600);
             }
             else {
                 $("#" + element).css("bottom", botOffNavbarH + 2 + "px");
@@ -5315,12 +5506,12 @@ function animatedOpen(forAll, element, sticky, closeAllOtherContainers) {
                     $("#" + element).css("bottom", botOffNavbarH + 18 + "px");
                     setTimeout(function () {
                         $("#" + element).css("bottom", botOffNavbarH + 2 + "px");
-                    }, 650);
+                    }, 600);
                 }
                 else {
                     $("#" + element).css("bottom", botOffNavbarH + 2 + "px");
                 }
-            }, 350);
+            }, 300);
         }
     }
 }
@@ -5503,6 +5694,7 @@ function displayCorrect(width) {
 
     $(".main-container").css("max-height", neededH + "px");
     $(".smallside-box-container").css("max-height", neededH + "px");
+    $(".smallside-bot-navbar").css("max-height", neededH + "px");
     $(".mh-max").css("height", neededH + "px");
     $(".messages-container").css("bottom", botOffNavbarH + 12 + "px");
 
@@ -5531,30 +5723,36 @@ function displayCorrect(width) {
             $(".main-container").css("left", 0);
             $(".smallside-box-container").css("width", "100%");
             $(".smallside-box-container").css("left", 0);
+            $(".smallside-bot-navbar").css("left", 0);
+            $(".smallside-bot-navbar").css("width", "100%");
             $(".collapse-horizontal-container").css("width", fullWidth + "px");
             $(".messages-container").css("width", fullWidth - 10 + "px");
             $(".messages-container").css("left", "5px");
         }
         else {
             $("#Main_SideBar").css("width", "35%");
-            let leftBarW = $("#Main_SideBar").innerWidth() + 3;
-            let leftW = fullWidth - leftBarW - 3;
-            let smallSideContainerW = leftBarW - 5;
+            setTimeout(function () {
+                let leftBarW = $("#Main_SideBar").innerWidth() + 3;
+                let leftW = fullWidth - leftBarW - 3;
+                let smallSideContainerW = leftBarW - 5;
+                $(".bot-navbar").css("width", leftW + "px");
+                $(".bot-navbar").css("width", leftW + "px");
+                $(".bot-navbar").css("left", leftBarW + "px");
+                $(".top-navbar").css("width", leftW + "px");
+                $(".top-navbar").css("left", leftBarW + "px");
 
-            $(".bot-navbar").css("width", leftW + "px");
-            $(".bot-navbar").css("width", leftW + "px");
-            $(".bot-navbar").css("left", leftBarW + "px");
-            $(".top-navbar").css("width", leftW + "px");
-            $(".top-navbar").css("left", leftBarW + "px");
-
-            $("#Main_SideBar").fadeIn(0);
-            $("#Main_SideBar").css("left", 0);
-            $(".main-container").css("width", leftW + "px");
-            $(".main-container").css("left", leftBarW + "px");
-            $(".smallside-box-container").css("width", smallSideContainerW + 2 + "px");
-            $(".collapse-horizontal-container").css("width", smallSideContainerW * 0.975 + "px");
-            $(".messages-container").css("width", leftW - 20 + "px");
-            $(".messages-container").css("left", leftBarW + 10 + "px");
+                $("#Main_SideBar").fadeIn(0);
+                $("#Main_SideBar").css("left", 0);
+                $(".main-container").css("width", leftW + "px");
+                $(".main-container").css("left", leftBarW + "px");
+                $(".smallside-box-container").css("width", smallSideContainerW + 2 + "px");
+                $(".smallside-bot-navbar").css("width", smallSideContainerW + 2 + "px");
+                $(".collapse-horizontal-container").css("width", smallSideContainerW * 0.975 + "px");
+                $(".messages-container").css("width", leftW - 20 + "px");
+                $(".messages-container").css("left", leftBarW + 10 + "px");
+                $(".smallside-bot-navbar").fadeIn(0);
+                $(".smallside-bot-navbar").css("bottom", 0);
+            }, 350);
         }
     }
 }

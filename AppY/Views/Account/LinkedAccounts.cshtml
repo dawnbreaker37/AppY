@@ -7,6 +7,17 @@
 }
 
 <div class="main-sidebar" id="Main_SideBar">
+    <div class="d-none">
+        <form method="post" asp-controller="Account" asp-action="EasyEntry" id="EasyEntry_Form">
+            <input type="hidden" name="Id" id="EasyEntry_Id_Val" value="0" />
+        </form>
+        <form method="post" asp-controller="Account" asp-action="Unlink" id="UnlinkAccounts_Form">
+            <input type="hidden" name="Id" id="UnlinkingAccount_Id_Val" value="0" />
+        </form>
+        <form method="post" asp-controller="Account" asp-action="SendReserveCodeViaEmail" id="SendReserveCodeViaEmail_Form">
+            <input type="hidden" name="Email" id="SRCVE_Email_Val" />
+        </form>
+    </div>
     <div class="smallside-box-container shadow-standard on-start-position p-2" style="bottom: 0; display: block;" id="LinkedAccountsInfoTooltip_Container">
         <div class="box-container text-center bg-light p-2">
             <h2 class="h2 text-primary"> <i class="fa-solid fa-folder-tree"></i> </h2>
@@ -44,13 +55,40 @@
     </div>
     <div class="box-container p-2 pt-1 mt-1" id="Prealoded_Container-Box">
         <div class="box-container">
+            <div class="d-none">
+                <input type="hidden" id="LinkedAccountsCount_Val" value="@LinkedAccountsCount" />
+            </div>
             @if(LinkedAccountsCount > 0)
             {
-                
+                <div class="box-container ms-1" id="LinkedAccountsCount_Box">
+                    <h5 class="h5">Linked Accounts: <span id="LinkedAccountsCount_Span">@LinkedAccountsCount</span></h5>
+                </div>
+                <div class="box-container" id="LinkedAccounts_Box">
+                    @foreach (LinkedAccount_ViewModel Item in ViewBag.LinkedAccounts)
+                    {
+                        <div class="box-container bg-light p-2 mt-1 mb-1" id="@Item.Id-LinkedAccount_Box">
+                            <div class="dropdown">
+                                <button class="btn btn-standard btn-sm float-end ms-1" type="button" data-bs-toggle="dropdown" aria-expanded="false"> <i class="fa-solid fa-ellipsis"></i> </button>
+                                <ul class="dropdown-menu shadow-sm p-1">
+                                    <li><a class="dropdown-item text-decoration-none" asp-controller="User" asp-action="Page" asp-route-Id="@Item.Id"> <i class="fa-solid fa-up-right-from-square"></i> @Item.Pseudoname's Page</a></li>
+                                    <li><button type="button" class="dropdown-item text-danger delete-easy-entry mt-1" id="@Item.Id-DeleteEasyEntry_Btn"> <i class="fa-solid fa-minus"></i> Delete</button></li>
+                                </ul>
+                            </div>
+                            <button type="button" class="btn btn-standard text-primary btn-sm float-end ms-1 easy-entry-to-acc" id="@Item.Id-EnterToAcc_Btn">Enter</button>
+                            <span class="h6">@Item.Pseudoname</span>
+                            <div></div>
+                            <small class="card-text text-muted">@Item.LastSeenText</small>
+                            <div></div>
+                        </div>
+                    }
+                </div>
             }
             else
             {
-                <div class="box-container text-center" id="NoLinkedAccount_Box">
+                <div class="box-container ms-1" id="LinkedAccountsCount_Box" style="display: none;">
+                    <h5 class="h5">Linked Accounts: <span id="LinkedAccountsCount_Span">@LinkedAccountsCount</span></h5>
+                </div>
+                <div class="box-container text-center" id="LinkedAccounts_Box">
                     <h2 class="h2"> <i class="fa-solid fa-link-slash"></i> </h2>
                     <h4 class="h4">No Linked Accounts Yet</h4>
                     <small class="card-text text-muted">link any other your account (if you got another one) to this to make switching between them much easier and quickier</small>
@@ -69,12 +107,12 @@
                 <div class="box-container mt-2" id="LinkAccount_Box">
                     <div class="box-container">
                         <div class="slider-container" id="LinkAccount_Box-Part0">
-                            <small class="badge bg-primary text-light rounded-pill">Step 1/3 (33.3%)</small>
+                            <small class="badge bg-primary text-light rounded-pill">Step 1/3</small>
                             <div class="box-container mt-1">
                                 <form method="get" asp-controller="Account" asp-action="CheckAccountCredentials" id="CheckAccountCredentials_Form">
                                     <div class="form-floating">
-                                        <input asp-for="UserName" autocomplete="off" class="form-control" placeholder="Email or Username" />
-                                        <label class="fw-500" asp-for="UserName">Email or Username</label>
+                                        <input asp-for="Email" autocomplete="off" class="form-control" placeholder="Email address" />
+                                        <label class="fw-500" asp-for="Email">Email</label>
                                     </div>
                                     <div class="form-floating mt-1">
                                         <input type="password" asp-for="PasswordHash" name="Password" id="Password" class="form-control" placeholder="Password of account" />
@@ -86,16 +124,13 @@
                                             <div class="col">
                                                 <button type="submit" class="btn btn-primary btn-standard-asset w-100">Check & Continue</button>
                                             </div>
-                                            <div class="col">
-                                                <button type="button" class="btn btn-standard-asset btn-light w-100">Cancel</button>
-                                            </div>
                                         </div>
                                     </div>
                                 </form>
                             </div>
                         </div>
                         <div class="slider-container" id="LinkAccount_Box-Part1" style="display: none;">
-                            <small class="badge bg-primary text-light rounded-pill">Step 2/3 (66.7%)</small>
+                            <small class="badge bg-primary text-light rounded-pill">Step 2/3</small>
                             <div></div>
                             <small class="card-text text-muted">Account: <span class="fw-500" id="LinkAccountInfo_Span">No Info</span></small>
                             <div class="box-container mt-2">
@@ -111,6 +146,35 @@
                                         <div class="row">
                                             <div class="col">
                                                 <button type="submit" class="btn btn-primary btn-standard-asset w-100">Check & Continue</button>
+                                            </div>
+                                            <div class="col">
+                                                <button type="button" class="btn btn-standard-asset btn-light w-100" id="SendReserveCodeMediated_Btn">Forgot My Code</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="slider-container" id="LinkAccount_Box-Part2" style="display: none;">
+                            <small class="badge bg-primary text-light rounded-pill">Step 3/3</small>
+                            <div></div>
+                            <small class="card-text text-muted">Account: <span class="fw-500" id="LinkAccountInfo2_Span">No Info</span></small>
+                            <div class="box-container mt-2">
+                                <form method="post" asp-controller="Account" asp-action="LinkAccounts" id="LinkAccounts_Form">
+                                    <div class="d-none">
+                                        <input type="hidden" name="Id" id="ALA_Id_Val" value="0" />
+                                    </div>
+                                    <div class="form-floating">
+                                        <input type="text" name="CodeName" id="CodeName" autocomplete="off" class="form-control" placeholder="Enter codename here" maxlength="30" />
+                                        <label class="fw-500" for="CodeName">Code Name</label>
+                                    </div>
+                                    <div class="ms-1">
+                                        <small class="card-text text-muted">Any name to show instead of your real account name. This field can stay empty</small>
+                                    </div>
+                                    <div class="box-container mt-2 w-100">
+                                        <div class="row">
+                                            <div class="col">
+                                                <button type="submit" class="btn btn-primary btn-standard-asset w-100">Add</button>
                                             </div>
                                             <div class="col">
                                                 <button type="button" class="btn btn-standard-asset btn-light w-100">Cancel</button>
