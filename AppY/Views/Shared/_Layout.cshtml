@@ -12,19 +12,16 @@
     <header>
         <nav class="navbar top-navbar bg-body-tertiary p-2" style="display: none;" id="MainTopOffNavbar">
             <div>
-                <button type="button" class="btn btn-outline-danger border-0 btn-standard me-1 d-xxl-none d-xl-none d-lg-none d-md-none d-sm-block text-danger btn-close-sidebar btn-fixed-close-sidebar" style="display: none;"> <i class="fa-solid fa-xmark"></i> </button>
+                <button type="button" class="btn btn-outline-danger border-0 btn-standard d-xxl-none d-xl-none d-lg-none d-md-none d-sm-block text-danger btn-close-sidebar btn-fixed-close-sidebar d-inline-block" style="display: none;"> <i class="fa-solid fa-xmark"></i> </button>
                 @if (User.Identity.IsAuthenticated)
                 {
                     <div class="d-none">
-                        <form method="post" asp-controller="User" asp-action="SetLastSeen" id="SetLastSeen_Form">                           
+                        <form method="post" asp-controller="User" asp-action="SetLastSeen" id="SetLastSeen_Form">
                         </form>
                     </div>
-                    <div class="box-container float-end">
-                        <a asp-controller="Home" asp-action="Create" class="btn btn-standard me-1"> <i class="fa-regular fa-square-plus"></i> </a>
-                        <button type="button" class="btn btn-standard me-1"> <i class="fa-regular fa-comments"></i> </button>
-                    </div>
+                    <a asp-controller="Home" asp-action="Create" class="btn btn-standard d-inline-block"> <i class="fa-regular fa-square-plus"></i> </a>
+                    <a asp-controller="Command" asp-action="Info" class="btn btn-standard d-inline-block"> <i class="fa-solid fa-terminal"></i> </a>
                 }
-                <button type="button" class="btn btn-standard me-1 open-main-bot-navbar" id="FifthMain_Btn" data-bs-html="Preloaded_BotOffNavbar" style="display: none;"> <i class="fa-regular fa-keyboard"></i> </button>
             </div>
         </nav>
 

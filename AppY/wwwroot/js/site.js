@@ -24,10 +24,10 @@ window.onload = function () {
             standardTimeout += 350;
             setTimeout(function () {
                 animatedOpen(false, "Preloaded_Container", true, false);
-                $("#MainTopOffNavbar").slideDown(300);
             }, 350);
         }
         else animatedOpen(false, "Preloaded_Container", true, false);
+        $("#MainTopOffNavbar").slideDown(300);
     }, 300);
 
     if (currentUrl.toLowerCase().includes("/discuss") || currentUrl.toLowerCase().includes("/chat/c")) {
@@ -1082,109 +1082,122 @@ $("#GetChats_Form").on("submit", function (event) {
             $("#Chats_Container-Box").empty();
             $("#ChatsCount_Span").text(response.count);
             animatedClose(true, "smallside-box-container", true, true);
-            $.each(response.result, function (index) {
-                let div = $("<div class='box-container bg-light p-2 mt-2'></div>");
-                let avatarDiv = $("<div class='image-picture-none-container-sm text-center bg-white d-inline-block me-2'></div>");
-                let name = $("<span class='h5 text-truncate'></span>");
-                let separatorZero = $("<div></div>");
-                let lastMessage = $("<small class='card-text ms-2'>No sent messages</small>");
-                let isMutedIcon = $('<small class="card-text text-orange float-end me-2 mt-1" style="display: none;"> <i class="fa-regular fa-bell-slash"></i> </small>');
-                let isPinnedIcon = $("<small class='card-text float-end me-2 mt-1' style='display: none;'> <i class='fa-solid fa-thumbtack'></i> </small>");
-                let noAvatarLbl = $("<div class='unpictured-container-label-sm text-dark'></div>");
+            if (response.count > 0) {
+                $.each(response.result, function (index) {
+                    let div = $("<div class='box-container bg-light p-2 mt-2'></div>");
+                    let avatarDiv = $("<div class='image-picture-none-container-sm text-center bg-white d-inline-block me-2'></div>");
+                    let name = $("<span class='h5 text-truncate'></span>");
+                    let separatorZero = $("<div></div>");
+                    let lastMessage = $("<small class='card-text ms-2'>No sent messages</small>");
+                    let isMutedIcon = $('<small class="card-text text-orange float-end me-2 mt-1" style="display: none;"> <i class="fa-regular fa-bell-slash"></i> </small>');
+                    let isPinnedIcon = $("<small class='card-text float-end me-2 mt-1' style='display: none;'> <i class='fa-solid fa-thumbtack'></i> </small>");
+                    let noAvatarLbl = $("<div class='unpictured-container-label-sm text-dark'></div>");
 
-                let dropdownDiv = $("<div class='dropdown'></div>");
-                let dropdownBtn = $("<button type='button' class='btn btn-standard btn-sm float-end ms-2' data-bs-toggle='dropdown' aria-expanded='false'> <i class='fa-solid fa-ellipsis-h'></i> </button>");
-                let dropdownUl = $("<ul class='dropdown-menu shadow-sm p-1'></ul>");
-                let dropdownLi0 = $("<li class='text-center mb-1'></li>");
-                let dropdownLi1 = $("<li></li>");
-                let dropdownLi2 = $("<li></li>");
-                let dropdownLi3 = $("<li></li>");
-                let dropdownLi4 = $("<li></li>");
-                let dropdownHeader = $("<small class='card-text text-muted'></small>");
-                let dropdownBtn1 = $("<a href='#' class='dropdown-item mb-1'> <i class='fa-solid fa-up-right-from-square'></i> Chat</a>");
-                let dropdownBtn2 = $("<button type='button' class='dropdown-item mb-1'></button>");
-                let dropdownBtn3 = $("<button type='button' class='dropdown-item'></button>");
-                let dropdownBtn4 = $("<button type='button' class='dropdown-item mt-1'></button>");
-                dropdownLi0.append(dropdownHeader);
-                dropdownLi1.append(dropdownBtn1);
-                dropdownLi2.append(dropdownBtn2);
-                dropdownLi3.append(dropdownBtn3);
-                dropdownLi4.append(dropdownBtn4);
-                dropdownUl.append(dropdownLi0);
-                dropdownUl.append(dropdownLi1);
-                dropdownUl.append(dropdownLi2);
-                dropdownUl.append(dropdownLi3);
-                dropdownUl.append(dropdownLi4);
-                dropdownDiv.append(dropdownBtn);
-                dropdownDiv.append(dropdownUl);
+                    let dropdownDiv = $("<div class='dropdown'></div>");
+                    let dropdownBtn = $("<button type='button' class='btn btn-standard btn-sm float-end ms-2' data-bs-toggle='dropdown' aria-expanded='false'> <i class='fa-solid fa-ellipsis-h'></i> </button>");
+                    let dropdownUl = $("<ul class='dropdown-menu shadow-sm p-1'></ul>");
+                    let dropdownLi0 = $("<li class='text-center mb-1'></li>");
+                    let dropdownLi1 = $("<li></li>");
+                    let dropdownLi2 = $("<li></li>");
+                    let dropdownLi3 = $("<li></li>");
+                    let dropdownLi4 = $("<li></li>");
+                    let dropdownHeader = $("<small class='card-text text-muted'></small>");
+                    let dropdownBtn1 = $("<a href='#' class='dropdown-item mb-1'> <i class='fa-solid fa-up-right-from-square'></i> Chat</a>");
+                    let dropdownBtn2 = $("<button type='button' class='dropdown-item mb-1'></button>");
+                    let dropdownBtn3 = $("<button type='button' class='dropdown-item'></button>");
+                    let dropdownBtn4 = $("<button type='button' class='dropdown-item mt-1'></button>");
+                    dropdownLi0.append(dropdownHeader);
+                    dropdownLi1.append(dropdownBtn1);
+                    dropdownLi2.append(dropdownBtn2);
+                    dropdownLi3.append(dropdownBtn3);
+                    dropdownLi4.append(dropdownBtn4);
+                    dropdownUl.append(dropdownLi0);
+                    dropdownUl.append(dropdownLi1);
+                    dropdownUl.append(dropdownLi2);
+                    dropdownUl.append(dropdownLi3);
+                    dropdownUl.append(dropdownLi4);
+                    dropdownDiv.append(dropdownBtn);
+                    dropdownDiv.append(dropdownUl);
 
-                name.attr("id", response.result[index].chatId + "-ChatName_Lbl");
-                dropdownBtn2.attr("id", response.result[index].chatId + "-ChatPinOrUnpin");
-                dropdownBtn3.attr("id", response.result[index].chatId + "-ChatMuteOrUnmute");
-                isPinnedIcon.attr("id", response.result[index].chatId + "-ChatPinned_Icon");
-                isMutedIcon.attr("id", response.result[index].chatId + "-ChatMuted_Icon");
+                    name.attr("id", response.result[index].chatId + "-ChatName_Lbl");
+                    dropdownBtn2.attr("id", response.result[index].chatId + "-ChatPinOrUnpin");
+                    dropdownBtn3.attr("id", response.result[index].chatId + "-ChatMuteOrUnmute");
+                    isPinnedIcon.attr("id", response.result[index].chatId + "-ChatPinned_Icon");
+                    isMutedIcon.attr("id", response.result[index].chatId + "-ChatMuted_Icon");
 
-                if (response.result[index].chatName != null) {
-                    if (response.result[index].chatName.length > 24) {
-                        name.html(response.result[index].chatName.substring(0, 24) + "...");
+                    if (response.result[index].chatName != null) {
+                        if (response.result[index].chatName.length > 24) {
+                            name.html(response.result[index].chatName.substring(0, 24) + "...");
+                        }
+                        else name.html(response.result[index].chatName);
+                        noAvatarLbl.html(response.result[index].chatName[0]);
                     }
-                    else name.html(response.result[index].chatName);
-                    noAvatarLbl.html(response.result[index].chatName[0]);
-                }
-                else {
-                    name.html("New Chat");
-                    noAvatarLbl.html("N");
-                }
-                avatarDiv.append(noAvatarLbl);
+                    else {
+                        name.html("New Chat");
+                        noAvatarLbl.html("N");
+                    }
+                    avatarDiv.append(noAvatarLbl);
 
-                if (response.result[index].isPinned) {
-                    isPinnedIcon.fadeIn(0);
-                    dropdownBtn2.addClass("unpin-the-chat");
-                    dropdownBtn2.html(' <i class="fa-solid fa-link-slash"></i> Unpin');
-                }
-                else {
-                    dropdownBtn2.addClass("pin-the-chat");
-                    dropdownBtn2.html(' <i class="fa-solid fa-thumbtack"></i> Pin');
-                }
-                if (response.result[index].isMuted) {
-                    isMutedIcon.fadeIn(0);
-                    dropdownBtn3.addClass("unmute-the-chat");
-                    dropdownBtn3.html(' <i class="fa-regular fa-bell"></i> Unmute');
-                }
-                else {
-                    dropdownBtn3.addClass("mute-the-chat");
-                    dropdownBtn3.html(' <i class="fa-regular fa-bell-slash"></i> Mute');
-                }
+                    if (response.result[index].isPinned) {
+                        isPinnedIcon.fadeIn(0);
+                        dropdownBtn2.addClass("unpin-the-chat");
+                        dropdownBtn2.html(' <i class="fa-solid fa-link-slash"></i> Unpin');
+                    }
+                    else {
+                        dropdownBtn2.addClass("pin-the-chat");
+                        dropdownBtn2.html(' <i class="fa-solid fa-thumbtack"></i> Pin');
+                    }
+                    if (response.result[index].isMuted) {
+                        isMutedIcon.fadeIn(0);
+                        dropdownBtn3.addClass("unmute-the-chat");
+                        dropdownBtn3.html(' <i class="fa-regular fa-bell"></i> Unmute');
+                    }
+                    else {
+                        dropdownBtn3.addClass("mute-the-chat");
+                        dropdownBtn3.html(' <i class="fa-regular fa-bell-slash"></i> Mute');
+                    }
 
-                if (response.result[index].deletedAt != null) {
-                    div.css("border", "1px solid red");
-                    dropdownLi1.fadeOut(0);
-                    dropdownHeader.html("deleted " + dateAndTimeTranslator(response.result[index].deletedAt));
-                    dropdownBtn4.addClass("text-danger");
-                    dropdownBtn4.addClass("restore-the-chat");
-                    dropdownBtn4.attr("id", response.result[index].chatId + "-RestoreTheChat");
-                    dropdownBtn4.html(' <i class="fa-solid fa-trash-arrow-up"></i> Restore');
-                    lastMessage.html("<small class='badge bg-danger rounded-pill text text-light'>Deleted</small> No Sent Messages");
-                }
-                else {
-                    dropdownBtn1.attr("href", "/Chat/C/" + response.result[index].chatId);
-                    name.addClass("relocate-to-chat");
-                    dropdownLi4.fadeOut(0);
-                    dropdownLi0.fadeOut(0);
-                }
+                    if (response.result[index].deletedAt != null) {
+                        div.css("border", "1px solid red");
+                        dropdownLi1.fadeOut(0);
+                        dropdownHeader.html("deleted " + dateAndTimeTranslator(response.result[index].deletedAt));
+                        dropdownBtn4.addClass("text-danger");
+                        dropdownBtn4.addClass("restore-the-chat");
+                        dropdownBtn4.attr("id", response.result[index].chatId + "-RestoreTheChat");
+                        dropdownBtn4.html(' <i class="fa-solid fa-trash-arrow-up"></i> Restore');
+                        lastMessage.html("<small class='badge bg-danger rounded-pill text text-light'>Deleted</small> No Sent Messages");
+                    }
+                    else {
+                        dropdownBtn1.attr("href", "/Chat/C/" + response.result[index].chatId);
+                        name.addClass("relocate-to-chat");
+                        dropdownLi4.fadeOut(0);
+                        dropdownLi0.fadeOut(0);
+                    }
 
-                if (!currentUrl.toLowerCase().includes("/discuss") && !currentUrl.toLowerCase().includes("/chat")) {
-                    div.append(dropdownDiv);
-                }
-                div.append(isPinnedIcon);
-                div.append(isMutedIcon);
-                div.append(avatarDiv);
-                div.append(name);
-                div.append(separatorZero);
-                div.append(lastMessage);
+                    if (!currentUrl.toLowerCase().includes("/discuss") && !currentUrl.toLowerCase().includes("/chat")) {
+                        div.append(dropdownDiv);
+                    }
+                    div.append(isPinnedIcon);
+                    div.append(isMutedIcon);
+                    div.append(avatarDiv);
+                    div.append(name);
+                    div.append(separatorZero);
+                    div.append(lastMessage);
 
+                    $("#Chats_Container-Box").append(div);
+                });
+            }
+            else {
+                let div = $("<div class='box-container bg-light text-center p-2'></div>");
+                let icon = $("<h2 class='h2'> <i class='fa-solid fa-comment-slash'></i> </h2>");
+                let title = $("<h5 class='h5'>No Chats</h5>");
+                let description = $("<small class='card-text text-muted'>You haven't got any chat yet</small>");
+
+                div.append(icon);
+                div.append(title);
+                div.append(description);
                 $("#Chats_Container-Box").append(div);
-            });
+            }
 
             setTimeout(function () {
                 openSidebar();
@@ -4654,9 +4667,6 @@ function closeSidebar() {
     }
 }
 
-$("#YTMiniPlayer_Search").on("change", function () {
-    ytVideoOptimizer($(this).val());
-});
 function ytVideoOptimizer(link) {
     let trueLink;
     if (link != null) {
@@ -5770,6 +5780,42 @@ $(document).on("change", ".checkbox-select", function (event) {
     if (description != undefined) {
         $("#" + event.target.id).attr("data-bs-html", $("#" + event.target.id + "-Description").text());
         $("#" + event.target.id + "-Description").html(description);
+    }
+});
+
+$("#YTMiniPlayer_Search").on("change", function () {
+    ytVideoOptimizer($(this).val());
+});
+$(document).on("click", "#MuteYTVideo_Btn", function () {
+    if (navigator.getBattery) {
+        navigator.getBattery()
+            .then(function (battery) {
+
+                // Get current battery level .
+                var batteryLevel = battery.level * 100;
+                console.log(batteryLevel);
+            })
+            .catch(function (e) {
+                console.error(e);
+            });
+    }
+    else {
+        console.log(false);
+    }
+
+    let element = document.getElementById("YoutubeMiniPlayer_Frame");
+    element.muted = true;
+    if (element.muted) {
+        $(this).html(' <i class="fa-solid fa-volume-high"></i> Unmute');
+        $(this).attr("id", "UnmuteYTVideo_Btn");
+    }
+});
+$(document).on("click", "#UnmuteYTVideo_Btn", function () {
+    let element = document.getElementById("YoutubeMiniPlayer_Frame");
+    element.muted = false;
+    if (!element.muted) {
+        $(this).html(' <i class="fa-solid fa-volume-xmark"></i> Mute');
+        $(this).attr("id", "MuteYTVideo_Btn");
     }
 });
 

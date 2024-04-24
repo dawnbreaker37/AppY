@@ -31,10 +31,10 @@
                     <button type="button" class="btn btn-close btn-sm rounded-circle" id="YoutubeMiniPlayer_Container-Close"></button>
                 </div>
             </div>
-            <div class="box-container text-center mt-1" id="YTMiniPlayer_Box" style="display: none;">
-                <iframe class="yt-mini-player" src="" title="YouTube Mini Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen id="YoutubeMiniPlayer_Frame"></iframe>
+            <div class="box-container text-center mt-1" id="YTMiniPlayer_Box">
+                <iframe class="yt-mini-player" loading="lazy" src="" title="Mini Player" frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen id="YoutubeMiniPlayer_Frame"></iframe>
             </div>
-            <div class="bordered-container text-center mt-1 p-3" id="YTNoCurrentView_Box">
+            <div class="bordered-container text-center mt-1 p-3" id="YTNoCurrentView_Box" style="display: none;">
                 <h2 class="h2 text-danger"> <i class="fa-brands fa-youtube"></i> </h2>
                 <h4 class="h4">No Video</h4>
                 <small class="card-text text-muted">paste your link or enter it to show the video</small>
@@ -45,7 +45,7 @@
                         <button type="button" class="btn btn-standard w-100 btn-sm"> <i class="fa-regular fa-copy"></i> Copy</button>
                     </div>
                     <div class="col">
-                        <button type="button" class="btn btn-standard btn-mute w-100 btn-sm"> <i class="fa-solid fa-volume-xmark"></i> Mute</button>
+                        <button type="button" class="btn btn-standard btn-mute w-100 btn-sm" id="MuteYTVideo_Btn"> <i class="fa-solid fa-volume-xmark"></i> Mute</button>
                     </div>
                     <div class="col">
                         <button type="button" class="btn btn-standard btn-forward-yt-video-to-chat w-100 btn-sm"> <i class="fa-solid fa-circle-chevron-right"></i> To Chat</button>
