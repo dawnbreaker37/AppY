@@ -11,10 +11,10 @@ namespace AppY.ViewModels
         public DateTime SentAt { get; set; }
         [Required]
         public int UserId { get; set; }
-        [Required]
         public int DiscussionId { get; set; }
         [Required]
         public int MessageId { get; set; }
+        public int ChatId { get; set; }
         public int IsAutoDeletable { get; set; }
         [DataType(DataType.ImageUrl)]
         public IFormFileCollection? Images { get; set; }

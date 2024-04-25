@@ -24,7 +24,7 @@ namespace AppY.Repositories
 
         public async Task<User?> GetMainUserInfoAsync(int Id)
         {
-            if (Id != 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, AvatarUrl = u.AvatarUrl, Email = u.Email, AvatarBgColor = u.AvatarBgColor, AvatarFgColor = u.AvatarFgColor, EmailConfirmed = u.EmailConfirmed, Description = u.Description, PseudoName = u.PseudoName, ShortName = u.ShortName, PasswordChanged = u.PasswordChanged, AvatarStickerUrl = u.AvatarStickerUrl, IsPrivate = u.IsPrivate, AreMessagesAutoDeletable = u.AreMessagesAutoDeletable }).FirstOrDefaultAsync(u => u.Id == Id && !u.IsDisabled);
+            if (Id != 0) return await _context.Users.AsNoTracking().Select(u => new User { Id = u.Id, IsDisabled = u.IsDisabled, AvatarUrl = u.AvatarUrl, Email = u.Email, AvatarBgColor = u.AvatarBgColor, AvatarFgColor = u.AvatarFgColor, EmailConfirmed = u.EmailConfirmed, Description = u.Description, EcoModeOnAt = u.EcoModeOnAt, PseudoName = u.PseudoName, ShortName = u.ShortName, PasswordChanged = u.PasswordChanged, AvatarStickerUrl = u.AvatarStickerUrl, IsPrivate = u.IsPrivate, AreMessagesAutoDeletable = u.AreMessagesAutoDeletable }).FirstOrDefaultAsync(u => u.Id == Id && !u.IsDisabled);
             else return null;
         }
 
@@ -247,6 +247,17 @@ namespace AppY.Repositories
             {
                 int Result = await _context.Users.AsNoTracking().Where(u => u.Id == Id).ExecuteUpdateAsync(u => u.SetProperty(u => u.LastSeen, DateTime.Now));
                 if (Result > 0) return Id;
+            }
+            return 0;
+        }
+
+        public async Task<int> EditEcoModeSettings(int Id, int BatteryLevel)
+        {
+            if(Id > 0)
+            {
+                BatteryLevel = BatteryLevel >= 0 && BatteryLevel <= 45 ? BatteryLevel : 20;
+                await _context.Users.AsNoTracking().Where(u => u.Id == Id).ExecuteUpdateAsync(u => u.SetProperty(u => u.EcoModeOnAt, BatteryLevel));
+                return BatteryLevel;
             }
             return 0;
         }

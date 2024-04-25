@@ -21,6 +21,7 @@ namespace AppY.Interfaces
         public Task<int> ChatSecondUserIdAsync(int Id, int UserId);
         public Task<List<int>?> ChatUserIdsAsync(int Id);
         public IQueryable<ChatUsers>? GetUserChats(int Id);
+        public IQueryable<ChatUsers>? GetUserChatsShortly(int Id);
         public Task<int> FindChatAvailability(int User1, int User2, bool CreateIfNot);
     }
 }

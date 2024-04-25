@@ -109,6 +109,8 @@ namespace AppY.Repositories
                         Email = SignUpModel.Email,
                         PseudoName = SignUpModel.Username,
                         UserName = SignUpModel.Username,
+                        EcoModeOnAt = 20,
+                        HideLastSeenInfo = false,
                         AvatarBgColor = "F0F0F0",
                         AvatarFgColor = "000000",
                         ShortName = "id" + Guid.NewGuid().ToString("D").Substring(0, 7),

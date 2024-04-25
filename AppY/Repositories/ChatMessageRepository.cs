@@ -23,29 +23,60 @@ namespace AppY.Repositories
         }
         public async override Task<string?> SendMessageAsync(SendMessage Model)
         {
-            if (!String.IsNullOrWhiteSpace(Model.Text) && Model.Text.Length <= 3400 && Model.UserId > 0 && Model.ChatId > 0)
+            bool CheckUser = await _context.ChatUsers.AsNoTracking().AnyAsync(u => u.ChatId == Model.DiscussionId && u.UserId == Model.UserId);
+            if (CheckUser)
             {
-                ChatMessage chatMessage = new ChatMessage()
+                if (!String.IsNullOrWhiteSpace(Model.Text) && Model.Text.Length <= 3400 && Model.UserId > 0 && Model.ChatId > 0)
                 {
-                    Text = Model.Text,
-                    UserId = Model.UserId,
-                    ChatId = Model.ChatId,
-                    IsAutodeletable = Model.IsAutoDeletable,
-                    IsDeleted = false,
-                    IsEdited = false,
-                    IsPinned = false,
-                    SendAt = DateTime.Now
-                };
-                await _context.AddAsync(chatMessage);
-                await _context.SaveChangesAsync();
+                    ChatMessage chatMessage = new ChatMessage()
+                    {
+                        Text = Model.Text,
+                        UserId = Model.UserId,
+                        ChatId = Model.ChatId,
+                        IsAutodeletable = Model.IsAutoDeletable,
+                        IsDeleted = false,
+                        IsEdited = false,
+                        IsPinned = false,
+                        SendAt = DateTime.Now
+                    };
+                    await _context.AddAsync(chatMessage);
+                    await _context.SaveChangesAsync();
 
-                return chatMessage.Id.ToString();
+                    return chatMessage.Id.ToString();
+                }
             }
-            else return null;
+            return null;
         }
-        public override Task<string?> ReplyToMessageAsync(SendReply Model)
+
+        public async override Task<string?> ReplyToMessageAsync(SendReply Model)
         {
-            throw new NotImplementedException();
+            if (Model.UserId > 0 && Model.ChatId > 0 && !String.IsNullOrWhiteSpace(Model.Text) && Model.Text.Length <= 3400 && !String.IsNullOrWhiteSpace(Model.ReplyText) && Model.MessageId > 0)
+            {
+                bool CheckUser = await _context.ChatUsers.AsNoTracking().AnyAsync(u => u.ChatId == Model.ChatId && u.UserId == Model.UserId);
+                if (CheckUser)
+                {
+                    Model.ReplyText = Model.ReplyText.Length > 40 ? Model.ReplyText.Substring(0, 37) + "..." : Model.ReplyText;
+                    ChatMessage chatMessage = new ChatMessage
+                    {
+                        ChatId = Model.ChatId,
+                        Text = Model.Text,
+                        RepliedMessageId = Model.MessageId,
+                        RepliesMessageText = Model.ReplyText,
+                        IsChecked = false,
+                        IsDeleted = false,
+                        SendAt = DateTime.Now,
+                        IsAutodeletable = Model.IsAutoDeletable,
+                        IsEdited = false,
+                        IsPinned = false,
+                        UserId = Model.UserId
+                    };
+                    await _context.AddAsync(chatMessage);
+                    await _context.SaveChangesAsync();
+
+                    return chatMessage.Id.ToString();
+                }
+            }
+            return null;
         }
         public override async Task<int> EditMessageAsync(SendEdit Model)
         {
@@ -64,9 +95,14 @@ namespace AppY.Repositories
         {
             throw new NotImplementedException();
         }
-        public override Task<int> DeleteMessageAsync(int Id, int UserId, int ChatOrDiscussionId)
+        public async override Task<int> DeleteMessageAsync(int Id, int UserId, int ChatOrDiscussionId)
         {
-            throw new NotImplementedException();
+            if (Id > 0 && UserId > 0 && ChatOrDiscussionId > 0)
+            {
+                await _context.ChatMessages.AsNoTracking().Where(c => c.Id == Id && c.UserId == UserId && c.ChatId == ChatOrDiscussionId).ExecuteUpdateAsync(c => c.SetProperty(c => c.IsDeleted, true));
+                return Id;
+            }
+            else return 0;
         }
         public override Task<DiscussionMessage?> GetPinnedMessageInfoAsync(int Id, int SkipCount)
         {
@@ -87,7 +123,7 @@ namespace AppY.Repositories
 
         public override IQueryable<IGrouping<DateTime, DiscussionMessage>>? GetMessages(int Id, int UserId, int SkipCount, int LoadCount)
         {
-            if (Id > 0 && UserId > 0) return _context.ChatMessages.AsNoTracking().Where(c => c.ChatId == Id && !c.IsDeleted).Select(c => new DiscussionMessage { Id = c.Id, UserId = c.UserId, IsAutoDeletable = c.IsAutodeletable, IsEdited = c.IsEdited, IsChecked = c.IsChecked, RepliedMessageId = c.RepliedMessageId, RepliesMsgShortText = c.RepliesMessageText, IsPinned = c.IsPinned, SentAt = c.SendAt, Text = c.Text }).OrderByDescending(c => c.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(c => c.SentAt.Date);
+            if (Id > 0 && UserId > 0) return _context.ChatMessages.AsNoTracking().Where(c => c.ChatId == Id && !c.IsDeleted).Select(c => new DiscussionMessage { Id = c.Id, UserId = c.UserId, IsAutoDeletable = c.IsAutodeletable, IsEdited = c.IsEdited, IsChecked = c.IsChecked, RepliedMessageId = c.RepliedMessageId, RepliesMsgShortText = c.RepliesMessageText, IsPinned = c.IsPinned, SentAt = c.SendAt, Text = c.Text }).OrderBy(c => c.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(c => c.SentAt.Date);
             else return null;
         }
 

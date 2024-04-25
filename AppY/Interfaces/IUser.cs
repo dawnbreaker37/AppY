@@ -14,6 +14,7 @@ namespace AppY.Interfaces
         public Task<User?> GetUserSuperShortInfoAsync(string? Shortname);
         public Task<int> GetCurrentUserAccessLevelAsync(int Id, int UserId);
         public Task<bool> EditUserInfoAsync(EditUserInfo_ViewModel Model);
+        public Task<int> EditEcoModeSettings(int Id, int BatteryLevel);
         public Task<bool> EditPrivacySettingsAsync(EditUserPrivacySettings Model);
         public Task<bool> EditAvatarDesignAsync(EditAvatarColors Model);
         public Task<string?> SetProfilePhotoAsync(int Id, IFormFile File);

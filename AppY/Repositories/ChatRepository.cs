@@ -237,5 +237,11 @@ namespace AppY.Repositories
             }
             return 0;
         }
+
+        public IQueryable<ChatUsers>? GetUserChatsShortly(int Id)
+        {
+            if (Id > 0) return _context.ChatUsers.AsNoTracking().Where(c => c.UserId == Id && !c.IsDeleted).Select(c => new ChatUsers { Id = c.Id, ChatId = c.ChatId, ChatName = c.Chat != null ? c.Chat.Name : "New Chat" });
+            else return null;
+        }
     }
 }

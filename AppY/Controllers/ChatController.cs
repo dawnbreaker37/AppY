@@ -52,7 +52,9 @@ namespace AppY.Controllers
                                         User? SecondUserInfo = await _user.GetUserSuperShortInfoEvenIfPrivateAsync(SecondUserId);
                                         ChatInfo.Name = ChatInfo.Name == null ? "New Chat" : ChatInfo.Name;
 
-                                        if(SentMessagesCount > 0)
+                                        if(SecondUserInfo != null) SecondUserInfo.LastSeenText = _user.SetLastSeenText(SecondUserInfo.LastSeen);
+
+                                        if (SentMessagesCount > 0)
                                         {
                                             IQueryable<IGrouping<DateTime, DiscussionMessage>>?  Messages_Preview = _messages.GetMessages(Id, CurrentUserId, 0, 35);
                                             if(Messages_Preview != null) Messages = await Messages_Preview.ToListAsync();
@@ -155,6 +157,31 @@ namespace AppY.Controllers
                 }
             }
             return Json(new { success = false, alert = "No chats to load" });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetChatsShortly(bool IsForForwarding)
+        {
+            if (Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? UserId_Str = Request.Cookies["CurrentUserId"];
+                if(UserId_Str != null)
+                {
+                    bool TryParse = Int32.TryParse(UserId_Str, out int UserId);
+                    if(TryParse)
+                    {
+                        IQueryable<ChatUsers>? Result_Preview = _chat.GetUserChatsShortly(UserId);
+                        if (Result_Preview != null)
+                        {
+                            List<ChatUsers>? Result = await Result_Preview.ToListAsync();
+                            if (Result != null) return Json(new { success = true, isForForwarding = IsForForwarding, result = Result, count = Result.Count });
+                            else return Json(new { success = false, count = 0, alert = "No Chats to Load" });
+                        }
+                        return Json(new { success = false, count = 0, alert = "No Chats to Load" });
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "Sorry, but we can't find any info about your chats" });
         }
 
         [HttpGet]

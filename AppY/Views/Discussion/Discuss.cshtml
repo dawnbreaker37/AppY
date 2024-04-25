@@ -158,118 +158,79 @@
         </div>
     </div>
 
-    <div class="smallside-box-container shadow-standard on-start-position" style="bottom: 0; display: block;" id="DiscussionInfoTooltips_Container">
-        <div class="box-container p-3">
-            <div class="slider-container" id="DiscussionInfoTooltips_Box-Part0">
-                <div class="row">
-                    <div class="col col-2 text-center">
-                        <h1 class="h1 text-neon-purple"> <i class="fa-regular fa-comment-dots fa-bounce"></i> </h1>
-                        <small class="card-text text-muted fw-500">1/7</small>
-                    </div>
-                    <div class="col col-10">
-                        <h5 class="h5">Welcome to Discussions!</h5>
-                        <small class="card-text text-muted">Please, spend 3 mins to be aware of <span class="fw-500">discussions</span>. Please, slide to the next tooltip for more info, thank You!</small>
-                        <div class="mt-2">
-                            <button type="button" class="btn btn-light btn-standard-asset btn-sm" onclick="animatedClose(false, 'DiscussionInfoTooltips_Container', true, true);">Ignore and Close</button>
-                        </div>
-                    </div>
+    <div class="smallside-box-container shadow-standard overflow-hidden" id="YoutubeMiniPlayer_Container">
+        <div class="box-container p-2">
+            <div class="box-container">
+                <div class="hstack gap-3">
+                    <input type="text" class="form-control bg-light shadow-none w-100" placeholder="Enter any youtube link here..." id="YTMiniPlayer_Search" />
+                    <button type="button" class="btn btn-close btn-sm rounded-circle" id="YoutubeMiniPlayer_Container-Close"></button>
                 </div>
             </div>
-
-            <div class="slider-container" style="display: none;" id="DiscussionInfoTooltips_Box-Part1">
-                <div class="row">
-                    <div class="col col-2  text-center">
-                        <h1 class="h1"> <i class="fa-solid fa-weight-hanging"></i> </h1>
-                        <small class="card-text text-muted fw-500">2/7</small>
-                    </div>
-                    <div class="col col-10">
-                        <h5 class="h5">Designed to be Large</h5>
-                        <small class="card-text text-muted">This kind of chats are made for heavy messages with up to 3400 characters each. They may also contain images and the text could be edited via our <span class="fw-500">text editor</span></small>
-                    </div>
-                </div>
+            <div class="box-container text-center mt-1" id="YTMiniPlayer_Box" style="display: none;">
+                <iframe class="yt-mini-player" loading="lazy" src="" title="Mini Player" frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen id="YoutubeMiniPlayer_Frame"></iframe>
             </div>
-
-            <div class="slider-container" style="display: none;" id="DiscussionInfoTooltips_Box-Part2">
-                <div class="row">
-                    <div class="col col-2  text-center">
-                        <h1 class="h1 text-primary"> <i class="fa-solid fa-users"></i> </h1>
-                        <small class="card-text text-muted fw-500">3/7</small>
-                    </div>
-                    <div class="col col-10">
-                        <h5 class="h5">Enough for Every Group</h5>
-                        <small class="card-text text-muted">Discussions may contain up to <span class="fw-500">1200</span> members, so no one will miss from your loving hands. Notice that you may add members to any discussion where you insist or other users may become a member of any discussion which is not <span class="fw-500">private</span></small>
-                    </div>
-                </div>
+            <div class="bordered-container text-center mt-1 p-3" id="YTNoCurrentView_Box">
+                <h2 class="h2 text-danger"> <i class="fa-brands fa-youtube"></i> </h2>
+                <h4 class="h4">No Video</h4>
+                <small class="card-text text-muted">paste your link or enter it to show the video</small>
             </div>
-
-            <div class="slider-container" style="display: none;" id="DiscussionInfoTooltips_Box-Part3">
+            <div class="box-container bg-light text-center mt-1 mw-99">
                 <div class="row">
-                    <div class="col col-2  text-center">
-                        <h1 class="h1 text-neon-purple"> <i class="fa-solid fa-lock fa-beat"></i> </h1>
-                        <small class="card-text text-muted fw-500">4/7</small>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard w-100 btn-sm"> <i class="fa-regular fa-copy"></i> Copy</button>
                     </div>
-                    <div class="col col-10">
-                        <h5 class="h5">Secure and Safe</h5>
-                        <small class="card-text text-muted">Any message in any discussion is <span class="fw-500">encrypted</span> by our own encription so no one could have access to your discussions and sent messages (even us...). Your messages are only yours and no one else</small>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard btn-mute w-100 btn-sm" id="MuteYTVideo_Btn"> <i class="fa-solid fa-volume-xmark"></i> Mute</button>
                     </div>
-                </div>
-            </div>
-
-            <div class="slider-container" style="display: none;" id="DiscussionInfoTooltips_Box-Part4">
-                <div class="row">
-                    <div class="col col-2  text-center">
-                        <h1 class="h1"> <i class="fa-solid fa-spinner fa-spin-pulse"></i> </h1>
-                        <small class="card-text text-muted fw-500">5/7</small>
-                    </div>
-                    <div class="col col-10">
-                        <h5 class="h5">Non-Live</h5>
-                        <small class="card-text text-muted">Standard discussions are not <span class="fw-500">live</span>, so you can't act with other users like in real-time chat. For that reasons we recommend you to create <span class="fw-500">live discussions</span>. They are similar to standard ones but with live chatting ability</small>
-                    </div>
-                </div>
-            </div>
-
-            <div class="slider-container" style="display: none;" id="DiscussionInfoTooltips_Box-Part5">
-                <div class="row">
-                    <div class="col col-2  text-center">
-                        <h1 class="h1 text-primary"> <i class="fa-solid fa-scroll"></i> </h1>
-                        <small class="card-text text-muted fw-500">6/7</small>
-                    </div>
-                    <div class="col col-10">
-                        <h5 class="h5">Free to Use</h5>
-                        <small class="card-text text-muted">You've an exclusive ability to create <span class="fw-500">shortcuts</span>, <span class="fw-500">scripts</span> or even edit your text by <span class="fw-500">text editor</span> to make it more interesting. Explore the abilities of <span class="fw-500">shortcuts</span> by <a class="text-primary text-decoration-none" asp-controller="Home" asp-action="Toolbox">this link</a></small>
-                    </div>
-                </div>
-            </div>
-
-            <div class="slider-container" style="display: none;" id="DiscussionInfoTooltips_Box-Part6">
-                <div class="row">
-                    <div class="col col-2  text-center">
-                        <h1 class="h1 text-neon-purple"> <i class="fa-regular fa-circle-check"></i> </h1>
-                        <small class="card-text text-muted fw-500">7/7</small>
-                    </div>
-                    <div class="col col-10">
-                        <h5 class="h5">That's All</h5>
-                        <small class="card-text text-muted">Thank You for reading this simple tooltips. We hope it helped you to become more informed about <span class="fw-500">discussions</span></small>
-                        <div class="mt-2">
-                            <button type="button" class="btn btn-light btn-standard-asset btn-sm" onclick="animatedClose(false, 'DiscussionInfoTooltips_Container', true, true);">Close</button>
-                        </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard btn-forward-yt-video-to-chat w-100 btn-sm"> <i class="fa-solid fa-circle-chevron-right"></i> To Chat</button>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="border-top mt-1 p-1 w-100">
-            <div class="w-75 text-center mx-auto">
-                <div class="d-none">
-                    <input type="hidden" id="DiscussionInfoTooltips_Box-StepVal" value="0" />
-                    <input type="hidden" id="DiscussionInfoTooltips_Box-MaxStepVal" value="6" />
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <button type="button" class="btn btn-standard btn-sm btn-slide-to-prev w-100" id="DiscussionInfoTooltips_Box-PrevSlide" disabled> <i class="fa-solid fa-arrow-left"></i> Previous</button>
+    <div class="smallside-box-container shadow-standard" id="Discussions_Container">
+        <div class="header-container p-2 pb-0 text-center" id="Discussions_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Discussions_Container-Close"></button>
+            <span class="h5 text-truncate p-1" id="Discussions_Container_Header">Discussions</span>
+            <div></div>
+            <small class="card-text text-muted" id="DiscussionsCount_Lbl"><span id="DiscussionsCount_Span">0</span> discussion(s)</small>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="Discussions_Container-Box">
+        </div>
+    </div>
+    <div class="smallside-box-container shadow-standard" id="Chats_Container">
+        <div class="header-container p-2 pb-0 text-center" id="Chats_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Chats_Container-Close"></button>
+            <span class="h5 text-truncate p-1" id="Chats_Container_Header">Chats</span>
+            <div></div>
+            <small class="card-text text-muted" id="ChatsCount_Lbl"><span id="ChatsCount_Span">0</span> chat(s)</small>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="Chats_Container-Box">
+        </div>
+    </div>
+
+    <div class="smallside-bot-navbar shadow-standard" style="display: none; bottom: -300px;" id="SmallsideBotNavbar">
+        <div class="box-container p-2">
+            <div class="row">
+                <div class="col">
+                    <div>
+                        <form method="get" asp-controller="Chat" asp-action="GetChats" id="GetChats_Form">
+                            <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-regular fa-comments"></i> <br />Chats</button>
+                        </form>
                     </div>
-                    <div class="col">
-                        <button type="button" class="btn btn-standard btn-sm btn-slide-to-next w-100" id="DiscussionInfoTooltips_Box-NextSlide">Next <i class="fa-solid fa-arrow-right"></i> </button>
+                </div>
+                <div class="col">
+                    <div>
+                        <form method="get" asp-controller="Discussion" asp-action="GetDiscussions" id="GetDiscussions_Form">
+                            <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-quote-right"></i> <br />Discussions</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="col">
+                    <div>
+                        <button type="button" class="btn btn-standard btn-sm w-100 btn-smallside-open-container" id="YoutubeMiniPlayer_Container-Open"> <i class="fa-brands fa-youtube text-danger"></i> <br />Youtube Mini</button>
                     </div>
                 </div>
             </div>

@@ -169,6 +169,14 @@ namespace AppY.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> EditBatterySettings(int Id, int EcoModeOnAt)
+        {
+            int Result = await _user.EditEcoModeSettings(Id, EcoModeOnAt);
+            if (Result > 0) return Json(new { success = true, alert = "Battery level settings has been edited", result = Result });
+            else return Json(new { success = false, alert = "Sorry, but an unexpected error has occured. Please, try to edit battery settings later" });
+        }
+
+        [HttpPost]
         public async Task<IActionResult> EditAvatarDesign(EditAvatarColors Model)
         {
             if (ModelState.IsValid)

@@ -17,10 +17,12 @@ namespace AppY.Models
         public string? ReserveCode { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsPrivate { get; set; }
+        public bool HideLastSeenInfo { get; set; }
         public int AreMessagesAutoDeletable { get; set; }
         public string? AvatarStickerUrl { get; set; }
         public string? AvatarBgColor { get; set; }
         public string? AvatarFgColor { get; set; }
+        public int EcoModeOnAt { get; set; }
         [DataType(DataType.ImageUrl)]
         public string? AvatarUrl { get; set; }
         public DateTime? PasswordChanged { get; set; }

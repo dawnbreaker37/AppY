@@ -98,6 +98,25 @@ namespace AppY.ChatHub
             else await this.Clients.All.SendAsync("Error", "Can't send this message now");
         }
 
+        public async Task Reply(int MessageId, string? ReplyText, int UserId, int ChatId, string? Text, int IsAutodeletable, string ReceiverId)
+        {
+            SendReply sendReply = new SendReply
+            {
+                ChatId = ChatId,
+                MessageId = MessageId,
+                ReplyText = ReplyText,
+                UserId = UserId,
+                IsAutoDeletable = IsAutodeletable,
+                Text = Text
+            };
+            string? Result = await _message.ReplyToMessageAsync(sendReply);
+            if (Result != null)
+            {
+                await this.Clients.User(ReceiverId).SendAsync("ReplyReceive", Result, Text, ReplyText, MessageId, ChatId);
+                await this.Clients.Caller.SendAsync("Caller_ReplyReceive", Result, Text, ReplyText, MessageId);
+            }
+        }
+
         public async Task Edit(int Id, int UserId, string ReceiverId, string? Text, int ChatId)
         {
             SendEdit Model = new SendEdit
@@ -112,6 +131,16 @@ namespace AppY.ChatHub
             {
                 await this.Clients.Caller.SendAsync("Edit_CallerReceive", Text, Result);
                 await this.Clients.User(ReceiverId).SendAsync("EditReceive", Text, Result, ChatId);
+            }
+        }
+
+        public async Task DeleteMessage(int Id, int UserId, int ChatId, string ReceiverId)
+        {
+            int Result = await _message.DeleteMessageAsync(Id, UserId, ChatId);
+            if(Result > 0)
+            {
+                await this.Clients.Caller.SendAsync("Caller_DeleteMessage", Id);
+                await this.Clients.User(ReceiverId).SendAsync("DeleteMessage", Id, ChatId);
             }
         }
     }

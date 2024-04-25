@@ -21,6 +21,14 @@
             <input type="hidden" name="Id" id="CGMI_Id_Val" value="0" />
             <input type="hidden" name="UserId" value="@UserInfo.Id" />
         </form>
+        <form method="post" asp-controller="Chat" asp-action="Mute" id="MuteTheChat_Form">
+            <input type="hidden" name="Id" value="@ChatInfo.Id" />
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
+        <form method="post" asp-controller="Chat" asp-action="Unmute" id="UnmuteTheChat_Form">
+            <input type="hidden" name="Id" value="@ChatInfo.Id" />
+            <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
     </div>
     
     <div class="smallside-box-container shadow-standard overflow-hidden" id="YoutubeMiniPlayer_Container">
@@ -31,10 +39,10 @@
                     <button type="button" class="btn btn-close btn-sm rounded-circle" id="YoutubeMiniPlayer_Container-Close"></button>
                 </div>
             </div>
-            <div class="box-container text-center mt-1" id="YTMiniPlayer_Box">
+            <div class="box-container text-center mt-1" id="YTMiniPlayer_Box" style="display: none;">
                 <iframe class="yt-mini-player" loading="lazy" src="" title="Mini Player" frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen id="YoutubeMiniPlayer_Frame"></iframe>
             </div>
-            <div class="bordered-container text-center mt-1 p-3" id="YTNoCurrentView_Box" style="display: none;">
+            <div class="bordered-container text-center mt-1 p-3" id="YTNoCurrentView_Box">
                 <h2 class="h2 text-danger"> <i class="fa-brands fa-youtube"></i> </h2>
                 <h4 class="h4">No Video</h4>
                 <small class="card-text text-muted">paste your link or enter it to show the video</small>
@@ -65,7 +73,6 @@
         <div class="box-container p-2 pt-1 mt-1" id="Discussions_Container-Box">
         </div>
     </div>
-
     <div class="smallside-box-container shadow-standard" id="Chats_Container">
         <div class="header-container p-2 pb-0 text-center" id="Chats_Container-Header">
             <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Chats_Container-Close"></button>
@@ -145,7 +152,6 @@
             </div>
         </div>
     </div>
-
     <div class="smallside-bot-navbar shadow-standard" style="display: none; bottom: -300px;" id="SmallsideBotNavbar">
         <div class="box-container p-2">
             <div class="row">
@@ -171,7 +177,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 <div class="main-container mh-max shadow-standard" id="Preloaded_Container">
@@ -191,11 +196,11 @@
                 <div class="col">
                     @if(!IsMuted)
                     {
-                        <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell-slash text-primary"></i> <br />Mute</button>
+                        <button type="button" class="btn btn-standard-asset btn-light mute-the-chat w-100" id="@ChatInfo.Id-ChatMuteOrUnmute"> <i class="fa-regular fa-bell-slash text-primary"></i> <br />Mute</button>
                     }
                     else
                     {
-                        <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-regular fa-bell text-primary"></i> <br />Unmute</button>
+                        <button type="button" class="btn btn-standard-asset btn-light unmute-the-chat w-100" id="@ChatInfo.Id-ChatMuteOrUnmute"> <i class="fa-regular fa-bell text-primary"></i> <br />Unmute</button>
                     }
                 </div>
                 <div class="col">
@@ -266,7 +271,7 @@
     <div class="header-container special-container-header bg-light p-2" id="Preloaded_Container-Header">
         <span class="h5 text-truncate p-1 discussion-header w-75" id="Preloaded_Container_ShowBox-Open">@ChatInfo.Name</span>
         <div></div>
-        <small class="card-text text-muted ms-1 btn-set-status" id="ChatStatusBar_Lbl"><span class="status-slider" id="StatusBar_Lbl-0">online</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">chat with @SecondUserInfo.PseudoName</span><span class="status-slider" id="StatusBar_Lbl-2" style="display: none;">tap to edit settings</span></small>
+        <small class="card-text text-muted ms-1 btn-set-status" id="ChatStatusBar_Lbl"><span class="status-slider" id="StatusBar_Lbl-0">@SecondUserInfo.LastSeenText</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">chat with @SecondUserInfo.PseudoName</span><span class="status-slider" id="StatusBar_Lbl-2" style="display: none;">tap to edit settings</span></small>
     </div>
     <div class="box-container p-2 pt-1 mt-1 discussion-box" id="Prealoded_Container-Box">
         <div class="box-container" id="Messages_Box">
@@ -345,7 +350,7 @@
                             }
                             else
                             {
-                                <div class="message-box">
+                                <div class="message-box" id="@message.Id-ChatMsgBox">
                                     <div class="other-user-msg-box">
                                         <div class="other-user-styled-msg-box p-2" id="@message.Id-ReplyToChatMessageViaDiscussionMessage">
                                             @if (message.IsAutoDeletable > 0)
@@ -426,20 +431,13 @@
                     <button type="button" class="btn btn-standard btn-sm w-100" id="ReplyChatMessage_Btn"> <i class="fa-solid fa-reply text-primary"></i> Reply</button>
                 </div>
                 <div class="col">
-                    <div>
-                        <form method="get" asp-controller="Answer" asp-action="GetChatMessageAnswers" id="GetChatMessageAnswers_Form">
-                            <div class="d-none">
-                                <input type="hidden" name="Id" id="GCMA_Id_Val" value="0" />
-                                <input type="hidden" name="UserId" id="GCMA_UserId_Val" value="0" />
-                                <input type="hidden" name="SkipCount" id="GCMA_SkipCount_Val" value="0" />
-                                <input type="hidden" name="MessageText" id="GCMA_MsgText_Val" />
-                            </div>
-                            <button type="submit" class="btn btn-standard btn-sm w-100" id="GCMASbmt_Btn"> <i class="fa-solid fa-feather-pointed text-primary"></i> Answer</button>
-                        </form>
-                    </div>
+                    <form method="get" asp-controller="Chat" asp-action="GetChatsShortly" id="GetChatsShortly_Form">
+                        <input type="hidden" name="IsForForwarding" value="true" />
+                        <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-share text-primary"></i> Forward</button>
+                    </form>
                 </div>
                 <div class="col" id="DeleteChatMsg_Col">
-                    <form method="post" asp-controller="ChatMessage" asp-action="Delete" id="DeleteChatMessage_Form">
+                    <form method="post" asp-controller="Chat" asp-action="Delete" id="DeleteChatMessage_Form">
                         <input type="hidden" name="Id" id="DDM_Id_Val" value="0" />
                         <input type="hidden" name="DiscussionId" value="@ChatInfo.Id" />
                         <button type="submit" class="btn btn-standard btn-sm text-danger w-100" id="DeleteChatMessageSbmt_Btn"> <i class="fa-regular fa-trash-can"></i> Delete</button>
@@ -562,28 +560,48 @@
         });
     });
 
-        document.getElementById("SendMessage_SbmtBtn").addEventListener("click", function () {
-            const message = $("#SendMessage_Text_Val").val();
-            const senderId = parseInt($("#SM_UserId_Val").val());
-            const receiverId = $("#SM_ReceiverId_Val").val();
-            const chatId = parseInt($("#SM_ChatId_Val").val());
-            const messageId = parseInt($("#EM_Id_Val").val());
-            const isAutodeletable = parseInt($("#SendMessage_IsAutoDeletable").val());
-            const updatedMessage = deleteAllEndEmptyChars(message);
+    document.getElementById("SendMessage_SbmtBtn").addEventListener("click", function () {
+        const message = $("#SendMessage_Text_Val").val();
+        const senderId = parseInt($("#SM_UserId_Val").val());
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        const chatId = parseInt($("#SM_ChatId_Val").val());
+        const messageId = parseInt($("#EM_Id_Val").val());
+        const replyId = parseInt($("#RM_ReplyId_Val").val());
+        const updatedMessage = deleteAllEndEmptyChars(message);
 
         if (messageId <= 0) {
-            hubConnection.invoke("Send", updatedMessage, senderId, receiverId, chatId, isAutodeletable).catch(function (err) {
+            const isAutodeletable = parseInt($("#SendMessage_IsAutoDeletable").val());
+            if (replyId <= 0) {
+                hubConnection.invoke("Send", updatedMessage, senderId, receiverId, chatId, isAutodeletable).catch(function (err) {
                     console.log(err.toString());
                 });
             }
             else {
-            hubConnection.invoke("Edit", messageId, senderId, receiverId, updatedMessage, chatId).catch(function (err) {
+                const replyText = $("#RM_ReplyText_Val").val();
+                hubConnection.invoke("Reply", replyId, replyText, senderId, chatId, updatedMessage, isAutodeletable, receiverId).catch(function (err) {
                     console.log(err.toString());
                 });
             }
-            $("#SendMessage_SbmtBtn").attr("disabled", true);
-            $("#SendMessage_Text_Val").val("");
+        }
+        else {
+            hubConnection.invoke("Edit", messageId, senderId, receiverId, updatedMessage, chatId).catch(function (err) {
+                console.log(err.toString());
+            });
+        }
+        $("#SendMessage_SbmtBtn").attr("disabled", true);
+        $("#SendMessage_Text_Val").val("");
+    });
+
+    document.getElementById("DeleteChatMessage_Form").addEventListener("submit", function (event) {
+        event.preventDefault();
+        const chatId = parseInt($("#SM_ChatId_Val").val());
+        const userId = parseInt($("#SM_UserId_Val").val());
+        const id = parseInt($("#DDM_Id_Val").val());
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        hubConnection.invoke("DeleteMessage", id, userId, chatId, receiverId).catch(function (err) {
+            console.log(err.toString());
         });
+    });
 
     hubConnection.on("Caller_EditChat", function (name, description, shortname) {
         document.getElementById("EditChatInfo_Box-Trigger").click();
@@ -787,6 +805,7 @@
             }
             sentMessagesCount++;
             document.getElementById("SentMessagesCount_Val").value = sentMessagesCount;
+        insideBoxClose(true, null);
     });
 
         hubConnection.on("Receive", function (message, id, chatId) {
@@ -858,17 +877,255 @@
             }
         });
 
+    hubConnection.on("Caller_ReplyReceive", function (id, text, replyText, messageId) {
+        let messageMainBox = document.createElement("div");
+        let messageNotMainBox = document.createElement("div");
+        let isAutodeletableSmall = document.createElement("small");
+        let mainText = document.createElement("p");
+        let styleBox = document.createElement("div");
+        let replyBox = document.createElement("div");
+        let repliedTo = document.createElement("small");
+        let repliedText = document.createElement("p");
+        let statsBox = document.createElement("div");
+        let isChecked = document.createElement("small");
+        let dateAndTime = document.createElement("small");
+        let isEdited = document.createElement("small");
+
+        replyBox.classList.add("cur-user-reply-container");
+        replyBox.classList.add("mb-1");
+        replyBox.classList.add("reply-element");
+        repliedTo.classList.add("card-text");
+        repliedTo.classList.add("fw-500");
+        repliedTo.classList.add("reply-element");
+        repliedText.classList.add("card-text");
+        repliedText.classList.add("white-space-on");
+        repliedText.classList.add("message-label");
+        repliedText.classList.add("reply-element");
+
+        messageMainBox.classList.add("message-box");
+        messageNotMainBox.classList.add("cur-user-msg-box");
+        styleBox.classList.add("cur-user-styled-msg-box");
+        styleBox.classList.add("p-2");
+        isAutodeletableSmall.classList.add("card-text");
+        mainText.classList.add("card-text");
+        mainText.classList.add("white-space-on");
+        mainText.classList.add("message-label");
+        mainText.classList.add("chat-options");
+        statsBox.classList.add("float-end");
+        statsBox.classList.add("me-1");
+        isChecked.classList.add("card-text");
+        dateAndTime.classList.add("card-text");
+        dateAndTime.classList.add("text-muted");
+        isEdited.classList.add("card-text");
+        isEdited.classList.add("text-muted");
+        isEdited.style.display = "none";
+
+        let currentDate = new Date();
+        let newMessage = textDecoder(text, null);
+        let newRepliedText = textDecoder(replyText, null);
+        repliedTo.innerHTML = " <i class='fa-solid fa-reply'></i> Replied to";
+        mainText.innerHTML = newMessage;
+        repliedText.innerHTML = newRepliedText;
+        dateAndTime.innerHTML = dateAndTimeTranslator(currentDate);
+        isChecked.innerHTML = ' <i class="fa-solid fa-check text-muted"></i> ';
+
+        replyBox.appendChild(repliedTo);
+        replyBox.appendChild(repliedText);
+        styleBox.appendChild(isAutodeletableSmall);
+        styleBox.appendChild(replyBox);
+        styleBox.appendChild(mainText);
+        statsBox.appendChild(isChecked);
+        statsBox.appendChild(dateAndTime);
+        statsBox.appendChild(isEdited);
+        messageNotMainBox.appendChild(styleBox);
+        messageNotMainBox.appendChild(statsBox);
+        messageMainBox.appendChild(messageNotMainBox);
+
+        replyBox.setAttribute("id", messageId + "-RepliedMsgBox");
+        repliedText.setAttribute("id", messageId + "-RepliedMsgText");
+        messageMainBox.setAttribute("id", id + "-ChatMsgBox");
+        isEdited.setAttribute("id", id + "-ChatMsgIsEdited_Lbl");
+        dateAndTime.setAttribute("id", id + "-ChatMsgDateAndTime_Lbl");
+        mainText.setAttribute("id", id + "-ChatOptionMsgText_Lbl");
+
+        document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
+        setTimeout(function () {
+            $("#SendMessage_SbmtBtn").attr("disabled", false);
+        }, 1500);
+
+        let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
+        if (sentMessagesCount > 0) {
+            document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
+        }
+        else {
+            slideToLeft("NoSentMessages_Box");
+            document.getElementById("HaveSentMessage_Box").style.display = "block";
+            document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
+        }
+        sentMessagesCount++;
+        $("#SentMessagesCount_Val").val(sentMessagesCount);
+
+        $("#EditingOrReplying_Box").slideUp(250);
+        $("#EM_Id_Val").val(0);
+        $("#RM_ReplyId_Val").val(0);
+        $("#RM_ReplyText_Val").val("");
+    });
+
+    hubConnection.on("ReplyReceive", function (id, text, replyText, messageId, chatId) {
+        let currentChatId = $("#CurrentChatId_Val").val();
+        if (currentChatId == chatId) {
+            let messageMainBox = document.createElement("div");
+            let messageNotMainBox = document.createElement("div");
+            let isAutodeletableSmall = document.createElement("small");
+            let mainText = document.createElement("p");
+            let styleBox = document.createElement("div");
+            let replyBox = document.createElement("div");
+            let repliedTo = document.createElement("small");
+            let repliedText = document.createElement("p");
+            let statsBox = document.createElement("div");
+            let isChecked = document.createElement("small");
+            let dateAndTime = document.createElement("small");
+            let isEdited = document.createElement("small");
+
+            replyBox.classList.add("other-user-reply-container");
+            replyBox.classList.add("mb-1");
+            replyBox.classList.add("reply-element");
+            repliedTo.classList.add("card-text");
+            repliedTo.classList.add("fw-500");
+            repliedTo.classList.add("reply-element");
+            repliedTo.classList.add("reply-to-chat-message");
+            repliedText.classList.add("card-text");
+            repliedText.classList.add("white-space-on");
+            repliedText.classList.add("message-label");
+            repliedText.classList.add("reply-element");
+
+            messageMainBox.classList.add("message-box");
+            messageNotMainBox.classList.add("other-user-msg-box");
+            styleBox.classList.add("other-user-styled-msg-box");
+            styleBox.classList.add("p-2");
+            isAutodeletableSmall.classList.add("card-text");
+            mainText.classList.add("card-text");
+            mainText.classList.add("white-space-on");
+            mainText.classList.add("message-label");
+            mainText.classList.add("chat-options");
+            statsBox.classList.add("float-end");
+            statsBox.classList.add("me-1");
+            isChecked.classList.add("card-text");
+            dateAndTime.classList.add("card-text");
+            dateAndTime.classList.add("text-muted");
+            isEdited.classList.add("card-text");
+            isEdited.classList.add("text-muted");
+            isEdited.style.display = "none";
+
+            let currentDate = new Date();
+            let newMessage = textDecoder(text, null);
+            let newRepliedText = textDecoder(replyText, null);
+            repliedTo.innerHTML = " <i class='fa-solid fa-reply'></i> Replied to";
+            mainText.innerHTML = newMessage;
+            repliedText.innerHTML = newRepliedText;
+            dateAndTime.innerHTML = dateAndTimeTranslator(currentDate);
+            isChecked.innerHTML = ' <i class="fa-solid fa-check text-muted"></i> ';
+
+            replyBox.appendChild(repliedTo);
+            replyBox.appendChild(repliedText);
+            styleBox.appendChild(isAutodeletableSmall);
+            styleBox.appendChild(replyBox);
+            styleBox.appendChild(mainText);
+            statsBox.appendChild(isChecked);
+            statsBox.appendChild(dateAndTime);
+            statsBox.appendChild(isEdited);
+            messageNotMainBox.appendChild(styleBox);
+            messageNotMainBox.appendChild(statsBox);
+            messageMainBox.appendChild(messageNotMainBox);
+
+            replyBox.setAttribute("id", messageId + "-RepliedMsgBox");
+            repliedText.setAttribute("id", messageId + "-RepliedMsgText");
+            messageMainBox.setAttribute("id", id + "-ChatMsgBox");
+            isEdited.setAttribute("id", id + "-ChatMsgIsEdited_Lbl");
+            dateAndTime.setAttribute("id", id + "-ChatMsgDateAndTime_Lbl");
+            mainText.setAttribute("id", id + "-ChatOptionMsgText_Lbl");
+
+            document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
+            setTimeout(function () {
+                $("#SendMessage_SbmtBtn").attr("disabled", false);
+            }, 1500);
+
+            let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
+            if (sentMessagesCount > 0) {
+                document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
+            }
+            else {
+                slideToLeft("NoSentMessages_Box");
+                document.getElementById("HaveSentMessage_Box").style.display = "block";
+                document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
+            }
+            sentMessagesCount++;
+            $("#SentMessagesCount_Val").val(sentMessagesCount);
+        }
+    });
+
     hubConnection.on("EditReceive", function (message, id) {
         textDecoder(message, id + "-ChatOptionMsgText_Lbl");
-        $("#" + id + "-ChatMsgIsEdited_Lbl").text("edited");
+        $("#" + id + "-ChatMsgIsEdited_Lbl").text(" edited");
         $("#" + id + "-ChatMsgIsEdited_Lbl").fadeIn(250);
     });
 
     hubConnection.on("Edit_CallerReceive", function (message, id) {
         textDecoder(message, id + "-ChatOptionMsgText_Lbl");
-        $("#" + id + "-ChatMsgIsEdited_Lbl").text("edited");
+        $("#" + id + "-ChatMsgIsEdited_Lbl").text(" edited");
         $("#" + id + "-ChatMsgIsEdited_Lbl").fadeIn(250);
         $("#EditingOrReplying_Box").slideUp(250);
+        $("#EM_Id_Val").val(0);
+        $("#RM_ReplyId_Val").val(0);
+        $("#RM_ReplyText_Val").val("");
+    });
+
+    hubConnection.on("Caller_DeleteMessage", function (id) {
+        let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
+        sentMessagesCount--;
+        slideToLeft(id + "-ChatMsgBox");
+        if (sentMessagesCount <= 0) {
+            let div = $("<div class='box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto' id='NoSentMessages_Box'></div>");
+            let icon = $("<h1 class='h1'> <i class='fa-regular fa-comments text-primary'></i> </h1>");
+            let title = $("<h3 class='h3 style-font'>No Sent Messages</h3>");
+            let description = $("<small class='card-text text-muted'>send your first message in this chat</small>");
+            div.append(icon);
+            div.append(title);
+            div.append(description);
+
+            setTimeout(function () {
+                $("#" + id + "-ChatMsgBox").remove();
+                $("#HaveSentMessage_Box").empty();
+                $("#Messages_Box").append(div);
+            }, 400);
+        }
+        $("#SentMessagesCount_Val").val(sentMessagesCount);
+        insideBoxClose(true, null);
+    });
+
+    hubConnection.on("DeleteMessage", function (id, chatId) {
+        let currentChatId=$("#CurrentChatId_Val").val();
+        if(currentChatId == chatId) {
+            let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
+            sentMessagesCount--;
+            slideToLeft(id + "-ChatMsgBox");
+            if (sentMessagesCount <= 0) {
+                let div = $("<div class='box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto' id='NoSentMessages_Box'></div>");
+                let icon = $("<h1 class='h1'> <i class='fa-regular fa-comments text-primary'></i> </h1>");
+                let title = $("<h3 class='h3 style-font'>No Sent Messages</h3>");
+                let description = $("<small class='card-text text-muted'>send your first message in this chat</small>");
+                div.append(icon);
+                div.append(title);
+                div.append(description);
+
+                setTimeout(function () {
+                    $("#" + id + "-ChatMsgBox").remove();
+                    $("#HaveSentMessage_Box").empty();
+                    $("#Messages_Box").append(div);
+                }, 400);
+            }
+            $("#SentMessagesCount_Val").val(sentMessagesCount);
+        }
     });
 
         hubConnection.onclose(async function () {

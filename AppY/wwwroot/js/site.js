@@ -3,10 +3,12 @@ let fullHeight = 0;
 let botOffNavbarH = 0;
 let alertTimeout;
 let currentUrl;
+let batteryInfo;
 let letters = /^[A-Za-z]+$/;
 
 window.onload = function () {
     let standardTimeout = 300;
+    batteryInfo = navigator.getBattery;
     currentUrl = document.location.href;
     fullHeight = parseInt(window.innerHeight);
     fullWidth = parseInt(window.innerWidth);
@@ -48,6 +50,8 @@ window.onload = function () {
     else {
         botNavbarOpen("MainBotOffNavbar", null, null);
     }
+
+    getBatteryLevel(true);
 }
 window.onresize = function () {
     fullHeight = parseInt(window.innerHeight);
@@ -57,6 +61,10 @@ window.onresize = function () {
 }
 $(window).on("blur", function () {
     $("#SetLastSeen_Form").submit();
+});
+
+$(batteryInfo).on("chargingchange levelchange", function () {
+    getBatteryLevel(true);
 });
 
 $("#SetLastSeen_Form").on("submit", function (event) {
@@ -444,6 +452,42 @@ $("#EditAccount_Form").on("submit", function (event) {
         }
         else {
             alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
+        }
+    });
+});
+
+$("#EditBatterySettings_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            if (response.result == 0) {
+                $("#EcoModeOnAt_Lbl").text("turned off");
+                $("#BatteryLevelIndicator_Span").html(' <i class="fas fa-battery-empty"></i> ' + response.result + "%");
+                $("#BatteryLevelIndicator_Span").fadeOut(300);
+            }
+            else if (response.result > 20 && response.result <= 50) {
+                $("#EcoModeOnAt_Lbl").text("turn on when battery level is below then");
+                $("#BatteryLevelIndicator_Span").html(' <i class="fas fa-battery-half"></i> ' + response.result + "%");
+            }
+            else if (response.result > 50 && response.result <= 75) {
+                $("#EcoModeOnAt_Lbl").text("turn on when battery level is below then");
+                $("#BatteryLevelIndicator_Span").html(' <i class="fas fa-battery-three-quarters"></i> ' + response.result + "%");
+            }
+            else if (response.result > 75) {
+                $("#EcoModeOnAt_Lbl").text("turn on when battery level is below then");
+                $("#BatteryLevelIndicator_Span").html(' <i class="fas fa-battery-full"></i> ' + response.result + "%");
+            }
+            else {
+                $("#EcoModeOnAt_Lbl").text("turn on when battery level is below then");
+                $("#BatteryLevelIndicator_Span").html(' <i class="fas fa-battery-quarter text-danger"></i> ' + response.result + "%");
+            }
+            alert('<i class="fa-solid fa-check-circle text-primary"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Got It", null, 0, null, null, null, 3.25);
         }
     });
 });
@@ -952,7 +996,8 @@ $("#MuteTheChat_Form").on("submit", function (event) {
     $.post(url, data, function (response) {
         if (response.success) {
             $("#" + response.id + "-ChatMuted_Icon").slideDown(250);
-            $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell'></i> Unmute");
+            if (currentUrl.toLowerCase().includes("/chat/c")) $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell text-primary'></i> <br/>Unmute");
+            else $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell'></i> Unmute");
             $("#" + response.id + "-ChatMuteOrUnmute").removeClass("mute-the-chat");
             $("#" + response.id + "-ChatMuteOrUnmute").addClass("unmute-the-chat");
         }
@@ -967,7 +1012,8 @@ $("#UnmuteTheChat_Form").on("submit", function (event) {
     $.post(url, data, function (response) {
         if (response.success) {
             $("#" + response.id + "-ChatMuted_Icon").slideUp(250);
-            $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell-slash'></i> Mute");
+            if (currentUrl.toLowerCase().includes("/chat/c")) $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell-slash text-primary'></i> <br/>Mute");
+            else $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell-slash'></i> Unmute");
             $("#" + response.id + "-ChatMuteOrUnmute").addClass("mute-the-chat");
             $("#" + response.id + "-ChatMuteOrUnmute").removeClass("unmute-the-chat");
         }
@@ -1209,7 +1255,59 @@ $("#GetChats_Form").on("submit", function (event) {
         }
     });
 });
+$("#GetChatsShortly_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
 
+    $.get(url, data, function (response) {
+        if (response.success) {
+            $("#ChatsCount_Span").text(response.count);
+            if (response.count > 0) {
+                let canBeForwarded;
+                if (response.isForForwarding) {
+                    canBeForwarded = "message can be forwarded";
+                }
+                else canBeForwarded = "message cannot be forwarded";
+                $("#Chats_Container-Box").empty();
+
+                $.each(response.result, function (index) {
+                    let div = $("<div class='box-container bg-light p-2 mt-2'></div>");
+                    let h6 = $("<span class='h6'></span>");
+                    let status = $("<small class='card-text text-muted'></small>");
+                    let separatorZero = $("<div></div>");
+                    let separatorOne = $("<div class='mt-2'></div>");
+                    let forwardBtn = $("<button type='button' class='btn btn-standard btn-sm text-primary forward-chat-msg'> <i class='fa-solid fa-share'></i> Forward</button>");
+
+                    if (response.result[index].chatName != null) h6.html(response.result[index].chatName);
+                    else h6.html("New Chat");
+                    status.text(canBeForwarded);
+                    div.append(h6);
+                    div.append(separatorZero);
+                    div.append(status);
+                    if (response.isForForwarding) {
+                        div.append(separatorOne);
+                        div.append(forwardBtn);
+                    }
+
+                    $("#Chats_Container-Box").append(div);
+                });
+
+                openSidebar();
+                animatedClose(true, "smallside-box-container", true, true);
+                setTimeout(function () {
+                    animatedOpen(false, "Chats_Container", false, false);
+                }, 325);
+
+                setTimeout(function () {
+                    insideBoxClose(true, null);
+                }, 200);
+            }
+            else alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+    });
+});
 $("#EditChat_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -3702,6 +3800,7 @@ $("#GetChatMessageInfo_Form").on("submit", function (event) {
             if (response.result.userId == response.userId) {
                 $("#EditChatMsg_Col").fadeIn(150);
                 $("#DeleteChatMsg_Col").fadeIn(150);
+                $("#DDM_Id_Val").val(response.result.id);
                 if (response.isEditable) {
                     $("#EditChatMessage_Btn").attr("disabled", false);
                 }
@@ -3727,6 +3826,7 @@ $("#GetChatMessageInfo_Form").on("submit", function (event) {
 $("#CancelChatMessageSettings_Btn").on("click", function () {
     $("#EM_Id_Val").val(0);
     $("#RM_Id_Val").val(0);
+    $("#DDM_Id_Val").val(0);
     $("#RM_ReplyText_Val").val("");
     $("#EditingOrReplying_Box").slideUp(250);
 });
@@ -3736,6 +3836,7 @@ $("#EditChatMessage_Btn").on("click", function () {
         let messageText = $("#" + trueId + "-ChatOptionMsgText_Lbl").text();
         messageText = textUncoder(messageText);
         $("#EM_Id_Val").val(trueId);
+        $("#DDM_Id_Val").val(0);
         $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-regular fa-pen-to-square"></i> ');
         $("#EditingOrReplyingMsgStatus_Lbl").text("Edit Message");
         $("#EditingOrReplyingMsgText_Lbl").html(messageText);
@@ -3748,7 +3849,39 @@ $("#EditChatMessage_Btn").on("click", function () {
     }
     else {
         $("#EM_Id_Val").val(0);
+        $("#DDM_Id_Val").val(0);
         $("#CurrentGotChatMsg_Id_Val").val(0);
+    }
+});
+$("#ReplyChatMessage_Btn").on("click", function () {
+    let trueId = $("#CurrentGotChatMsg_Id_Val").val();
+    if (trueId != "") {
+        let messageText = $("#" + trueId + "-ChatOptionMsgText_Lbl").html();
+        if (messageText != "" || messageText != undefined) {
+
+            messageText = messageText.length > 40 ? messageText.substring(0, 37) + "..." : messageText;
+
+            $("#RM_ReplyId_Val").val(trueId);
+            $("#DDM_Id_Val").val(0);
+            $("#RM_ReplyText_Val").val(messageText);
+            $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fas fa-reply"></i> ');
+            $("#EditingOrReplyingMsgStatus_Lbl").text("Reply to Message");
+            $("#EditingOrReplyingMsgText_Lbl").html(messageText);
+            $("#SendMessage_Text_Val").val("");
+            $("#SendMessage_SbmtBtn").attr("disabled", true);
+            insideBoxClose(false, "ChatMessageOptions_Box");
+            setTimeout(function () {
+                $("#EditingOrReplying_Box").slideDown(250);
+            }, 450);
+        }
+        else {
+        }
+    }
+    else {
+        $("#RM_ReplyId_Val").val(0);
+        $("#DDM_Id_Val").val(0);
+        $("#RM_ReplyText_Val").val("");
+        $("#EditingOrReplying_Box").slideUp(250);
     }
 });
 //Chat Messages//
@@ -5316,22 +5449,6 @@ function botNavbarOpen(element, reservedBtn, reservedBtnHtml) {
     }
 }
 
-$(".main-container").on("scroll", function (event) {
-    let scrollH = $(this).scrollTop();
-    let maxScrollH = document.getElementById(event.target.id).scrollHeight;
-    if (scrollH > 0 && maxScrollH + 20 >= fullHeight) {
-        headerScrollTransformation(event.target.id);
-    }
-    else {
-        headerScrollReturn(event.target.id);
-        if (currentUrl.toLowerCase().includes("/discuss")) {
-            if (parseInt($("#GOM_SkipCount_Val").val()) < parseInt($("#SentMessagesCount_Val").val())) {
-                $("#GetDiscussionsOlderMessages_Form").submit();
-            }
-        }
-    }
-});
-
 function headerScrollTransformation(mainElement) {
     $("#" + mainElement + "-Header").css("position", "fixed");
     $("#" + mainElement + "_PostHeader").css("position", "fixed");
@@ -5767,6 +5884,63 @@ function displayCorrect(width) {
     }
 }
 
+$("#EcoModeOnAt").on("change", function () {
+    let batteryLevel = $(this).val();
+    if (batteryLevel <= 100 && batteryLevel > 75) {
+        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-full"></i> ' + batteryLevel + "%");
+    }
+    else if (batteryLevel <= 75 && batteryLevel > 50) {
+        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-three-quarters"></i> ' + batteryLevel + "%");
+    }
+    else if (batteryLevel <= 50 && batteryLevel > 20) {
+        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-half"></i> ' + batteryLevel + "%");
+    }
+    else if (batteryLevel <= 20 && batteryLevel > 5) {
+        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-quarter text-danger"></i> ' + batteryLevel + "%");
+    }
+    else {
+        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-empty text-danger"></i> ' + batteryLevel + "%");
+    }
+});
+
+function getBatteryLevel(indicateTheLevel) {
+    let batteryLevel = 0;
+    let isCharging = false;
+    if (batteryInfo) {
+        navigator.getBattery()
+            .then(function (battery) {
+                batteryLevel = Math.floor(battery.level * 100);
+                isCharging = battery.charging;
+
+                if (indicateTheLevel) {
+                    if (!isCharging) {
+                        if (batteryLevel <= 100 && batteryLevel > 75) {
+                            $(".battery-level-indicator").html('<span class="badge bg-dark text-light"> <i class="fas fa-battery-full"></i> ' + batteryLevel + "%</span>");
+                        }
+                        else if (batteryLevel <= 75 && batteryLevel > 50) {
+                            $(".battery-level-indicator").html('<span class="badge bg-dark text-light"> <i class="fas fa-battery-three-quarters"></i> ' + batteryLevel + "%</span>");
+                        }
+                        else if (batteryLevel <= 50 && batteryLevel > 20) {
+                            $(".battery-level-indicator").html('<span class="badge bg-dark text-light"> <i class="fas fa-battery-half"></i> ' + batteryLevel + "%</span>");
+                        }
+                        else if (batteryLevel <= 20 && batteryLevel > 5) {
+                            $(".battery-level-indicator").html('<span class="badge bg-dark text-light"> <i class="fas fa-battery-quarter text-danger"></i> ' + batteryLevel + "%</span>");
+                        }
+                        else {
+                            $(".battery-level-indicator").html('<span class="badge bg-dark text-danger"> <i class="fas fa-battery-empty text-danger"></i> ' + batteryLevel + "%</span>");
+                        }
+                    }
+                    else {
+                        $(".battery-level-indicator").html('<span class="badge bg-success text-light"> <i class="fas fa-bolt"></i> ' + batteryLevel + "%</span>");
+                    }
+                }
+            })
+            .catch(function (e) {
+                console.error(e);
+            });
+    }
+}
+
 $(document).on("change", ".checkbox-select", function (event) {
     let value = $("#" + event.target.id).prop("checked");
     let description = $("#" + event.target.id).attr("data-bs-html");
@@ -5783,40 +5957,24 @@ $(document).on("change", ".checkbox-select", function (event) {
     }
 });
 
-$("#YTMiniPlayer_Search").on("change", function () {
-    ytVideoOptimizer($(this).val());
-});
-$(document).on("click", "#MuteYTVideo_Btn", function () {
-    if (navigator.getBattery) {
-        navigator.getBattery()
-            .then(function (battery) {
-
-                // Get current battery level .
-                var batteryLevel = battery.level * 100;
-                console.log(batteryLevel);
-            })
-            .catch(function (e) {
-                console.error(e);
-            });
+$(".main-container").on("scroll", function (event) {
+    let scrollH = $(this).scrollTop();
+    let maxScrollH = document.getElementById(event.target.id).scrollHeight;
+    if (scrollH > 0 && maxScrollH + 20 >= fullHeight) {
+        headerScrollTransformation(event.target.id);
     }
     else {
-        console.log(false);
-    }
-
-    let element = document.getElementById("YoutubeMiniPlayer_Frame");
-    element.muted = true;
-    if (element.muted) {
-        $(this).html(' <i class="fa-solid fa-volume-high"></i> Unmute');
-        $(this).attr("id", "UnmuteYTVideo_Btn");
+        headerScrollReturn(event.target.id);
+        if (currentUrl.toLowerCase().includes("/discuss")) {
+            if (parseInt($("#GOM_SkipCount_Val").val()) < parseInt($("#SentMessagesCount_Val").val())) {
+                $("#GetDiscussionsOlderMessages_Form").submit();
+            }
+        }
     }
 });
-$(document).on("click", "#UnmuteYTVideo_Btn", function () {
-    let element = document.getElementById("YoutubeMiniPlayer_Frame");
-    element.muted = false;
-    if (!element.muted) {
-        $(this).html(' <i class="fa-solid fa-volume-xmark"></i> Mute');
-        $(this).attr("id", "MuteYTVideo_Btn");
-    }
+
+$("#YTMiniPlayer_Search").on("change", function () {
+    ytVideoOptimizer($(this).val());
 });
 
 $(document).on("mouseover", ".info-popover", function () {
