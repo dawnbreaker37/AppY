@@ -19,5 +19,6 @@ namespace AppY.ViewModels
         [DataType(DataType.ImageUrl)]
         public IFormFileCollection? Images { get; set; }
         public string? ReplyText { get; set; }
+        public int CurrentChatUserId { get; set; }
     }
 }

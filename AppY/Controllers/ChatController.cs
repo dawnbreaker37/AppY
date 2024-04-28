@@ -50,6 +50,7 @@ namespace AppY.Controllers
                                         int SecondUserId = await _chat.ChatSecondUserIdAsync(Id, CurrentUserId);
                                         bool IsMuted = await _chat.IsChatMutedAsync(Id, CurrentUserId);
                                         User? SecondUserInfo = await _user.GetUserSuperShortInfoEvenIfPrivateAsync(SecondUserId);
+                                        int CurrentChatUserId = await _context.ChatUsers.AsNoTracking().Where(c => c.UserId == CurrentUserId && c.ChatId == Id).Select(c => c.Id).FirstOrDefaultAsync();
                                         ChatInfo.Name = ChatInfo.Name == null ? "New Chat" : ChatInfo.Name;
 
                                         if(SecondUserInfo != null) SecondUserInfo.LastSeenText = _user.SetLastSeenText(SecondUserInfo.LastSeen);
@@ -61,6 +62,7 @@ namespace AppY.Controllers
                                         }
 
                                         ViewBag.UserInfo = UserInfo;
+                                        ViewBag.AutodeleteDelayValue = _user.AutodeleteDelay(UserInfo.AreMessagesAutoDeletable);
                                         ViewBag.SecondUserInfo = SecondUserInfo;
                                         ViewBag.ChatInfo = ChatInfo;
                                         ViewBag.IsMuted = IsMuted;
@@ -68,6 +70,7 @@ namespace AppY.Controllers
                                         ViewBag.Messages = Messages;
                                         ViewBag.MessagesCount = SentMessagesCount;
                                         ViewBag.ReceiverId = SecondUserId;
+                                        ViewBag.CurrentChatUserId = CurrentChatUserId;
 
                                         return View();
                                     }
@@ -160,7 +163,7 @@ namespace AppY.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetChatsShortly(bool IsForForwarding)
+        public async Task<IActionResult> GetChatsShortly(int ChatId, bool IsForForwarding)
         {
             if (Request.Cookies.ContainsKey("CurrentUserId"))
             {
@@ -170,7 +173,7 @@ namespace AppY.Controllers
                     bool TryParse = Int32.TryParse(UserId_Str, out int UserId);
                     if(TryParse)
                     {
-                        IQueryable<ChatUsers>? Result_Preview = _chat.GetUserChatsShortly(UserId);
+                        IQueryable<ChatUsers>? Result_Preview = _chat.GetUserChatsShortly(UserId, ChatId);
                         if (Result_Preview != null)
                         {
                             List<ChatUsers>? Result = await Result_Preview.ToListAsync();
@@ -182,6 +185,14 @@ namespace AppY.Controllers
                 }
             }
             return Json(new { success = false, alert = "Sorry, but we can't find any info about your chats" });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CheckChatAvailability(int UserId1, int UserId2)
+        {
+            int Result = await _chat.FindChatAvailability(UserId1, UserId2, true);
+            if (Result > 0) return Json(new { success = true, result = Result });
+            else return Json(new { success = false, alert = "We're sorry, but an unexpected error has occured. Please, try message this user a bit later" });
         }
 
         [HttpGet]

@@ -4,6 +4,7 @@ using AppY.Interfaces;
 using AppY.Repositories;
 using AppY.ViewModels;
 using Microsoft.AspNetCore.SignalR;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace AppY.ChatHub
 {
@@ -78,7 +79,12 @@ namespace AppY.ChatHub
             await this.Clients.User(ReceiverId).SendAsync("OpenedTheChat");
         }
 
-        public async Task Send(string? Text, int SenderId, string ReceiverId, int ChatId, int IsAutodeletable)
+        public async Task SendFromAlert(string? Text, int SenderId, int ReceiverId, int ChatId, int IsAutodeletable, string? Chatname, int CurrentChatUserId)
+        {
+            await Send(Text, SenderId, ReceiverId, ChatId, 0, Chatname, CurrentChatUserId);
+        }
+
+        public async Task Send(string? Text, int SenderId, int ReceiverId, int ChatId, int IsAutodeletable, string? Chatname, int CurrentChatUserId)
         {
             SendMessage Model = new SendMessage()
             {
@@ -87,18 +93,41 @@ namespace AppY.ChatHub
                 ChatId = ChatId,
                 IsAutoDeletable = IsAutodeletable,
                 UserId = SenderId,
-                DiscussionId = ChatId
+                DiscussionId = ChatId,
+                CurrentChatUserId = CurrentChatUserId
             };
             string? Result = await _message.SendMessageAsync(Model);
             if (Result != null)
             {
-                await this.Clients.User(ReceiverId).SendAsync("Receive", Text, Result, ChatId);
-                await this.Clients.Caller.SendAsync("CallerReceive", Text, Result);
+                bool IsChatMuted = await _chat.IsChatMutedAsync(ChatId, ReceiverId);
+                await this.Clients.User(ReceiverId.ToString()).SendAsync("Receive", Text, Result, ChatId, Chatname, SenderId, IsChatMuted);
+                await this.Clients.Caller.SendAsync("CallerReceive", Text, Result, ChatId);
             }
             else await this.Clients.All.SendAsync("Error", "Can't send this message now");
         }
 
-        public async Task Reply(int MessageId, string? ReplyText, int UserId, int ChatId, string? Text, int IsAutodeletable, string ReceiverId)
+        public async Task Forward(int MessageId, int ToChatId, int FromChatId, string? Caption, string? ForwardingText, int UserId, int CurrentChatUserId)
+        {
+            ForwardMessage forwardMessage = new ForwardMessage
+            {
+                Caption = Caption,
+                ForwardingText = ForwardingText,
+                FromChatId = FromChatId,
+                ToChatId = ToChatId,
+                MessageId = MessageId,
+                CurrentChatUserId = CurrentChatUserId,
+                UserId = UserId
+            };
+            string? Result = await _message.Forward(forwardMessage);
+            if(Result != null)
+            {
+                int ReceiverId = await _chat.ChatSecondUserIdAsync(ToChatId, UserId);
+                await this.Clients.User(ReceiverId.ToString()).SendAsync("ReplyReceive", Result, Caption, ForwardingText, MessageId, ToChatId);
+                await this.Clients.Caller.SendAsync("Forward_Success");
+            }
+        }
+
+        public async Task Reply(int MessageId, string? ReplyText, int UserId, int ChatId, string? Text, int IsAutodeletable, string ReceiverId, int CurrentChatUserId)
         {
             SendReply sendReply = new SendReply
             {
@@ -107,6 +136,7 @@ namespace AppY.ChatHub
                 ReplyText = ReplyText,
                 UserId = UserId,
                 IsAutoDeletable = IsAutodeletable,
+                CurrentChatUserId = CurrentChatUserId,
                 Text = Text
             };
             string? Result = await _message.ReplyToMessageAsync(sendReply);

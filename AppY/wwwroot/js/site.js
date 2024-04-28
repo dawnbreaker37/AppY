@@ -2,6 +2,7 @@
 let fullHeight = 0;
 let botOffNavbarH = 0;
 let alertTimeout;
+let messageAlertTimeout;
 let currentUrl;
 let batteryInfo;
 let letters = /^[A-Za-z]+$/;
@@ -17,20 +18,20 @@ window.onload = function () {
         $(".unpictured-container-label-sm").html($("#AvatarSticker_Hdn_Val").val());
     }
 
+    displayCorrect(fullWidth);
     setTimeout(function () {
-        displayCorrect(fullWidth);
         additionalBtnSelector(fullWidth);
 
         if (fullWidth >= 768) {
-            animatedOpen(false, "SmallsidePreloaded_Container", true, false);
             standardTimeout += 350;
+            animatedOpen(false, "SmallsidePreloaded_Container", true, false);
             setTimeout(function () {
                 animatedOpen(false, "Preloaded_Container", true, false);
-            }, 350);
+            }, 250);
         }
         else animatedOpen(false, "Preloaded_Container", true, false);
-        $("#MainTopOffNavbar").slideDown(300);
-    }, 300);
+        $("#MainTopOffNavbar").slideDown(250);
+    }, 250);
 
     if (currentUrl.toLowerCase().includes("/discuss") || currentUrl.toLowerCase().includes("/chat/c")) {
         botNavbarClose(true, null);
@@ -61,10 +62,6 @@ window.onresize = function () {
 }
 $(window).on("blur", function () {
     $("#SetLastSeen_Form").submit();
-});
-
-$(batteryInfo).on("chargingchange levelchange", function () {
-    getBatteryLevel(true);
 });
 
 $("#SetLastSeen_Form").on("submit", function (event) {
@@ -364,21 +361,17 @@ $("#UpdatePassword_Form").on("submit", function (event) {
 
     $.post(url, data, function (response) {
         if (response.success) {
-            let currentUrl = document.location.href;
-            if (currentUrl.toLowerCase().includes("/user/account")) {
-                alert('<i class="fa-solid fa-check-double text-neon-purple"></i>', response.alert, "Done", null, 0, null, null, null, 4.5);
-                $("#UpdatePassword_Password_Val").attr("disabled", true);
-                $("#UpdatePassword_ConfirmPassword_Val").attr("disabled", true);
-                $("#Password").attr("disabled", true);
-                $("#ConfirmPassword").attr("disabled", true);
-                $("#UpdatePassword_SbmtBtn").attr("disabled", true);
-                $("#UpdatePassword_SbmtBtn").html(' <i class="fa-regular fa-circle-check"></i> Password Updated');
-
-                $("#ChangePassword_Box").fadeOut(300);
-                $("#SubmitPassword_Box").fadeOut(300);
-                $("#PasswordChangeData_Box").fadeIn(300);
-                $("#DayOfChange_Lbl").text("few moments ago");
-                $("#DaysPassed_Lbl").text("today, few minutes ago");
+            if (currentUrl.toLowerCase().includes("/user/security")) {
+                alert('<i class="fa-solid fa-check-double text-neon-purple"></i>', response.alert, "Done", null, 0, null, null, null, 4);
+                animatedClose(false, "CreateNewPassword_Container", true, true);
+                $("#SecuritySettings_Container-Open").slideUp(250);
+                $("#PasswordChangedDaysPassed_Lbl").html("<span class='fw-500' id='PasswordChangedDaysPassed_Span'>few seconds ago</span>");
+                $("#CanPasswordBeChanged_Lbl").html("password has recently been changed");
+                setTimeout(function () {
+                    $("#ChangePassword_Box").fadeOut(100);
+                    $("#SubmitPassword_Box").fadeOut(100);
+                    $("#PasswordChangeData_Box").fadeIn(100);
+                }, 450);
             }
             else {
                 alert('<i class="fa-regular fa-circle-check text-neon-purple"></i>', response.alert, "Done", null, 0, null, null, null, 3.75);
@@ -389,8 +382,15 @@ $("#UpdatePassword_Form").on("submit", function (event) {
             }
         }
         else {
+            $("#ConfirmPassword").val(null);
+            $("#Password").val(null);
+            $("#OldPassword").val(null);
+            $("#ChangePassword_NewPassword").val(null);
+            $("#ChangePassword_ConfirmPassword").val(null);
             $("#UpdatePassword_Password_Val").val(null);
             $("#UpdatePassword_ConfirmPassword_Val").val(null);
+            $("#SendReserveCodeViaEmail_ReserveCode_Val").val(null);
+            $("#SubmitSingleUsingCode_Email_Val").val(null);
             alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Try Again", null, 0, null, null, null, 4.5);
         }
     });
@@ -409,12 +409,10 @@ $("#ChangePassword_Form").on("submit", function (event) {
                 $("#ChangePassword_Box").fadeOut(100);
                 $("#SubmitPassword_Box").fadeOut(100);
                 $("#PasswordChangeData_Box").fadeIn(100);
-                $("#DayOfChange_Lbl").text("few moments ago");
-                $("#DaysPassed_Lbl").text("today, few minutes ago");
+                $("#SecuritySettings_Container-Open").slideUp(250);
+                $("#PasswordChangedDaysPassed_Lbl").html("<span class='fw-500' id='PasswordChangedDaysPassed_Span'>few seconds ago</span>");
+                $("#CanPasswordBeChanged_Lbl").html("password has recently been changed")
             }, 500);
-            setTimeout(function () {
-                animatedOpen(false, "SecuritySettings_Container", true, false);
-            }, 600);
         }
         else {
             $("#OldPassword").val(null);
@@ -680,6 +678,87 @@ $("#ConfirmPassword").on("keyup", function () {
     }
 });
 
+$("#FindUsers_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        $("#FoundResults_Box").empty();
+        if (response.success) {
+            if (response.count > 0) {
+                let counter = $("<h5 class='h5 mb-2 ms-1'></h4>");
+                if (response.count == 1) counter.html("One user has been found");
+                else counter.html(response.count + " users has been found");
+                $("#FoundResults_Box").append(counter);
+                $.each(response.result, function (index) {
+                    let avatarDiv = $("<div></div>");
+                    let div = $("<div class='box-container bg-white p-2 mt-2'></div>");
+                    let userPseudoname = $("<a class='h5 text-decoration-none text-dark'></a>");
+                    let separatorZero = $("<div></div>");
+                    let shortName = $("<small class='card-text text-muted'></small>");
+                    let chatBtn = $("<button type='button' class='btn btn-standard text-primary btn-sm btn-check-for-chat float-end ms-1'>Chat</button>");
+
+                    if (response.result[index].avatarUrl == null) {
+                        let unpicturedAvatarDiv = $("<div class='unpictured-container-label-md'></div>");
+                        avatarDiv.addClass("image-picture-none-container-md bg-light text-center mb-2");
+                        unpicturedAvatarDiv.html(response.result[index].pseudoName[0]);
+                        avatarDiv.append(unpicturedAvatarDiv);
+                    }
+                    else {
+                        let picturedAvatarImg = $("<img class='image-container-md' alt='Cannot display this image' />");
+                        avatarDiv.addClass("image-container-md text-center mb-2");
+                        picturedAvatarImg.attr("src", "/Avatars/" + response.result[index].avatarUrl);
+                        avatarDiv.append(picturedAvatarImg);
+                    }
+
+                    userPseudoname.html(response.result[index].pseudoName);
+                    shortName.html("@" + response.result[index].shortName);
+                    userPseudoname.attr("href", "/User/Page/" + response.result[index].id);
+                    userPseudoname.attr("id", response.result[index].id + "-RelocateToUsersPage_Lbl");
+                    chatBtn.attr("id", response.result[index].id + "-CheckForChat_Btn");
+                    div.attr("id", response.result[index].id + "-FoundUser_Box");
+
+                    div.append(chatBtn);
+                    div.append(avatarDiv);
+                    div.append(userPseudoname);
+                    div.append(separatorZero);
+                    div.append(shortName);
+
+                    $("#FoundResults_Box").append(div);
+                });
+            }
+            else {
+                let noUserDiv = $("<div class='box-container text-center'></div>");
+                let noUserDescription = $("<p class='card-text text-muted'> <i class='fa-solid fa-magnifying-glass'></i> Search for some discussions, chats or users to appear them here</p>");
+
+                noUserDiv.append(noUserDescription);
+                $("#FoundResults_Box").append(noUserDiv);
+            }
+        }
+        else {
+            let noUserDiv = $("<div class='box-container text-center'></div>");
+            let noUserDescription = $("<p class='card-text text-muted'> <i class='fa-solid fa-magnifying-glass'></i> Search for some discussions, chats or users to appear them here</p>");
+
+            noUserDiv.append(noUserDescription);
+            $("#FoundResults_Box").append(noUserDiv);
+        }
+    });
+});
+$("#CheckChatAvailability_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            if (response.result > 0) {
+                document.location.href = "/Chat/C/" + response.result;
+            }
+            else alert('<i class="fa-solid fa-xmark-circle fa-shake" style="--fa-animation-duration: 1.2s; --fa-animation-iteration-count: 3;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.25);
+        }
+    });
+});
 $("#FindUserById_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -996,7 +1075,10 @@ $("#MuteTheChat_Form").on("submit", function (event) {
     $.post(url, data, function (response) {
         if (response.success) {
             $("#" + response.id + "-ChatMuted_Icon").slideDown(250);
-            if (currentUrl.toLowerCase().includes("/chat/c")) $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell text-primary'></i> <br/>Unmute");
+            if (currentUrl.toLowerCase().includes("/chat/c")) {
+                $("#IsThisChatMuted_Val").val(true);
+                $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell text-primary'></i> <br/>Unmute");
+            }
             else $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell'></i> Unmute");
             $("#" + response.id + "-ChatMuteOrUnmute").removeClass("mute-the-chat");
             $("#" + response.id + "-ChatMuteOrUnmute").addClass("unmute-the-chat");
@@ -1012,7 +1094,10 @@ $("#UnmuteTheChat_Form").on("submit", function (event) {
     $.post(url, data, function (response) {
         if (response.success) {
             $("#" + response.id + "-ChatMuted_Icon").slideUp(250);
-            if (currentUrl.toLowerCase().includes("/chat/c")) $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell-slash text-primary'></i> <br/>Mute");
+            if (currentUrl.toLowerCase().includes("/chat/c")) {
+                $("#IsThisChatMuted_Val").val(false);
+                $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell-slash text-primary'></i> <br/>Mute");
+            }
             else $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell-slash'></i> Unmute");
             $("#" + response.id + "-ChatMuteOrUnmute").addClass("mute-the-chat");
             $("#" + response.id + "-ChatMuteOrUnmute").removeClass("unmute-the-chat");
@@ -1117,7 +1202,7 @@ $(document).on("click", ".restore-the-chat", function (event) {
     else {
         $("#RestoreTheChat_Id_Val").val(0);
     }
-});
+});//ChangePassword_Form
 $("#GetChats_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -1133,8 +1218,8 @@ $("#GetChats_Form").on("submit", function (event) {
                     let div = $("<div class='box-container bg-light p-2 mt-2'></div>");
                     let avatarDiv = $("<div class='image-picture-none-container-sm text-center bg-white d-inline-block me-2'></div>");
                     let name = $("<span class='h5 text-truncate'></span>");
-                    let separatorZero = $("<div></div>");
-                    let lastMessage = $("<small class='card-text ms-2'>No sent messages</small>");
+                    let separatorOne = $("<div class='mt-1'></div>");
+                    let lastMessage = $("<small class='card-text'>No sent messages</small>");
                     let isMutedIcon = $('<small class="card-text text-orange float-end me-2 mt-1" style="display: none;"> <i class="fa-regular fa-bell-slash"></i> </small>');
                     let isPinnedIcon = $("<small class='card-text float-end me-2 mt-1' style='display: none;'> <i class='fa-solid fa-thumbtack'></i> </small>");
                     let noAvatarLbl = $("<div class='unpictured-container-label-sm text-dark'></div>");
@@ -1218,6 +1303,9 @@ $("#GetChats_Form").on("submit", function (event) {
                         name.addClass("relocate-to-chat");
                         dropdownLi4.fadeOut(0);
                         dropdownLi0.fadeOut(0);
+                        if (response.result[index].lastMessageInfo != null) {
+                            lastMessage.html("<span class='fw-500'>" + response.result[index].lastMessageInfo.senderPseudoname + "</span>: " + response.result[index].lastMessageInfo.text);
+                        }
                     }
 
                     if (!currentUrl.toLowerCase().includes("/discuss") && !currentUrl.toLowerCase().includes("/chat")) {
@@ -1227,7 +1315,7 @@ $("#GetChats_Form").on("submit", function (event) {
                     div.append(isMutedIcon);
                     div.append(avatarDiv);
                     div.append(name);
-                    div.append(separatorZero);
+                    div.append(separatorOne);
                     div.append(lastMessage);
 
                     $("#Chats_Container-Box").append(div);
@@ -1277,7 +1365,7 @@ $("#GetChatsShortly_Form").on("submit", function (event) {
                     let status = $("<small class='card-text text-muted'></small>");
                     let separatorZero = $("<div></div>");
                     let separatorOne = $("<div class='mt-2'></div>");
-                    let forwardBtn = $("<button type='button' class='btn btn-standard btn-sm text-primary forward-chat-msg'> <i class='fa-solid fa-share'></i> Forward</button>");
+                    let forwardBtn = $("<button type='button' class='btn btn-standard btn-sm forward-chat-msg'> <i class='fa-solid fa-share text-primary'></i> Choose</button>");
 
                     if (response.result[index].chatName != null) h6.html(response.result[index].chatName);
                     else h6.html("New Chat");
@@ -1286,8 +1374,15 @@ $("#GetChatsShortly_Form").on("submit", function (event) {
                     div.append(separatorZero);
                     div.append(status);
                     if (response.isForForwarding) {
+                        h6.attr("id", response.result[index].chatId + "-ForwardingChatName_Lbl");
+                        forwardBtn.attr("id", response.result[index].chatId + "-ForwardToChat_Btn");
                         div.append(separatorOne);
                         div.append(forwardBtn);
+
+                        $("#MessageForwarding_Box").fadeIn(300);
+                    }
+                    else {
+                        $("#MessageForwarding_Box").fadeOut(300);
                     }
 
                     $("#Chats_Container-Box").append(div);
@@ -1307,6 +1402,19 @@ $("#GetChatsShortly_Form").on("submit", function (event) {
         }
         else alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
     });
+});
+$(document).on("click", ".forward-chat-msg", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        $("#ForwardAMessageSbmt_Btn").attr("disabled", false);
+        $("#ForwardingChatName_Lbl").html($("#" + trueId + "-ForwardingChatName_Lbl").text());
+        $("#Forward_ToChatId_Val").val(trueId);
+    }
+    else {
+        $("#ForwardAMessageSbmt_Btn").attr("disabled", false);
+        $("#ForwardingChatName_Lbl").html("No Message Info");
+        $("#Forward_ToChatId_Val").val(0);
+    }
 });
 $("#EditChat_Form").on("submit", function (event) {
     event.preventDefault();
@@ -2627,7 +2735,7 @@ $("#PreviewTheMessage_Btn").on("click", function () {
     if (text.length > 0 && text.length <= 3400) $("#SendPreviewedMessage_Btn").attr("disabled", false);
     else $("#SendPreviewedMessage_Btn").attr("disabled", true);
 
-    animatedOpen(false, "MessagePreview_Container", true, true);
+    animatedOpen(false, "MessagePreview_Container", true, true, true);
 });
 
 $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
@@ -3792,8 +3900,10 @@ $("#GetChatMessageInfo_Form").on("submit", function (event) {
     $.get(url, data, function (response) {
         if (response.success) {
             $("#EditingOrReplying_Box").slideUp(250);
+            let editedText = textDecoder(response.result.text, null);
 
-            textDecoder(response.result.text, "ChatOptionMessageText_Lbl");
+            $("#ForwardingMsgText_Lbl").html(editedText);
+            $("#ChatOptionMessageText_Lbl").html(editedText);
             $("#CurrentGotChatMsg_Id_Val").val(response.result.id);
             if (response.result.isEdited) $("#ChatMsgOptionAdditionalInfo_Lbl").text(dateAndTimeTranslator(response.result.sentAt) + ", edited");
             else $("#ChatMsgOptionAdditionalInfo_Lbl").text(dateAndTimeTranslator(response.result.sentAt));
@@ -3801,6 +3911,7 @@ $("#GetChatMessageInfo_Form").on("submit", function (event) {
                 $("#EditChatMsg_Col").fadeIn(150);
                 $("#DeleteChatMsg_Col").fadeIn(150);
                 $("#DDM_Id_Val").val(response.result.id);
+                $("#Forward_MsgId_Val").val(response.result.id);
                 if (response.isEditable) {
                     $("#EditChatMessage_Btn").attr("disabled", false);
                 }
@@ -3827,20 +3938,26 @@ $("#CancelChatMessageSettings_Btn").on("click", function () {
     $("#EM_Id_Val").val(0);
     $("#RM_Id_Val").val(0);
     $("#DDM_Id_Val").val(0);
+    $("#Forward_MsgId_Val").val(0);
+    $("#SendMessage_Text_Val").val("");
     $("#RM_ReplyText_Val").val("");
+    $("#ForwardingMsgText_Lbl").text("No Message Info");
+    $("#ForwardAMessageSbmt_Btn").attr("disabled", false);
     $("#EditingOrReplying_Box").slideUp(250);
 });
 $("#EditChatMessage_Btn").on("click", function () {
     let trueId = $("#CurrentGotChatMsg_Id_Val").val();
     if (trueId != "" && parseInt(trueId) > 0) {
-        let messageText = $("#" + trueId + "-ChatOptionMsgText_Lbl").text();
-        messageText = textUncoder(messageText);
+        let messageText = textDecoder($("#" + trueId + "-ChatOptionMsgText_Lbl").html(), null);
+        let messageTextWithoutSigns = textUncoder(messageText);
         $("#EM_Id_Val").val(trueId);
         $("#DDM_Id_Val").val(0);
+        $("#Forward_MsgId_Val").val(0);
         $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-regular fa-pen-to-square"></i> ');
         $("#EditingOrReplyingMsgStatus_Lbl").text("Edit Message");
         $("#EditingOrReplyingMsgText_Lbl").html(messageText);
-        $("#SendMessage_Text_Val").val(messageText);
+        $("#SendMessage_Text_Val").val(messageTextWithoutSigns);
+        $("#ForwardAMessageSbmt_Btn").attr("disabled", false);
 
         insideBoxClose(false, "ChatMessageOptions_Box");
         setTimeout(function () {
@@ -3850,25 +3967,31 @@ $("#EditChatMessage_Btn").on("click", function () {
     else {
         $("#EM_Id_Val").val(0);
         $("#DDM_Id_Val").val(0);
+        $("#Forward_MsgId_Val").val(0);
         $("#CurrentGotChatMsg_Id_Val").val(0);
+        $("#ForwardAMessageSbmt_Btn").attr("disabled", false);
     }
 });
 $("#ReplyChatMessage_Btn").on("click", function () {
     let trueId = $("#CurrentGotChatMsg_Id_Val").val();
     if (trueId != "") {
         let messageText = $("#" + trueId + "-ChatOptionMsgText_Lbl").html();
+        let messageTextWithoutSigns = textDecoder(messageText);
         if (messageText != "" || messageText != undefined) {
 
             messageText = messageText.length > 40 ? messageText.substring(0, 37) + "..." : messageText;
+            messageTextWithoutSigns = messageTextWithoutSigns.length > 65 ? messageTextWithoutSigns.substring(0, 65) + "..." : messageTextWithoutSigns;
 
             $("#RM_ReplyId_Val").val(trueId);
             $("#DDM_Id_Val").val(0);
+            $("#Forward_MsgId_Val").val(0);
             $("#RM_ReplyText_Val").val(messageText);
             $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fas fa-reply"></i> ');
             $("#EditingOrReplyingMsgStatus_Lbl").text("Reply to Message");
-            $("#EditingOrReplyingMsgText_Lbl").html(messageText);
+            $("#EditingOrReplyingMsgText_Lbl").html(messageTextWithoutSigns);
             $("#SendMessage_Text_Val").val("");
             $("#SendMessage_SbmtBtn").attr("disabled", true);
+            $("#ForwardAMessageSbmt_Btn").attr("disabled", false);
             insideBoxClose(false, "ChatMessageOptions_Box");
             setTimeout(function () {
                 $("#EditingOrReplying_Box").slideDown(250);
@@ -3880,7 +4003,9 @@ $("#ReplyChatMessage_Btn").on("click", function () {
     else {
         $("#RM_ReplyId_Val").val(0);
         $("#DDM_Id_Val").val(0);
+        $("#Forward_MsgId_Val").val(0);
         $("#RM_ReplyText_Val").val("");
+        $("#ForwardAMessageSbmt_Btn").attr("disabled", false);
         $("#EditingOrReplying_Box").slideUp(250);
     }
 });
@@ -4002,6 +4127,14 @@ $(document).on("click", ".relocate-to-chat", function (event) {
         document.location.href = "/Chat/C/" + trueId;
     }
 });
+$(document).on("click", ".btn-check-for-chat", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        $("#CCA_UserId2_Val").val(trueId);
+        $("#CheckChatAvailability_Form").submit();
+    }
+    else $("#CCA_UserId2_Val").val(0);
+});
 
 $(document).on("click", ".discussion-options", function (event) {
     let trueId = getTrueId(event.target.id);
@@ -4039,7 +4172,7 @@ $(document).on("click", ".btn-delete-user-from-discussion", function (event) {
         $("#DeleteUserFromDiscussion_Form").submit();
     }
     else $("#DUFD_Id_Val").val(0);
-});//GetChats_Form
+});
 $(document).on("click", ".btn-edit-access-level", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
@@ -4123,7 +4256,7 @@ $(document).on("click", ".chat-options", function (event) {
         $("#CGMI_Id_Val").val(0);
     }
 });
-//Chat MessageOptions//
+//Chat Message Options//
 
 $(document).on("click", ".set-autodelete-duration", function (event) {
     let trueId = getTrueId(event.target.id);
@@ -4177,6 +4310,7 @@ $(document).on("keyup change", ".form-control-check-input", function () {
 $(document).on("click", ".btn-open-container", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
+        $(".btn-message-example").attr("disabled", false);
         animatedOpen(false, trueId, true, true);
     }
 });
@@ -4274,6 +4408,7 @@ $(document).on("click", ".btn-close-sidebar", function () {
 $(document).on("click", ".btn-close", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
+        $(".btn-message-example").attr("disabled", false);
         if ($("#" + trueId).hasClass("smallside-box-container")) {
             animatedClose(false, trueId, true, true);
         }
@@ -4688,6 +4823,10 @@ $(document).on("change", ".send-message-form-control", function (event) {
     }
 });
 
+$(document).on("click", ".btn-send-reply-via-alert", function () {
+    clearInterval(messageAlertTimeout);
+});
+
 $(document).on("click", ".user-via-shortname", function () {
     let trueName = $(this).text().substring(1);
     if (trueName != null) {
@@ -4765,6 +4904,16 @@ $(document).on("click", ".open-main-bot-navbar", function () {
         setTimeout(function () {
             botNavbarOpen(trueId);
         }, 100);
+    }
+});
+
+$(document).on("click", ".open-built-in-box", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != null) {
+        $(".built-in-box").fadeOut(300);
+        setTimeout(function () {
+            $("#" + trueId).fadeIn(300);
+        }, 295);
     }
 });
 
@@ -5414,6 +5563,24 @@ function slideToRight(element) {
     }, 350);
 }
 
+function topBarOpen(element) {
+    $("#" + element).fadeIn(0);
+    $("#" + element).css("top", "28px");
+    setTimeout(function () {
+        $("#" + element).css("top", "18px");
+    }, 300);
+}
+
+function topBarClose(element) {
+    $("#" + element).css("top", "24px");
+    setTimeout(function () {
+        $("#" + element).css("top", "-400px");
+    }, 300);
+    setTimeout(function () {
+        $("#" + element).fadeOut(300);
+    }, 650);
+}
+
 function botNavbarHeightUpdate() {
     let botOffNavbars = document.getElementsByClassName("bot-navbar");
     for (let i = 0; i < botOffNavbars.length; i++) {
@@ -5563,8 +5730,11 @@ function insideBoxClose(closeAll, element) {
     }
 }
 
-function animatedOpen(forAll, element, sticky, closeAllOtherContainers) {
+function animatedOpen(forAll, element, sticky, closeAllOtherContainers, disableOtherButtons) {
     if (fullWidth < 768) $(".btn-fixed-close-sidebar").fadeIn(300);
+    if (disableOtherButtons) {
+        $(".btn-message-example").attr("disabled", true);
+    }
 
     if (forAll) {
         let botOffNavbarAdditionalValue = botOffNavbarH;
@@ -5645,7 +5815,8 @@ function animatedOpen(forAll, element, sticky, closeAllOtherContainers) {
 
 function animatedClose(forAll, element, alternativeAnima, speedUp) {
     let timeOutDuration = speedUp ? 170 : 340;
-
+    //PreviewTheMessage_Btn
+    insideBoxClose(true, null);
     if (forAll) {
         if (alternativeAnima) {
             $("." + element).css("bottom", "17px");
@@ -5934,6 +6105,13 @@ function getBatteryLevel(indicateTheLevel) {
                         $(".battery-level-indicator").html('<span class="badge bg-success text-light"> <i class="fas fa-bolt"></i> ' + batteryLevel + "%</span>");
                     }
                 }
+
+                battery.onchargingchange = () => {
+                    getBatteryLevel(true);
+                };
+                battery.onlevelchange = () => {
+                    getBatteryLevel(true);
+                };
             })
             .catch(function (e) {
                 console.error(e);
@@ -5960,7 +6138,7 @@ $(document).on("change", ".checkbox-select", function (event) {
 $(".main-container").on("scroll", function (event) {
     let scrollH = $(this).scrollTop();
     let maxScrollH = document.getElementById(event.target.id).scrollHeight;
-    if (scrollH > 0 && maxScrollH + 20 >= fullHeight) {
+    if (scrollH > 0 && maxScrollH + 45 >= fullHeight) {
         headerScrollTransformation(event.target.id);
     }
     else {

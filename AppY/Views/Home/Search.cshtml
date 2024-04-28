@@ -13,6 +13,10 @@
                 <input type="hidden" name="Id" id="GSI_Id_Val" value="0" />
                 <input type="hidden" name="UserId" value="@UserInfo.Id" />
             </form>
+            <form method="get" asp-controller="Chat" asp-action="CheckChatAvailability" id="CheckChatAvailability_Form">
+                <input type="hidden" name="UserId1" value="@UserInfo.Id" />
+                <input type="hidden" name="UserId2" id="CCA_UserId2_Val" value="0" />
+            </form>
         }
         else
         {
@@ -25,18 +29,51 @@
         <h5 class="h5 text-truncate p-1" id="HeaderText_Lbl">Search</h5>
     </div>
     <div class="box-container p-2 pt-1 mt-1" id="Preloaded_Container-Box">
-        <div class="box-container">
+        <div class="box-container bg-light p-3 text-center">
+            <h2 class="h2">What're You Looking For?</h2>
+            <small class="card-text text-muted">Select your preferred search query</small>
+            <div class="row mt-3">
+                <div class="col mt-1">
+                    <div class="box-container bg-white p-3">
+                        <h4 class="h4 text-primary"> <i class="fa-solid fa-quote-right text-primary"></i> </h4>
+                        <button type="button" class="btn btn-standard w-100 open-built-in-box" id="LookingFor_Discussions-Open">Discussions</button>
+                    </div>
+                </div>
+                <div class="col mt-1">
+                    <div class="box-container bg-white p-3">
+                        <h4 class="h4 text-primary"> <i class="fa-regular fa-comments text-primary"></i> </h4>
+                        <button type="button" class="btn btn-standard w-100 open-built-in-box" id="LookingFor_Chats-Open">Chats</button>
+                    </div>
+                </div>
+                <div class="col mt-1">
+                    <div class="box-container bg-white p-3">
+                        <h4 class="h4 text-primary"> <i class="fa-solid fa-users text-primary"></i> </h4>
+                        <button type="button" class="btn btn-standard w-100 open-built-in-box" id="LookingFor_Users-Open">Users</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="box-container built-in-box mt-2" id="LookingFor_Discussions">
             <form method="post" asp-controller="Discussion" asp-action="Find" id="FindDiscussions_Form">
                 <div class="hstack gap-3">
-                    <input type="text" class="form-control me-auto shadow-none" autocomplete="off" name="Keyword" id="FindDiscussion_Keyword_Val" placeholder="Search for discussions..." />
                     <button type="submit" class="btn btn-primary btn-standard-asset">Search</button>
+                    <input type="text" class="form-control me-auto shadow-none" autocomplete="off" name="Keyword" id="FindDiscussion_Keyword_Val" placeholder="Search for discussions..." />
                     <button type="button" class="btn btn-standard"> <i class="fa-solid fa-sliders"></i> </button>
                 </div>
             </form>
         </div>
-        <div class="box-container bg-light mt-2 p-2" id="FoundResults_Box">           
+        <div class="box-container built-in-box  mt-2" id="LookingFor_Users" style="display: none;">
+            <form method="post" asp-controller="User" asp-action="Find" id="FindUsers_Form">
+                <div class="hstack gap-3">
+                    <button type="submit" class="btn btn-primary btn-standard-asset">Search</button>
+                    <input type="text" class="form-control me-auto shadow-none" autocomplete="off" name="Keyword" id="FindUsers_Keyword_Val" placeholder="Search for users..." />
+                    <button type="button" class="btn btn-standard"> <i class="fa-solid fa-sliders"></i> </button>
+                </div>
+            </form>
+        </div>
+        <div class="box-container bg-light mt-3 p-2" id="FoundResults_Box">           
             <div class="box-container text-center">
-                <p class="card-text text-muted"> <i class="fa-solid fa-magnifying-glass"></i> Search for some discussions or chats to appear them here</p>
+                <p class="card-text text-muted"> <i class="fa-solid fa-magnifying-glass"></i> Search for some discussions, chats or users to appear them here</p>
             </div>
         </div>
     </div>

@@ -15,9 +15,13 @@ namespace AppY.Models
         public int UserId { get; set; }
         public Chat? Chat { get; set; }
         public User? User { get; set; }
+        public List<ChatMessage>? ChatMessages { get; set; }
         [NotMapped]
         public string? ChatName { get; set; }
+        [NotMapped]
         public string? ChatSecondUserName { get; set; }
+        [NotMapped]
+        public ChatMessage? LastMessageInfo { get; set; }
 
     }
 }

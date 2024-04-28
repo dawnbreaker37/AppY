@@ -20,7 +20,12 @@ namespace AppY.Models
         public int UserId { get; set; }
         [ForeignKey("Chat")]
         public int ChatId { get; set; }
+        [ForeignKey("ChatUsers")]
+        public int? ChatUserId { get; set; }
         public User? User { get; set; }
         public Chat? Chat { get; set; }
+        public ChatUsers? ChatUsers { get; set; }
+        [NotMapped]
+        public string? SenderPseudoname { get; set; }
     }
 }

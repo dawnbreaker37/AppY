@@ -64,8 +64,8 @@ namespace AppY.Repositories
                             UserId = UserInfo.Id
                         };
 
-                        await _notification.SendNotificationAsync(notificationModel);
-                        await _context.Users.AsNoTracking().Where(u=>u.Id == Model.Id && !u.IsDisabled).ExecuteUpdateAsync(u=>u.SetProperty(u=>u.PasswordChanged, DateTime.Now));
+                        //await _notification.SendNotificationAsync(notificationModel);
+                        await _context.Users.AsNoTracking().Where(u => u.Id == Model.Id && !u.IsDisabled).ExecuteUpdateAsync(u => u.SetProperty(u => u.PasswordChanged, DateTime.Now));
                         return true;
                     }
                 }
@@ -146,9 +146,9 @@ namespace AppY.Repositories
                             NotificationCategoryId = 1,
                             UserId = UserInfo.Id
                         };
-                        await _notification.SendNotificationAsync(notificationModel);
+                        //await _notification.SendNotificationAsync(notificationModel);
                         await _context.Users.AsNoTracking().Where(u => u.Email == Model.Email && !u.IsDisabled).ExecuteUpdateAsync(u => u.SetProperty(u => u.PasswordChanged, DateTime.Now));
-                        await _context.SaveChangesAsync();
+                        //await _context.SaveChangesAsync();
 
                         return true;
                     }

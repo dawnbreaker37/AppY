@@ -50,32 +50,46 @@ namespace AppY.Controllers
                         }
                         else HttpContext.Response.Cookies.Append("CurrentUserId", UserInfo.Id.ToString());
 
-                        string? DaysPassedString = null;
-                        bool IsPasswordChangeAllowed = false;
-                        TimeSpan? DaysPassed;
-                        if (UserInfo.PasswordChanged is not null) DaysPassed = DateTime.Now.Subtract((DateTime)UserInfo.PasswordChanged);
-                        else DaysPassed = null;
-
-                        if ((DaysPassed is null) || (DaysPassed.HasValue && DaysPassed.Value.Days >= 28)) IsPasswordChangeAllowed = true;
-                        else
-                        {
-                            DaysPassedString = DaysPassed.Value.Days > 0 ? DaysPassed.Value.Days + " days, " : null;
-                            DaysPassedString += DaysPassed.Value.Hours > 0 ? DaysPassed.Value.Hours + " hr." : DaysPassed.Value.Minutes + " min.";
-                        }
-
                         int DeletedDiscussionsCount = await _discussion.GetDeletedDiscussionsCountAsync(UserId);
 
                         ViewBag.UnpicturedAvatarInfo = _user.UnpicturedAvatarSelector(UserInfo);
                         ViewBag.UserInfo = UserInfo;
                         ViewBag.DeletedDiscussionsCount = DeletedDiscussionsCount;
-                        ViewBag.DaysPassed = DaysPassed;
-                        ViewBag.DaysPassedStr = DaysPassedString;
-                        ViewBag.IsPasswordChangeAllowed = IsPasswordChangeAllowed;
 
                         return View();
                     }
                 }
                 else return RedirectToAction("Index", "Home");
+            }
+            return RedirectToAction("Create", "Account");
+        }
+
+        public async Task<IActionResult> Security()
+        {
+            if(User.Identity.IsAuthenticated)
+            {
+                User? UserInfo = await _userManager.GetUserAsync(User);
+                if(UserInfo != null)
+                {
+                    bool IsAbleToChange = false;
+                    double DaysFromLastPasswordChange = 0;
+                    string? DaysPassed_Str = null;
+                    if (UserInfo.PasswordChanged != null)
+                    {
+                        DaysFromLastPasswordChange = Math.Round(DateTime.Now.Subtract(UserInfo.PasswordChanged.Value).TotalDays, 1);
+                        if (DaysFromLastPasswordChange > 28) IsAbleToChange = true;
+                        DaysPassed_Str = _user.SetLastSeenText(UserInfo.PasswordChanged.Value);
+                    }
+                    else IsAbleToChange = true;
+
+                    ViewBag.UserInfo = UserInfo;
+                    ViewBag.UnpicturedAvatarInfo = _user.UnpicturedAvatarSelector(UserInfo);
+                    ViewBag.IsAbleToChange = IsAbleToChange;
+                    ViewBag.DaysPassed = DaysFromLastPasswordChange;
+                    ViewBag.DateOfPasswordChange = DaysPassed_Str;
+
+                    return View();
+                }
             }
             return RedirectToAction("Create", "Account");
         }
@@ -223,6 +237,18 @@ namespace AppY.Controllers
             bool Result = await _user.IsShortnameUniqueAsync(Id, Shortname);
             if (Result) return Json(new { success = true, result = Shortname });
             else return Json(new { success = false, });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Find(string? Keyword)
+        {
+            IQueryable<User>? Result_Preview = _user.FindUsers(Keyword);
+            if(Result_Preview != null)
+            {
+                List<User>? Result = await Result_Preview.ToListAsync();
+                if (Result != null) return Json(new { success = true, result = Result, count = Result.Count });
+            }
+            return Json(new { success = false });
         }
 
         [HttpGet]

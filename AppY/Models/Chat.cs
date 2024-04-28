@@ -11,6 +11,7 @@ namespace AppY.Models
         public string? Description { get; set; }
         [MaxLength(24)]
         public string? Shortname { get; set; }
+        public bool UnablePreview { get; set; }
         public DateTime CreatedAt { get; set; }
         public int CreatorId { get; set; }
         public List<User>? Users { get; set; }

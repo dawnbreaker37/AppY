@@ -4,6 +4,7 @@ using AppY.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppY.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20240426193011_26042024")]
+    partial class _26042024
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -70,9 +73,6 @@ namespace AppY.Migrations
                     b.Property<int>("ChatId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ChatUserId")
-                        .HasColumnType("int");
-
                     b.Property<int>("IsAutodeletable")
                         .HasColumnType("int");
 
@@ -110,8 +110,6 @@ namespace AppY.Migrations
 
                     b.HasIndex("ChatId");
 
-                    b.HasIndex("ChatUserId");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("ChatMessages");
@@ -127,6 +125,9 @@ namespace AppY.Migrations
 
                     b.Property<int>("ChatId")
                         .HasColumnType("int");
+
+                    b.Property<string>("ChatSecondUserName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
@@ -870,10 +871,6 @@ namespace AppY.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AppY.Models.ChatUsers", "ChatUsers")
-                        .WithMany("ChatMessages")
-                        .HasForeignKey("ChatUserId");
-
                     b.HasOne("AppY.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -881,8 +878,6 @@ namespace AppY.Migrations
                         .IsRequired();
 
                     b.Navigation("Chat");
-
-                    b.Navigation("ChatUsers");
 
                     b.Navigation("User");
                 });
@@ -1129,11 +1124,6 @@ namespace AppY.Migrations
                     b.Navigation("ChatMessages");
 
                     b.Navigation("ChatUsers");
-                });
-
-            modelBuilder.Entity("AppY.Models.ChatUsers", b =>
-                {
-                    b.Navigation("ChatMessages");
                 });
 
             modelBuilder.Entity("AppY.Models.Discussion", b =>

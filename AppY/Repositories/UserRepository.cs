@@ -194,7 +194,7 @@ namespace AppY.Repositories
         {
             if (!String.IsNullOrWhiteSpace(Keyword))
             {
-                return _context.Users.AsNoTracking().Where(u => !u.IsPrivate && !u.IsDisabled && (u.UserName != null && u.UserName.ToLower().Contains(Keyword.ToLower()) || u.ShortName != null && u.ShortName.ToLower().Contains(Keyword.ToLower()) || u.PseudoName != null && u.PseudoName.ToLower().Contains(Keyword.ToLower()))).Select(u => new User { Id = u.Id, PseudoName = u.PseudoName, ShortName = u.ShortName, IsPrivate = u.IsPrivate });
+                return _context.Users.AsNoTracking().Where(u => !u.IsPrivate && !u.IsDisabled && (u.UserName != null && u.UserName.ToLower().Contains(Keyword.ToLower()) || u.ShortName != null && u.ShortName.ToLower().Contains(Keyword.ToLower()) || u.PseudoName != null && u.PseudoName.ToLower().Contains(Keyword.ToLower()))).Select(u => new User { Id = u.Id, AvatarUrl = u.AvatarUrl, PseudoName = u.PseudoName, ShortName = u.ShortName, IsPrivate = u.IsPrivate });
             }
             else return null;
         }

@@ -80,10 +80,14 @@ namespace AppY.Repositories
             if(User1 > 0 && User2 > 0)
             {
                 int ChatId = 0;
-                if (!CreateIfNot) ChatId = await _context.Chats.AsNoTracking().Where(c => !c.IsDeleted && (c.ChatUsers != null) && ((c.CreatorId == User1 && User2 == c.ChatUsers.Where(c => c.UserId == User2).Select(c => c.UserId).FirstOrDefault()) || (c.CreatorId == User2 && User1 == c.ChatUsers.Where(c => c.UserId == User1).Select(c => c.UserId).FirstOrDefault()))).Select(c => c.Id).FirstOrDefaultAsync();
+                if (!CreateIfNot)
+                {
+                    //ChatId = await _context.Chats.AsNoTracking().Where(c => !c.IsDeleted && (c.ChatUsers != null) && ((c.CreatorId == User1 && User2 == c.ChatUsers.Where(c => c.UserId == User2).Select(c => c.UserId).FirstOrDefault()) || (c.CreatorId == User2 && User1 == c.ChatUsers.Where(c => c.UserId == User1).Select(c => c.UserId).FirstOrDefault()))).Select(c => c.Id).FirstOrDefaultAsync();
+                    ChatId = await _context.Chats.AsNoTracking().Where(c => c.ChatUsers != null && c.ChatUsers.Any(c => c.UserId == User1) && c.ChatUsers.Any(c => c.UserId == User2) && !c.IsDeleted).Select(c => c.Id).FirstOrDefaultAsync();
+                }
                 else
                 {
-                    ChatId = await _context.Chats.AsNoTracking().Where(c => !c.IsDeleted && (c.ChatUsers != null) && ((c.CreatorId == User1 && User2 == c.ChatUsers.Where(c => c.UserId == User2).Select(c => c.UserId).FirstOrDefault()) || (c.CreatorId == User2 && User1 == c.ChatUsers.Where(c => c.UserId == User1).Select(c => c.UserId).FirstOrDefault()))).Select(c => c.Id).FirstOrDefaultAsync();
+                    ChatId = await _context.Chats.AsNoTracking().Where(c => c.ChatUsers != null && c.ChatUsers.Any(c => c.UserId == User1) && c.ChatUsers.Any(c => c.UserId == User2) && !c.IsDeleted).Select(c => c.Id).FirstOrDefaultAsync();
                     if (ChatId > 0) return ChatId;
                     else
                     {
@@ -105,7 +109,7 @@ namespace AppY.Repositories
 
         public async Task<Chat?> GetChatInfoAsync(int Id)
         {
-            if (Id > 0) return await _context.Chats.AsNoTracking().Select(c => new Chat { Id = c.Id, CreatedAt = c.CreatedAt, Name = c.Name, CreatorId = c.CreatorId, IsDeleted = c.IsDeleted }).FirstOrDefaultAsync(c => c.Id == Id && !c.IsDeleted);
+            if (Id > 0) return await _context.Chats.AsNoTracking().Select(c => new Chat { Id = c.Id, CreatedAt = c.CreatedAt, Name = c.Name, CreatorId = c.CreatorId, IsDeleted = c.IsDeleted, UnablePreview = c.UnablePreview }).FirstOrDefaultAsync(c => c.Id == Id && !c.IsDeleted);
             else return null;
         }
 
@@ -150,7 +154,7 @@ namespace AppY.Repositories
         {
             if (Id > 0)
             {
-                return _context.ChatUsers.AsNoTracking().Where(c => c.UserId == Id && !c.IsBlocked && (!c.DeletedAt.HasValue || c.DeletedAt.Value.AddDays(5) >= DateTime.Now)).Select(c => new ChatUsers { Id = c.Id, ChatId = c.ChatId, ChatName = c.Chat!.Name, IsPinned = c.IsPinned, DeletedAt = c.DeletedAt, IsDeleted = c.IsDeleted, IsMuted = c.IsMuted }).OrderBy(c => c.DeletedAt).ThenByDescending(c => c.IsPinned);
+                return _context.ChatUsers.AsNoTracking().Where(c => c.UserId == Id && !c.IsBlocked && (!c.DeletedAt.HasValue || c.DeletedAt.Value.AddDays(5) >= DateTime.Now)).Select(c => new ChatUsers { Id = c.Id, ChatId = c.ChatId, ChatName = c.Chat!.Name, IsPinned = c.IsPinned, DeletedAt = c.DeletedAt, IsDeleted = c.IsDeleted, IsMuted = c.IsMuted, LastMessageInfo = c.ChatMessages != null ? c.ChatMessages.Select(c => new ChatMessage { Text = c.Text, SenderPseudoname = c.User != null ? c.User.PseudoName : "Unknown User" }).FirstOrDefault() : null }).OrderBy(c => c.DeletedAt).ThenByDescending(c => c.IsPinned);
             }
             else return null;
         }
@@ -238,9 +242,9 @@ namespace AppY.Repositories
             return 0;
         }
 
-        public IQueryable<ChatUsers>? GetUserChatsShortly(int Id)
+        public IQueryable<ChatUsers>? GetUserChatsShortly(int Id, int CurrentChatId)
         {
-            if (Id > 0) return _context.ChatUsers.AsNoTracking().Where(c => c.UserId == Id && !c.IsDeleted).Select(c => new ChatUsers { Id = c.Id, ChatId = c.ChatId, ChatName = c.Chat != null ? c.Chat.Name : "New Chat" });
+            if (Id > 0) return _context.ChatUsers.AsNoTracking().Where(c => c.UserId == Id && c.ChatId != CurrentChatId && !c.IsDeleted).Select(c => new ChatUsers { Id = c.Id, ChatId = c.ChatId, ChatName = c.Chat != null ? c.Chat.Name : "New Chat" });
             else return null;
         }
     }
