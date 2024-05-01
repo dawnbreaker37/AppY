@@ -158,38 +158,6 @@
         </div>
     </div>
 
-    <div class="smallside-box-container shadow-standard overflow-hidden" id="YoutubeMiniPlayer_Container">
-        <div class="box-container p-2">
-            <div class="box-container">
-                <div class="hstack gap-3">
-                    <input type="text" class="form-control bg-light shadow-none w-100" placeholder="Enter any youtube link here..." id="YTMiniPlayer_Search" />
-                    <button type="button" class="btn btn-close btn-sm rounded-circle" id="YoutubeMiniPlayer_Container-Close"></button>
-                </div>
-            </div>
-            <div class="box-container text-center mt-1" id="YTMiniPlayer_Box" style="display: none;">
-                <iframe class="yt-mini-player" loading="lazy" src="" title="Mini Player" frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen id="YoutubeMiniPlayer_Frame"></iframe>
-            </div>
-            <div class="bordered-container text-center mt-1 p-3" id="YTNoCurrentView_Box">
-                <h2 class="h2 text-danger"> <i class="fa-brands fa-youtube"></i> </h2>
-                <h4 class="h4">No Video</h4>
-                <small class="card-text text-muted">paste your link or enter it to show the video</small>
-            </div>
-            <div class="box-container bg-light text-center mt-1 mw-99">
-                <div class="row">
-                    <div class="col">
-                        <button type="button" class="btn btn-standard w-100 btn-sm"> <i class="fa-regular fa-copy"></i> Copy</button>
-                    </div>
-                    <div class="col">
-                        <button type="button" class="btn btn-standard btn-mute w-100 btn-sm" id="MuteYTVideo_Btn"> <i class="fa-solid fa-volume-xmark"></i> Mute</button>
-                    </div>
-                    <div class="col">
-                        <button type="button" class="btn btn-standard btn-forward-yt-video-to-chat w-100 btn-sm"> <i class="fa-solid fa-circle-chevron-right"></i> To Chat</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="smallside-box-container shadow-standard" id="Discussions_Container">
         <div class="header-container p-2 pb-0 text-center" id="Discussions_Container-Header">
             <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Discussions_Container-Close"></button>
@@ -226,11 +194,6 @@
                         <form method="get" asp-controller="Discussion" asp-action="GetDiscussions" id="GetDiscussions_Form">
                             <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-quote-right"></i> <br />Discussions</button>
                         </form>
-                    </div>
-                </div>
-                <div class="col">
-                    <div>
-                        <button type="button" class="btn btn-standard btn-sm w-100 btn-smallside-open-container" id="YoutubeMiniPlayer_Container-Open"> <i class="fa-brands fa-youtube text-danger"></i> <br />Youtube Mini</button>
                     </div>
                 </div>
             </div>
@@ -797,7 +760,7 @@
                             <button class="btn btn-standard btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#AutoDeleteOptions_Collapse" aria-expanded="false" aria-controls="AutoDeleteOptions_Collapse" id="SendMessage_IsAutoDeletable-TurnOnOrOff"> <span class="text-muted" id="AreMessagesAutoDeletable-Icon"><i class="fa-solid fa-clock-rotate-left"></i></span> Auto-Deletable Messages: <span class="text-muted" id="AutoDeleteDelay-Icon">disabled</span></button>
                         }
                         <div class="ms-1">
-                            <small class="card-text text-muted">Message will be automatically deleted after being marked as read when a certain time period has been passed</small>
+                            <small class="card-text text-muted">Messages auto-destruct after a set time when marked as read</small>
                         </div>
                         <div class="collapse" id="AutoDeleteOptions_Collapse">
                             <div class="box-container mt-1">
@@ -809,6 +772,30 @@
                                 <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1" id="720-MinsSet_Btn">12 hours</button>
                                 <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1" id="1440-MinsSet_Btn">1 day</button>
                                 <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1" id="10080-MinsSet_Btn">1 week</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="box-container inside-box-container mt-2 bg-white p-2" id="MessagePreview_Box" style="display: none;">
+                    </div>
+                    <div class="bordered-container inside-box-container p-2 mt-2" id="TextEditorSettings-Box" style="display: none;">
+                        <div class="box-container w-auto">
+                            <button type="button" class="btn btn-standard-asset bg-white btn-sm" id="AddTextToTheTextEditor_Btn"> <i class="fa-regular fa-rectangle-list"></i> Type: <span class="text-primary" id="TES_Type_Span"></span></button>
+                            <div class="mt-1"></div>
+                            <small class="card-text text-muted ms-1">Tap on <span class="text-primary">type</span> shower to insert sample to your message</small>
+                        </div>
+                        <div class="mt-2">
+                            <div class="form-floating">
+                                <div class="d-none">
+                                    <input type="hidden" id="TextType_Val" value="0" />
+                                    <input type="hidden" id="PasteTo_Val" value="SendMessage_Text_Val" />
+                                    <input type="hidden" id="WidgetId_Val" value="Preloaded_Container" />
+                                </div>
+                                <input type="text" id="PreparedText1_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
+                                <label for="PreparedText1_Val" class="fw-500" id="PreparedText1_Lbl">Prepared Text, 1</label>
+                            </div>
+                            <div class="form-floating mt-2">
+                                <input type="text" id="PreparedText2_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
+                                <label for="PreparedText2_Val" class="fw-500" id="PreparedText2_Lbl">Prepared Text, 2</label>
                             </div>
                         </div>
                     </div>
@@ -886,50 +873,6 @@
                 </div>
             </div>
 
-        </div>
-    </div>
-</div>
-
-<div class="main-container shadow-standard" id="MessagePreview_Container">
-    <div class="header-container p-2 text-center" id="MessagePreview_Container-Header">
-        <button type="button" class="btn btn-standard-asset btn-light btn-sm float-end ms-1 btn-open-container" id="Preloaded_Container-OpenMessagePreview_Container">Close</button>
-        <h5 class="h5 text-truncate p-1" id="MessagePreview_Container">Message Preview</h5>
-    </div>
-    <div class="box-container p-2 pt-1 mt-1" id="MessagePreview_Container-Box">
-        <div class="box-container" id="MessagePreview_Box">
-
-        </div>
-        <button type="button" class="btn btn-primary w-100 btn-standard-asset" id="SendPreviewedMessage_Btn">Send this Template</button>
-    </div>
-</div>
-<div class="main-container shadow-standard" id="TextEditorSettings_Container">
-    <div class="header-container p-2 text-center" id="TextEditorSettings_Container-Header">
-        <button type="button" class="btn btn-standard-asset btn-light btn-sm float-end ms-1 btn-open-container" id="Preloaded_Container-Open">Back</button>
-        <h5 class="h5 text-truncate p-1" id="TextEditorsSettings_HeaderText_Lbl">Text Editor Settings</h5>
-    </div>
-    <div class="box-container p-2 pt-1 mt-1" id="TextEditorSettings_Container-Box">
-        <div class="box-container bg-light p-2">
-            <span class="card-text fw-500">Type: <span class="text-muted" id="TES_Type_Span"></span></span>
-            <div></div>
-            <small class="card-text text-muted">to change the type go back to the previous widget</small>
-        </div>
-        <div class="mt-2">
-            <div class="form-floating">
-                <div class="d-none">
-                    <input type="hidden" id="TextType_Val" value="0" />
-                    <input type="hidden" id="PasteTo_Val" value="SendMessage_Text_Val" />
-                    <input type="hidden" id="WidgetId_Val" value="Preloaded_Container" />
-                </div>
-                <input type="text" id="PreparedText1_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
-                <label for="PreparedText1_Val" class="fw-500" id="PreparedText1_Lbl">Prepared Text, 1</label>
-            </div>
-            <div class="form-floating mt-2">
-                <input type="text" id="PreparedText2_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
-                <label for="PreparedText2_Val" class="fw-500" id="PreparedText2_Lbl">Prepared Text, 2</label>
-            </div>
-            <div class="mt-2">
-                <button type="button" class="btn btn-primary w-100 btn-standard-asset" id="AddTextToTheTextEditor_Btn">Add Text</button>
-            </div>
         </div>
     </div>
 </div>
@@ -1059,6 +1002,8 @@
             </div>
         </div>
         }
+
+    <button type="button" class="btn btn-light text-primary btn-slide-to-bottom btn-slide-to-bottom-style shadow-sm" id="Preloaded_Container-SlideToBottom" style="bottom: -75px;"> <i class="fa-solid fa-angle-down btn-slide-to-bottom" id="Preloaded_Container-SlideToBottomX"></i> </button>
 </div>
 
 <div class="fixed-bottom bot-navbar shadow-sm p-1" style="display: none;" id="StatusEdit_BotOffNavbar">

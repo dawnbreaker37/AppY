@@ -72,15 +72,14 @@
                             <a asp-controller="Chat" asp-action="C" asp-route-Id="@ViewBag.ChatId" class="btn btn-standard-asset btn-light w-100" disabled> <i class="fa-regular fa-comments text-primary"></i> <br />Chat</a>
                     </div>
                 </div>
-@*                 <div class="col">
-                    <small class="d-none" id="UsersFullLink_Lbl">/User/Page/@UserInfo.ShortName</small>
-                    <div class="btn btn-standard-asset btn-light copy-to-clipboard w-100" id="UsersFullLink_Lbl-Copy"> <i class="fa-regular fa-copy text-primary copy-to-clipboard" id="UsersFullLink_Lbl-CopyX"></i> <br />Copy</div>
-                </div> *@
                 <div class="col">
                     <div>
                         <button type="button" class="btn btn-standard-asset btn-light w-100 btn-slide-to-right" id="AdditionalInfo_Container-Open"> <i class="fa-solid fa-ellipsis text-primary"></i> <br />More</button>
                     </div>
                 </div>
+            </div>
+            <div class="row mt-1">
+                <a asp-controller="Chat" asp-action="CreateSecretChat" asp-route-Id="@UserInfo.Id" class="btn btn-standard-asset btn-light w-100"> <i class="fa-solid fa-user-secret text-primary"></i> Secret Chat</a>
             </div>
         </div>
 

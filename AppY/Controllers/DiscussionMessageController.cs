@@ -89,7 +89,11 @@ namespace AppY.Controllers
                 {
                     Model.UserId = UserId;
                     int Result = await _messages.EditMessageAsync(Model);
-                    if (Result != 0) return Json(new { success = true, id = Result, text = Model.Text });
+                    if (Result > 0)
+                    {
+                        await _messages.EditAllRepliedMessageTextsAsync(Model.Id, Model.Text);
+                        return Json(new { success = true, id = Result, text = Model.Text });
+                    }
                 }
             }
             return Json(new { success = false, alert = "Unable to edit this message. Please, check all datas and then try to edit it again" });

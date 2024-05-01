@@ -13,6 +13,7 @@
     <div class="d-none">
         <input type="hidden" id="SentMessagesCount_Val" value="@ViewBag.MessagesCount" />
         <input type="hidden" id="CurrentChatId_Val" value="@ChatInfo.Id" />
+        <input type="hidden" id="IsChatLocked_Val" value="@ViewBag.IsChatLocked" />
         <form method="get" asp-controller="Chat" asp-action="CheckShortnameAvailability" id="ChatShortnameAvailabilityCheck_Form">
             <input type="hidden" name="Id" value="@ChatInfo.Id" />
             <input type="hidden" name="Value" id="CSA_Value_Val" />
@@ -29,38 +30,6 @@
             <input type="hidden" name="Id" value="@ChatInfo.Id" />
             <input type="hidden" name="UserId" value="@UserInfo.Id" />
         </form>
-    </div>
-    
-    <div class="smallside-box-container shadow-standard overflow-hidden" id="YoutubeMiniPlayer_Container">
-        <div class="box-container p-2">
-            <div class="box-container">
-                <div class="hstack gap-3">
-                    <input type="text" class="form-control bg-light shadow-none w-100" placeholder="Enter any youtube link here..." id="YTMiniPlayer_Search" />
-                    <button type="button" class="btn btn-close btn-sm rounded-circle" id="YoutubeMiniPlayer_Container-Close"></button>
-                </div>
-            </div>
-            <div class="box-container text-center mt-1" id="YTMiniPlayer_Box" style="display: none;">
-                <iframe class="yt-mini-player" loading="lazy" src="" title="Mini Player" frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen id="YoutubeMiniPlayer_Frame"></iframe>
-            </div>
-            <div class="bordered-container text-center mt-1 p-3" id="YTNoCurrentView_Box">
-                <h2 class="h2 text-danger"> <i class="fa-brands fa-youtube"></i> </h2>
-                <h4 class="h4">No Video</h4>
-                <small class="card-text text-muted">paste your link or enter it to show the video</small>
-            </div>
-            <div class="box-container bg-light text-center mt-1 mw-99">
-                <div class="row">
-                    <div class="col">
-                        <button type="button" class="btn btn-standard w-100 btn-sm"> <i class="fa-regular fa-copy"></i> Copy</button>
-                    </div>
-                    <div class="col">
-                        <button type="button" class="btn btn-standard btn-mute w-100 btn-sm" id="MuteYTVideo_Btn"> <i class="fa-solid fa-volume-xmark"></i> Mute</button>
-                    </div>
-                    <div class="col">
-                        <button type="button" class="btn btn-standard btn-forward-yt-video-to-chat w-100 btn-sm"> <i class="fa-solid fa-circle-chevron-right"></i> To Chat</button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="smallside-box-container shadow-standard" id="Discussions_Container">
@@ -192,11 +161,6 @@
                         </form>
                     </div>
                 </div>
-                <div class="col">
-                    <div>
-                        <button type="button" class="btn btn-standard btn-sm w-100 btn-smallside-open-container" id="YoutubeMiniPlayer_Container-Open"> <i class="fa-brands fa-youtube text-danger"></i> <br />Youtube Mini</button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -227,7 +191,7 @@
                     }
                 </div>
                 <div class="col">
-                    <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-solid fa-fingerprint text-primary"></i> <br />Security</button>
+                    <button type="button" class="btn btn-standard-asset btn-light btn-slide-to-right w-100" id="SecurityInfo_Box-Open"> <i class="fa-solid fa-fingerprint text-primary"></i> <br />Security</button>
                 </div>
                 <div class="col">
                     <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-solid fa-palette text-primary"></i> <br />Appearance</button>
@@ -255,6 +219,94 @@
                 <a asp-controller="User" asp-action="Page" asp-route-Id="@SecondUserInfo.Id" class="h6 text-dark text-decoration-none user-via-shortname">@SecondUserInfo.PseudoName</a>
                 <div></div>
                 <small class="card-text text-muted">@@@SecondUserInfo.ShortName</small>
+            </div>
+        </div>
+        <div class="box-container mt-2" id="SecurityInfo_Box" style="margin-left: -1200px; display: none;">
+            <button type="button" class="btn btn-standard-asset btn-light btn-sm btn-slide-to-left" id="SecurityInfo_Box-Close">Close</button>
+            <div class="btn-group-vertical w-100 mt-1" role="group" aria-label="vertical btn-group">
+                @if(!ChatInfo.UnablePreview)
+                {
+                    <div class="w-100">
+                        <form method="post" asp-controller="Chat" asp-action="SwitchPreviewOption" id="SwitchChatPreviewingOption_Form">
+                            <input type="hidden" name="Value" id="SPO_Value_Val" value="false" />
+                            <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                            <button type="submit" class="btn btn-group-member w-100 btn-top-rounded" id="SwitchChatPreviewOption_Btn"> <i class="fa-regular fa-window-maximize"></i> Chat Previewing <span class="text-primary style-font" id="ChatPreviewing_Span"> ∙ On</span></button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="w-100">
+                        <form method="post" asp-controller="Chat" asp-action="SwitchPreviewOption" id="SwitchChatPreviewingOption_Form">
+                            <input type="hidden" name="Value" id="SPO_Value_Val" value="true" />
+                            <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                            <button type="submit" class="btn btn-group-member btn-top-rounded w-100" id="SwitchChatPreviewOption_Btn"> <i class="fa-regular fa-window-maximize"></i> Chat Previewing <span class="text-muted style-font" id="ChatPreviewing_Span"> ∙ Off</span></button>
+                        </form>
+                    </div>
+                }
+                <div class="w-100">
+                    <form method="post" asp-controller="Chat" asp-action="SwitchAutoDestructionOption" id="SwitchAutoDesctructionOption_Form">
+                        <input type="hidden" name="Value" id="SADO_Value_Val" value="false" />
+                        <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                        <button type="submit" class="btn btn-group-member border-radius-sharp w-100" id="SwitchAutoDestructionOptionSbmt_Btn" disabled> <i class="fa-solid fa-eraser"></i> Messages Auto-Destruction <span class="text-muted style-font" id="SADO_Span"> ∙ Off</span></button>
+                    </form>
+                </div>
+                <button type="button" class="btn btn-group-member btn-bottom-rounded w-100" data-bs-toggle="collapse" data-bs-target="#SetChatPassword_Collapse" aria-expanded="false" aria-controls="SetChatPassword_Collapse"> <i class="fa-solid fa-key"></i> Password Settings</button>
+            </div>
+        </div>
+        <div class="collapse" id="SetChatPassword_Collapse">
+            <div class="bordered-container p-2 mt-2">
+                <div class="box-container bg-light p-2 text-center">
+                    <h3 class="h3 text-primary"> <i class="fa-solid fa-key fa-flip" style="--fa-animation-duration: 1.2s;"></i> </h3>
+                    <h5 class="h5">Password Settings</h5>
+                    <small class="card-text text-muted">Set or remove your password for this chat</small>
+                </div>
+                <div class="box-container mt-2 text-center">
+                    @if (ViewBag.PasswordSettings != null)
+                    {
+                        <div class="box-container bg-light p-1 text-center">
+                            <form method="post" asp-controller="Chat" asp-action="SetPassword" id="SetPassword_Form">
+                                <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                                <input type="password" class="message-form-control natural-form-control w-100 text-center" name="Password" id="SetPassword_Password_Val" placeholder="You've got a password for this chat" data-bs-html="You've got a password for this chat" maxlength="16" disabled />
+                            </form>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <form method="post" asp-controller="Chat" asp-action="RemovePassword" id="RemovePassword_Form">
+                                    <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                                    <button type="submit" class="btn btn-standard-asset btn-light text-danger w-100" id="RemovePasswordSbmt_Btn">Remove</button>
+                                </form>
+                                <small class="card-text text-muted">Removes the password</small>
+                            </div>
+                            <div class="col">
+                                <button type="button" class="btn btn-standard-asset btn-primary btn-form-awakening w-100" id="SetPassword_Password_Val-Activate" data-bs-html="Enter new password here">Set New</button>
+                                <small class="card-text text-muted">Tap to set a new one</small>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="box-container bg-light p-1 text-center">
+                            <form method="post" asp-controller="Chat" asp-action="SetPassword" id="SetPassword_Form">
+                                <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                                <input type="password" class="message-form-control natural-form-control w-100 text-center" name="Password" id="SetPassword_Password_Val" placeholder="You haven't got any password for this chat" data-bs-html="You haven't got any password for this chat" maxlength="16" disabled />
+                            </form>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <form method="post" asp-controller="Chat" asp-action="RemovePassword" id="RemovePassword_Form">
+                                    <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                                    <button type="submit" class="btn btn-standard-asset btn-light text-danger w-100" id="RemovePasswordSbmt_Btn" disabled>Remove</button>
+                                </form>
+                                <small class="card-text text-muted">Completely removes the password</small>
+                            </div>
+                            <div class="col">
+                                <button type="button" class="btn btn-standard-asset btn-primary btn-form-awakening w-100" id="SetPassword_Password_Val-Activate" data-bs-html="Enter new password here">Set New</button>
+                                <small class="card-text text-muted">Tap to set a new one</small>
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
         <div class="collapse" id="EditChatInfo_Box">
@@ -342,9 +394,9 @@
                                             }
                                             @if (message.RepliedMessageId != 0)
                                             {
-                                                <div class="cur-user-reply-container mb-1 reply-element" id="@message.Id-ChatMsgReplyBox" data-bs-msg-id="@message.Id">
-                                                    <small class="card-text fw-500 reply-element" id="@message.RepliedMessageId-ChatMsgReplyIcon" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-reply"></i> Replied to</small>
-                                                    <p class="card-text white-space-on message-label chat-options reply-element" id="@message.RepliedMessageId-ChatMsgReplyText" data-bs-msg-id="@message.Id">@message.RepliesMsgShortText</p>
+                                                <div class="cur-user-reply-container mb-1 reply-element" id="@message.Id-RepliedMsgBox" data-bs-msg-id="@message.Id">
+                                                    <small class="card-text fw-500 reply-element" id="@message.RepliedMessageId-RepliedMsgIcon" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-reply"></i> Replied to</small>
+                                                    <p class="card-text white-space-on message-label chat-options reply-element" id="@message.RepliedMessageId-RepliedMsgText" data-bs-msg-id="@message.Id">@message.RepliesMsgShortText</p>
                                                 </div>
                                             }
                                             <p class="card-text white-space-on message-label chat-options" id="@message.Id-ChatOptionMsgText_Lbl">@message.Text</p>
@@ -390,9 +442,9 @@
                                             }
                                             @if (message.RepliedMessageId != 0)
                                             {
-                                                <div class="other-user-reply-container mb-1 reply-element" id="@message.Id-ChatMsgReplyBox" data-bs-msg-id="@message.Id">
-                                                    <small class="card-text fw-500 reply-element" id="@message.Id-ChatMsgReplyIcon" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-reply"></i> Replied to</small>
-                                                    <p class="card-text reply-to-chat-message message-label white-space-on reply-element" id="@message.Id-ChatMsgReplyText" data-bs-msg-id="@message.Id">@message.RepliesMsgShortText</p>
+                                                <div class="other-user-reply-container mb-1 reply-element" id="@message.Id-RepliedMsgBox" data-bs-msg-id="@message.Id">
+                                                    <small class="card-text fw-500 reply-element" id="@message.Id-RepliedMsgIcon" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-reply"></i> Replied to</small>
+                                                    <p class="card-text reply-to-chat-message message-label white-space-on reply-element" id="@message.Id-RepliedMsgText" data-bs-msg-id="@message.Id">@message.RepliesMsgShortText</p>
                                                 </div>
                                             }
                                             <p class="card-text white-space-on message-label reply-to-chat-message" id="@message.Id-ChatOptionMsgText_Lbl">@message.Text</p>
@@ -440,7 +492,7 @@
                         <button class="btn btn-standard btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#AutoDeleteOptions_Collapse" aria-expanded="false" aria-controls="AutoDeleteOptions_Collapse" id="SendMessage_IsAutoDeletable-TurnOnOrOff"> <span class="text-muted" id="AreMessagesAutoDeletable-Icon"><i class="fa-solid fa-clock-rotate-left"></i></span> Auto-Deletable Messages: <span class="text-muted" id="AutoDeleteDelay-Icon">disabled</span></button>
                     }
                     <div class="ms-1">
-                        <small class="card-text text-muted">Message will be automatically deleted after being marked as read when a certain time period has been passed</small>
+                        <small class="card-text text-muted">Messages auto-destruct after a set time when marked as read</small>
                     </div>
                     <div class="collapse" id="AutoDeleteOptions_Collapse">
                         <div class="box-container mt-1">
@@ -452,6 +504,30 @@
                             <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1" id="720-MinsSet_Btn">12 hours</button>
                             <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1" id="1440-MinsSet_Btn">1 day</button>
                             <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1" id="10080-MinsSet_Btn">1 week</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-container inside-box-container mt-2 bg-white p-2" id="MessagePreview_Box" style="display: none;">
+                </div>
+                <div class="bordered-container inside-box-container p-2 mt-2" id="TextEditorSettings-Box" style="display: none;">
+                    <div class="box-container w-auto">
+                        <button type="button" class="btn btn-standard-asset bg-white btn-sm" id="AddTextToTheTextEditor_Btn"> <i class="fa-regular fa-rectangle-list"></i> Type: <span class="text-primary" id="TES_Type_Span"></span></button>
+                        <div class="mt-1"></div>
+                        <small class="card-text text-muted ms-1">Tap on <span class="text-primary">type</span> shower to insert sample to your message</small>
+                    </div>
+                    <div class="mt-2">
+                        <div class="form-floating">
+                            <div class="d-none">
+                                <input type="hidden" id="TextType_Val" value="0" />
+                                <input type="hidden" id="PasteTo_Val" value="SendMessage_Text_Val" />
+                                <input type="hidden" id="WidgetId_Val" value="Preloaded_Container" />
+                            </div>
+                            <input type="text" id="PreparedText1_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
+                            <label for="PreparedText1_Val" class="fw-500" id="PreparedText1_Lbl">Prepared Text, 1</label>
+                        </div>
+                        <div class="form-floating mt-2">
+                            <input type="text" id="PreparedText2_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
+                            <label for="PreparedText2_Val" class="fw-500" id="PreparedText2_Lbl">Prepared Text, 2</label>
                         </div>
                     </div>
                 </div>
@@ -469,14 +545,14 @@
             </div>
             <button type="button" class="btn btn-standard btn-sm copy-to-clipboard float-end" id="ChatOptionMessageText_Lbl-CopyToTheClipboard"> <i class="fa-regular fa-copy text-primary"></i> Copy</button>
             <div class="float-end ms-1" id="PinTheMessage_Box">
-                <form method="post" asp-controller="ChatMessage" asp-action="Pin" id="PinTheDiscussionMessage_Form">
+                <form method="post" asp-controller="ChatMessage" asp-action="Pin" id="PinTheChatMessage_Form">
                     <input type="hidden" name="Id" id="PCM_Id_Val" value="0" />
                     <input type="hidden" name="UserId" value="@UserInfo.Id" />
                     <button type="submit" class="btn btn-standard btn-sm float-end me-1"> <i class="fa-solid fa-thumbtack text-primary"></i> Pin</button>
                 </form>
             </div>
             <div class="float-end ms-1" id="UnpinTheMessage_Box" style="display: none;">
-                <form method="post" asp-controller="ChatMessage" asp-action="Unpin" id="UnpinTheDiscussionMessage_Form">
+                <form method="post" asp-controller="ChatMessage" asp-action="Unpin" id="UnpinTheChatMessage_Form">
                     <input type="hidden" name="Id" id="UCM_Id_Val" value="0" />
                     <input type="hidden" name="DiscussionOrChatId" value="@ChatInfo.Id" />
                     <input type="hidden" name="UserId" value="@UserInfo.Id" />
@@ -516,48 +592,6 @@
     </div>
 </div>
 
-<div class="main-container shadow-standard" id="MessagePreview_Container">
-    <div class="header-container p-2 text-center" id="MessagePreview_Container-Header">
-        <button type="button" class="btn btn-standard-asset btn-light btn-sm float-end ms-1 btn-open-container" id="Preloaded_Container-OpenMessagePreview_Container">Close</button>
-        <h5 class="h5 text-truncate p-1" id="MessagePreview_Container">Message Preview</h5>
-    </div>
-    <div class="box-container p-2 pt-1 mt-1" id="MessagePreview_Container-Box">
-        <div class="box-container" id="MessagePreview_Box">
-        </div>
-    </div>
-</div>
-<div class="main-container shadow-standard" id="TextEditorSettings_Container">
-    <div class="header-container p-2 text-center" id="TextEditorSettings_Container-Header">
-        <button type="button" class="btn btn-standard-asset btn-light btn-sm float-end ms-1 btn-open-container" id="Preloaded_Container-Open">Back</button>
-        <h5 class="h5 text-truncate p-1" id="TextEditorsSettings_HeaderText_Lbl">Text Editor Settings</h5>
-    </div>
-    <div class="box-container p-2 pt-1 mt-1" id="TextEditorSettings_Container-Box">
-        <div class="box-container bg-light p-2">
-            <span class="card-text fw-500">Type: <span class="text-muted" id="TES_Type_Span"></span></span>
-            <div></div>
-            <small class="card-text text-muted">to change the type go back to the previous widget</small>
-        </div>
-        <div class="mt-2">
-            <div class="form-floating">
-                <div class="d-none">
-                    <input type="hidden" id="TextType_Val" value="0" />
-                    <input type="hidden" id="PasteTo_Val" value="SendMessage_Text_Val" />
-                    <input type="hidden" id="WidgetId_Val" value="Preloaded_Container" />
-                </div>
-                <input type="text" id="PreparedText1_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
-                <label for="PreparedText1_Val" class="fw-500" id="PreparedText1_Lbl">Prepared Text, 1</label>
-            </div>
-            <div class="form-floating mt-2">
-                <input type="text" id="PreparedText2_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
-                <label for="PreparedText2_Val" class="fw-500" id="PreparedText2_Lbl">Prepared Text, 2</label>
-            </div>
-            <div class="mt-2">
-                <button type="button" class="btn btn-primary w-100 btn-standard-asset" id="AddTextToTheTextEditor_Btn">Add Text</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="fixed-bottom bot-navbar shadow-sm p-2" id="Preloaded_BotOffNavbar">
     <div class="box-container" id="SendMessage_FirstInside_Box">
         <div class="box-container">
@@ -584,7 +618,7 @@
             </div>
 
             <div class="hstack gap-2" id="TextSendingBox">
-                <button type="button" class="btn btn-standard btn-sm return-main-bot-navbar"> <i class="fa-solid fa-chevron-down"></i> </button>
+                <button type="button" class="btn btn-standard btn-sm" id="ReturnMainBotNavbar_Btn"> <i class="fa-solid fa-chevron-down"></i> </button>
                 <textarea name="Text" id="SendMessage_Text_Val" class="send-message-form-control message-form-control me-auto form-control-check-input w-100 overflow-hidden" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendMessage_SbmtBtn"></textarea>
                 <button type="button" class="btn btn-message-example btn-sm open-animated-collapse btn-open-inside-box" id="MainTextEditor_Box-Open"> <i class="fa-solid fa-plus btn-open-inside-box" id="MainTextEditor_Box-OpenY"></i> </button>
                 <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="SendAFileInMessage_Btn" data-bs-html="SendMessage_Images_Val"> <i class="fa-regular fa-file-image"></i> </button>
@@ -594,6 +628,7 @@
 
         </div>
     </div>
+    <button type="button" class="btn btn-light text-primary btn-slide-to-bottom btn-slide-to-bottom-style shadow-sm" id="Preloaded_Container-SlideToBottom" style="bottom: -75px;"> <i class="fa-solid fa-angle-down btn-slide-to-bottom" id="Preloaded_Container-SlideToBottomX"></i> </button>
 </div>
 
 <div class="alert-container mx-auto shadow-sm p-3" role="alert" id="MessageAlert_Container">
@@ -613,6 +648,34 @@
       </div>
     </div>
 </div>
+
+@if (ViewBag.PasswordSettings != null)
+{
+    <div class="cloud-box shadow-sm p-3" id="Password_Box">
+        <div class="box-container text-center">
+            <h1 class="h1 text-primary"> <i class="fa-solid fa-lock" id="Password_Box_Main_Icon"></i> </h1>
+            <h4 class="h4">Chat Locked</h4>
+            <small class="card-text text-muted" id="PasswordDescription_Lbl">Enter the password to continue</small>
+            <div class="mt-3">
+                <form method="post" asp-controller="Chat" asp-action="CheckPassword" id="CheckPassword_Form">
+                    <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                    <input type="password" name="Password" id="CheckPassword_Val" class="message-form-control text-center w-100" placeholder="Chat Password..." maxlength="16" />
+                </form>
+            </div>
+            <div class="row mt-3">
+                <div class="col">
+                    <button type="button" class="btn btn-standard text-primary w-100" onclick="window.history.back();">Close</button>
+                </div>
+                <div class="col">
+                    <form method="post" asp-controller="Chat" asp-action="SendChatPasswordViaEmail" id="SendChatPasswordViaEmail_Form">
+                        <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                        <button type="submit" class="btn btn-standard text-primary w-100" id="SendChatPasswordViaEmailSbmt_Btn">Send Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
 <script>
@@ -964,7 +1027,7 @@
             }, 1500);
 
             let sentMessagesCount = parseInt(document.getElementById("SentMessagesCount_Val").value);
-            if (parseInt(document.getElementById("SentMessagesCount_Val").value) > 0) {
+            if (sentMessagesCount > 0) {
                 document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
             }
             else {
@@ -1252,12 +1315,14 @@
 
     hubConnection.on("EditReceive", function (message, id) {
         textDecoder(message, id + "-ChatOptionMsgText_Lbl");
+        textDecoder(message, id + "-RepliedMsgText");
         $("#" + id + "-ChatMsgIsEdited_Lbl").text(" edited");
         $("#" + id + "-ChatMsgIsEdited_Lbl").fadeIn(250);
     });
 
     hubConnection.on("Edit_CallerReceive", function (message, id) {
         textDecoder(message, id + "-ChatOptionMsgText_Lbl");
+        textDecoder(message, id + "-RepliedMsgText");
         $("#" + id + "-ChatMsgIsEdited_Lbl").text(" edited");
         $("#" + id + "-ChatMsgIsEdited_Lbl").fadeIn(250);
         $("#EditingOrReplying_Box").slideUp(250);

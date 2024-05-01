@@ -127,7 +127,7 @@ namespace AppY.ChatHub
             }
         }
 
-        public async Task Reply(int MessageId, string? ReplyText, int UserId, int ChatId, string? Text, int IsAutodeletable, string ReceiverId, int CurrentChatUserId)
+        public async Task Reply(int MessageId, string? ReplyText, int UserId, int ChatId, string? Text, int IsAutodeletable, int ReceiverId, int CurrentChatUserId)
         {
             SendReply sendReply = new SendReply
             {
@@ -142,12 +142,12 @@ namespace AppY.ChatHub
             string? Result = await _message.ReplyToMessageAsync(sendReply);
             if (Result != null)
             {
-                await this.Clients.User(ReceiverId).SendAsync("ReplyReceive", Result, Text, ReplyText, MessageId, ChatId);
+                await this.Clients.User(ReceiverId.ToString()).SendAsync("ReplyReceive", Result, Text, ReplyText, MessageId, ChatId);
                 await this.Clients.Caller.SendAsync("Caller_ReplyReceive", Result, Text, ReplyText, MessageId);
             }
         }
 
-        public async Task Edit(int Id, int UserId, string ReceiverId, string? Text, int ChatId)
+        public async Task Edit(int Id, int UserId, int ReceiverId, string? Text, int ChatId)
         {
             SendEdit Model = new SendEdit
             {
@@ -159,8 +159,9 @@ namespace AppY.ChatHub
             int Result = await _message.EditMessageAsync(Model);
             if(Result > 0)
             {
+                await _message.EditAllRepliedMessageTextsAsync(Id, Text);
                 await this.Clients.Caller.SendAsync("Edit_CallerReceive", Text, Result);
-                await this.Clients.User(ReceiverId).SendAsync("EditReceive", Text, Result, ChatId);
+                await this.Clients.User(ReceiverId.ToString()).SendAsync("EditReceive", Text, Result, ChatId);
             }
         }
 
@@ -173,5 +174,28 @@ namespace AppY.ChatHub
                 await this.Clients.User(ReceiverId).SendAsync("DeleteMessage", Id, ChatId);
             }
         }
+
+        //Secret Chats//
+        public async Task SecretSend(string? Message, int SenderId, string ReceiverId, int ChatId)
+        {
+            await this.Clients.Caller.SendAsync("CallerSecretReceive", Message, SenderId);
+            await this.Clients.User(ReceiverId).SendAsync("SecretReceive", Message, SenderId, ReceiverId, ChatId);
+        }
+
+        public async Task SecretReply(int ReplyId, string? ReplyText, string? Message, int SenderId, string ReceiverId, int ChatId)
+        {
+            if (ReplyText != null) ReplyText = ReplyText.Length > 50 ? ReplyText.Substring(0, 50) : ReplyText;
+            else ReplyText = "Deleted Message";
+
+            await this.Clients.Caller.SendAsync("CallerSecretReply", ReplyId, ReplyText, Message, SenderId);
+            await this.Clients.User(ReceiverId).SendAsync("SecretReply", ReplyId, ReplyText, Message, ReceiverId, ChatId);
+        }
+
+        public async Task SecretEdit(int Id, string? Message, int SenderId, string ReceiverId, int ChatId)
+        {
+            await this.Clients.Caller.SendAsync("CallerSecretEdit", Id, Message, SenderId);
+            await this.Clients.User(ReceiverId).SendAsync("SecretEdit", Id, Message, SenderId, ReceiverId, ChatId);
+        }
+        //Secret Chats//
     }
 }

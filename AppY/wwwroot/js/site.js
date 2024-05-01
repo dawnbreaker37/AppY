@@ -5,10 +5,11 @@ let alertTimeout;
 let messageAlertTimeout;
 let currentUrl;
 let batteryInfo;
+let mouseOverDuration = 0;
+let mouseEventInterval;
 let letters = /^[A-Za-z]+$/;
 
 window.onload = function () {
-    let standardTimeout = 300;
     batteryInfo = navigator.getBattery;
     currentUrl = document.location.href;
     fullHeight = parseInt(window.innerHeight);
@@ -23,17 +24,18 @@ window.onload = function () {
         additionalBtnSelector(fullWidth);
 
         if (fullWidth >= 768) {
-            standardTimeout += 350;
             animatedOpen(false, "SmallsidePreloaded_Container", true, false);
             setTimeout(function () {
                 animatedOpen(false, "Preloaded_Container", true, false);
             }, 250);
         }
-        else animatedOpen(false, "Preloaded_Container", true, false);
+        else {
+            animatedOpen(false, "Preloaded_Container", true, false);
+        }
         $("#MainTopOffNavbar").slideDown(250);
     }, 250);
 
-    if (currentUrl.toLowerCase().includes("/discuss") || currentUrl.toLowerCase().includes("/chat/c")) {
+    if (currentUrl.toLowerCase().includes("/discuss")) {
         botNavbarClose(true, null);
         insideBoxOpen("PreloadedInside_Box", true);
         botNavbarOpen("Preloaded_BotOffNavbar");
@@ -42,7 +44,27 @@ window.onload = function () {
 
         setTimeout(function () {
             slideToTheBottom("Preloaded_Container");
-        }, standardTimeout);
+        }, 300);
+    }
+    else if (currentUrl.toLowerCase().includes("/chat/c") || (currentUrl.toLowerCase().includes("/chat/sc"))) {
+        let isLocked = $("#IsChatLocked_Val").val();
+
+        botNavbarClose(true, null);
+        insideBoxOpen("PreloadedInside_Box", true);
+        botNavbarOpen("Preloaded_BotOffNavbar");
+        statusSlider("StatusBar_Lbl", 2);
+        replaceAllTheTextInMessages();
+
+        setTimeout(function () {
+            slideToTheBottom("Preloaded_Container");
+        }, 300);
+
+        if (isLocked) {
+            $("#Preloaded_Container").addClass("bg-blur");
+            $("#Preloaded_Container").css("pointer-events", "none");
+            $("#SendMessage_Text_Val").css("pointer-events", "none");
+            $(".btn-message-example").css("pointer-events", "none");
+        }
     }
     else if (currentUrl.toLowerCase().includes("/page")) {
         statusSlider("StatusBar_Lbl", 2);
@@ -271,7 +293,13 @@ $("#LogIn_Form").on("submit", function (event) {
     let data = $(this).serialize();
     $.post(url, data, function (response) {
         if (response.success) {
-            document.location.href = "/Home/Index";
+            if (response.result.result == 2) document.location.href = "/Home/Index";
+            else if (response.result.result == 1) {
+                $("#STFAC_Email_Val").val(response.result.email);
+                $("#TFA_Email_Val").val(response.result.email);
+                $("#TFA_Password_Val").val(response.result.password);
+                $("#SendTwoFactorAuthenticationCode_Form").submit();
+            }
         }
         else {
             $("#LogIn_Password_Val").val(null);
@@ -279,7 +307,32 @@ $("#LogIn_Form").on("submit", function (event) {
         }
     });
 });
+$("#TFASignInAsync_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
 
+    $.post(url, data, function (response) {
+        if (response.success) {
+            document.location.href = "/Home/Index";
+        }
+        else {
+            $("#TFA_Code_Val").val(null);
+            alert('<i class="fa-solid fa-user-xmark text-neon-purple"></i>', response.alert, "Close", null, 0, null, null, null, 3.75);
+        }
+    });
+});
+$("#TFA_Code_Val").on("keyup", function () {
+    if ($(this).val().length >= 12) {
+        $("#TFASignInAsync_Form").submit();
+    }
+});
+
+$(".send-one-time-usage-code").on("click", function () {
+    if ($("#SSUC_Email_Val").val() != "" || $("#SSUC_Email_Val").val() != undefined) {
+        $("#SendSingleUseCode_Form").submit();
+    }
+});
 $("#SendCodeAgain_Btn").on("click", function () {
     $("#SendSingleUseCode_Form").submit();
     $(this).attr("disabled", true);
@@ -352,6 +405,129 @@ $("#SubmitAccountViaReserveCode_Form").on("submit", function (event) {
             alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 4.5);
         }
     });
+});
+
+$("#SendTwoFactorAuthenticationCode_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $("#Send2FAEnableCodeSbmt_Btn").html(' <i class="fa-solid fa-spinner fa-spin-pulse"></i> <br/>Sending. Please Wait');
+    $("#Send2FAEnableCodeSbmt_Btn").attr("disabled", true);
+    $("#LogInSbmt_Btn").html(' <i class="fa-solid fa-spinner fa-spin-pulse"></i> Sending...');
+    $.post(url, data, function (response) {
+        $("#Send2FAEnableCodeSbmt_Btn").html(' <i class="fa-solid fa-check-double"></i> <br/>Sent. Check Your Inbox');
+        if (response.success) {
+            if (currentUrl.toLowerCase().includes("/security")) {
+                animatedClose(false, "TwoFactorEnable_Container", true, true);
+                alert('<i class="fa-regular fa-circle-check text-neon-purple"></i>', response.alert, "Close", null, 0, null, null, null, 4.25);
+                setTimeout(function () {
+                    animatedOpen(false, "TwoFactorEnabling_Container", true, false, false);
+                }, 350);
+                $("#ETFA_Email_Val").val($("#STFAC_Email_Val").val());
+            }
+            else {
+                $("#LogInSbmt_Btn").text("Log In");
+                animatedClose(false, "SmallsidePreloaded_Container", true, true);
+                setTimeout(function () {
+                    animatedOpen(false, "2FASignIn_Container", false, false, false);
+                }, 350);
+            }
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 3.75);
+        }
+    });
+});
+$("#Send2FADisablingCode_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $("#S2FDCSbmt_Btn").attr("disabled", true);
+    $("#S2FDCSbmt_Btn").html(' <i class="fa-solid fa-spinner fa-spin-pulse"></i> Sending...');
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let timeOut = 85;
+            let timeOutTimer = timeOut - 1;
+
+            let resendInterval = setInterval(function () {
+                timeOutTimer--;
+                $("#S2FDCSbmt_Btn").attr("disabled", true);
+                $("#S2FDCSbmt_Btn").html(' <i class="fa-solid fa-arrow-rotate-right"></i> Resend in ' + timeOutTimer);
+            }, 1000);
+            setTimeout(function () {
+                $("#S2FDCSbmt_Btn").attr("disabled", false);
+                $("#S2FDCSbmt_Btn").html(' <i class="fa-solid fa-lock-open"></i> Send Again');
+                clearInterval(resendInterval);
+            }, timeOut * 1000);
+
+            animatedClose(true, "smallside-box-container", true, true);
+            setTimeout(function () {
+                animatedOpen(false, "TwoFactorDisable_Container", false, false, false);
+            }, 350);
+            alert('<i class="fa-regular fa-circle-check text-neon-purple"></i>', response.alert, "Close", null, 0, null, null, null, 4.25);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 3.75);
+        }
+    });
+});
+
+$("#EnableTwoFactorAuthentication_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-regular fa-circle-check text-neon-purple"></i>', response.alert, "Close", null, 0, null, null, null, 4.25);
+            $("#IsTwoFactorEnabled_Lbl").html("Two-Factor authentication enabled by your email");
+            $("#TwoFactorEnable_Container-Open").slideUp(250);
+            $("#Disable2FA_Box").slideDown(250);
+            $("#AuthenticationStatus_Icon").addClass("text-primary");
+            $("#AuthenticationStatus_Icon").removeClass("text-muted");
+            $("#AuthenticationStatus_Icon").text("On");
+            animatedClose(false, "TwoFactorEnabling_Container", true, true);
+        }
+        else {
+            $("#ETFD_Code_Val").val(null);
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 3.75);
+        }
+    });
+});
+$("#DisableTwoFactorAuthentication_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-regular fa-circle-check text-neon-purple"></i>', response.alert, "Close", null, 0, null, null, null, 4.25);
+            $("#IsTwoFactorEnabled_Lbl").html("Two-Factor authentication disabled. Click to activate it by your email");
+            $("#Disable2FA_Box").slideUp(250);
+            $("#TwoFactorEnable_Container-Open").slideDown(250);
+            $("#AuthenticationStatus_Icon").removeClass("text-primary");
+            $("#AuthenticationStatus_Icon").addClass("text-muted");
+            $("#AuthenticationStatus_Icon").text("Off");
+            animatedClose(false, "TwoFactorDisable_Container", true, true);
+        }
+        else {
+            $("#DTFA_Code_Val").val(null);
+            alert('<i class="fa-regular fa-circle-xmark text-danger"></i>', response.alert, "Got It", null, 0, null, null, null, 3.75);
+        }
+    });
+});
+$("#ETFD_Code_Val").on("keyup", function () {
+    let valueLength = $(this).val().length;
+    if (valueLength >= 12) {
+        $("#EnableTwoFactorAuthentication_Form").submit();
+    }
+});
+$("#DTFA_Code_Val").on("keyup", function () {
+    if ($(this).val().length >= 8) {
+        $("#DisableTwoFactorAuthentication_Form").submit();
+    }
 });
 
 $("#UpdatePassword_Form").on("submit", function (event) {
@@ -1098,7 +1274,7 @@ $("#UnmuteTheChat_Form").on("submit", function (event) {
                 $("#IsThisChatMuted_Val").val(false);
                 $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell-slash text-primary'></i> <br/>Mute");
             }
-            else $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell-slash'></i> Unmute");
+            else $("#" + response.id + "-ChatMuteOrUnmute").html(" <i class='fa-regular fa-bell-slash'></i> Mute");
             $("#" + response.id + "-ChatMuteOrUnmute").addClass("mute-the-chat");
             $("#" + response.id + "-ChatMuteOrUnmute").removeClass("unmute-the-chat");
         }
@@ -1202,7 +1378,7 @@ $(document).on("click", ".restore-the-chat", function (event) {
     else {
         $("#RestoreTheChat_Id_Val").val(0);
     }
-});//ChangePassword_Form
+});
 $("#GetChats_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -1213,6 +1389,16 @@ $("#GetChats_Form").on("submit", function (event) {
             $("#Chats_Container-Box").empty();
             $("#ChatsCount_Span").text(response.count);
             animatedClose(true, "smallside-box-container", true, true);
+
+            let hintContainer = $("<div class='box-container bg-light p-2'></div>");
+            let hintSeparatorZero=$("<div></div>")
+            let hintMainText = $("<span class='h6'> <i class='fa-regular fa-window-maximize text-primary'></i> Chat Previewing</span>");
+            let hintDescription = $("<small class='card-text text-muted'>Tap once on avatar of chat to preview it. If you want to open the chat, tap on the chat name</small>");
+            hintContainer.append(hintMainText);
+            hintContainer.append(hintSeparatorZero);
+            hintContainer.append(hintDescription);
+            $("#Chats_Container-Box").append(hintContainer);
+
             if (response.count > 0) {
                 $.each(response.result, function (index) {
                     let div = $("<div class='box-container bg-light p-2 mt-2'></div>");
@@ -1220,9 +1406,10 @@ $("#GetChats_Form").on("submit", function (event) {
                     let name = $("<span class='h5 text-truncate'></span>");
                     let separatorOne = $("<div class='mt-1'></div>");
                     let lastMessage = $("<small class='card-text'>No sent messages</small>");
+                    let isLockedIcon = $("<small class='card-text float-end me-2 mt-1' style='display: none;'> <i class='fa-solid fa-lock'></i> </small>");
                     let isMutedIcon = $('<small class="card-text text-orange float-end me-2 mt-1" style="display: none;"> <i class="fa-regular fa-bell-slash"></i> </small>');
                     let isPinnedIcon = $("<small class='card-text float-end me-2 mt-1' style='display: none;'> <i class='fa-solid fa-thumbtack'></i> </small>");
-                    let noAvatarLbl = $("<div class='unpictured-container-label-sm text-dark'></div>");
+                    let noAvatarLbl = $("<div class='unpictured-container-label-sm text-dark chat-select-to-preview'></div>");
 
                     let dropdownDiv = $("<div class='dropdown'></div>");
                     let dropdownBtn = $("<button type='button' class='btn btn-standard btn-sm float-end ms-2' data-bs-toggle='dropdown' aria-expanded='false'> <i class='fa-solid fa-ellipsis-h'></i> </button>");
@@ -1232,7 +1419,9 @@ $("#GetChats_Form").on("submit", function (event) {
                     let dropdownLi2 = $("<li></li>");
                     let dropdownLi3 = $("<li></li>");
                     let dropdownLi4 = $("<li></li>");
+                    let dropdownLi5 = $("<li></li>");
                     let dropdownHeader = $("<small class='card-text text-muted'></small>");
+                    let dropdownBtn5 = $("<button type='button' class='dropdown-item chat-select-to-preview mb-1'> <i class='fa-regular fa-eye'></i> Preview</button>");
                     let dropdownBtn1 = $("<a href='#' class='dropdown-item mb-1'> <i class='fa-solid fa-up-right-from-square'></i> Chat</a>");
                     let dropdownBtn2 = $("<button type='button' class='dropdown-item mb-1'></button>");
                     let dropdownBtn3 = $("<button type='button' class='dropdown-item'></button>");
@@ -1242,19 +1431,25 @@ $("#GetChats_Form").on("submit", function (event) {
                     dropdownLi2.append(dropdownBtn2);
                     dropdownLi3.append(dropdownBtn3);
                     dropdownLi4.append(dropdownBtn4);
+                    dropdownLi5.append(dropdownBtn5);
                     dropdownUl.append(dropdownLi0);
                     dropdownUl.append(dropdownLi1);
+                    dropdownUl.append(dropdownBtn5);
                     dropdownUl.append(dropdownLi2);
                     dropdownUl.append(dropdownLi3);
                     dropdownUl.append(dropdownLi4);
                     dropdownDiv.append(dropdownBtn);
                     dropdownDiv.append(dropdownUl);
 
+                    avatarDiv.attr("id", response.result[index].chatId + "-ChatAvatar_Box");
+                    noAvatarLbl.attr("id", response.result[index].chatId + "-ChatAvatar_Lbl");
                     name.attr("id", response.result[index].chatId + "-ChatName_Lbl");
                     dropdownBtn2.attr("id", response.result[index].chatId + "-ChatPinOrUnpin");
                     dropdownBtn3.attr("id", response.result[index].chatId + "-ChatMuteOrUnmute");
+                    dropdownBtn5.attr("id", response.result[index].chatId + "-ChatPreview_Btn");
                     isPinnedIcon.attr("id", response.result[index].chatId + "-ChatPinned_Icon");
                     isMutedIcon.attr("id", response.result[index].chatId + "-ChatMuted_Icon");
+                    isLockedIcon.attr("id", response.result[index].chatId + "-ChatLocked_Icon");
 
                     if (response.result[index].chatName != null) {
                         if (response.result[index].chatName.length > 24) {
@@ -1269,6 +1464,9 @@ $("#GetChats_Form").on("submit", function (event) {
                     }
                     avatarDiv.append(noAvatarLbl);
 
+                    if (response.result[index].passwordAvailability) {
+                        isLockedIcon.fadeIn(0);
+                    }
                     if (response.result[index].isPinned) {
                         isPinnedIcon.fadeIn(0);
                         dropdownBtn2.addClass("unpin-the-chat");
@@ -1313,6 +1511,7 @@ $("#GetChats_Form").on("submit", function (event) {
                     }
                     div.append(isPinnedIcon);
                     div.append(isMutedIcon);
+                    div.append(isLockedIcon);
                     div.append(avatarDiv);
                     div.append(name);
                     div.append(separatorOne);
@@ -1341,6 +1540,119 @@ $("#GetChats_Form").on("submit", function (event) {
         else {
             alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Close", null, 0, null, null, null, 3.25);
         }
+    });
+});
+$("#PreviewTheChat_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            $("#Preview_Container-Box").empty();
+            let chatName = $("#" + response.id + "-ChatName_Lbl").html();
+            $("#Preview_Container-Box").append();
+            $("#Preview_Container_Main-Lbl").text(response.fullCount + " messages loaded so far");
+            if (chatName != undefined) {
+                $("#Preview_Container_Name-Lbl").html(chatName);
+            }
+            else {
+                $("#Preview_Container_Name-Lbl").text("New Chat");
+            }
+
+            if (response.fullCount > 0) {
+                $.each(response.result, function (index) {
+                    let messageMainBox = $("<div class='message-box'></div>");
+                    let messageNotMainBox;
+                    let styleBox;
+                    let replyBox;
+                    let replyTitle;
+                    let replyText;
+                    let isAutodeletableSmall;
+                    let mainText;
+                    let statsBox;
+                    let isChecked;
+                    let dateAndTime = $("<small class='card-text text-muted'></small>");
+                    let isEdited = $("<small class='card-text text-muted'></small>");
+                    let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
+                    let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
+
+                    if (response.userId == response.result[index].userId) {
+                        messageNotMainBox = $("<div class='cur-user-msg-box'></div>");
+                        styleBox = $("<div class='cur-user-styled-msg-box p-2'></div>");
+                        replyBox = $("<div class='cur-user-reply-container mb-1'></div>");
+                        isAutodeletableSmall = $("<small class='card-text'></small>");
+                        mainText = $("<p class='card-text white-space-on message-label'></p>");
+                        statsBox = $("<div class='float-end me-1'></div>");
+                        dateAndTime = $("<small class='card-text text-muted'></small>");
+                        isEdited = $("<small class='card-text text-muted' style='display: none;'></small>");
+                        imgBox = $("<div class='box-container mt-1 mb-1'></div>");
+                        imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
+                        if (response.result[index].isChecked) {
+                            isChecked = $("<small class='card-text text-primary'> <i class='fa-solid fa-check-double'></i> </small>");
+                        }
+                        else {
+                            isChecked = $("<small class='card-text text-muted'> <i class='fa-solid fa-check'></i> </small>");
+                        }
+                    }
+                    else {
+                        messageNotMainBox = $("<div class='other-user-msg-box'></div>");
+                        styleBox = $("<div class='other-user-styled-msg-box p-2'></div>");
+                        replyBox = $("<div class='other-user-reply-container mb-1'></div>");
+                        isAutodeletableSmall = $("<small class='card-text' style='display: none;'></small>");
+                        mainText = $("<p class='card-text white-space-on message-label></p>");
+                        statsBox = $("<div class='discussion-options float-end me-1'></div>");
+                        dateAndTime = $("<small class='card-text text-muted'></small>");
+                        isEdited = $("<small class='card-text text-muted' style='display: none;'>edited</small>");
+                    }
+
+                    mainText.html(textDecoder(response.result[index].text), null);
+                    dateAndTime.html(dateAndTimeTranslator(response.result[index].sentAt));
+                    if (response.result[index].isEdited) isEdited.fadeIn(0);
+                    if (response.result[index].isAutoDeletable > 0) {
+                        styleBox.append(isAutodeletableSmall);
+                        isAutodeletableSmall.fadeIn(0);
+                        isAutodeletableSmall.html(' <i class="fa-solid fa-clock-rotate-left"></i> ' + dateAndTimeTranslatorFromMins(response.result[index].isAutoDeletable));
+                    }
+
+                    if (response.result[index].repliedMessageId > 0) {
+                        replyTitle.html("<i class='fa-solid fa-reply'></i> Replied to");
+                        replyText.html(textDecoder(response.result[index].repliesMessageText, null));
+                        replyBox.append(replyTitle);
+                        replyBox.append(replyText);
+                        styleBox.append(replyBox);
+                    }
+
+                    styleBox.append(mainText);
+                    statsBox.append(isChecked);
+                    statsBox.append(dateAndTime);
+                    statsBox.append(isEdited);
+
+                    messageNotMainBox.append(styleBox);
+                    messageNotMainBox.append(statsBox);
+                    messageMainBox.append(messageNotMainBox);
+
+                    $("#Preview_Container-Box").append(messageMainBox);
+                });
+            }
+            else {
+                let emptyDiv = $("<div class='box-container bg-light p-2 mt-1 text-center'></div>");
+                let emptyIcon = $("<h1 class='h1'> <i class='fa-regular fa-file fa-flip text-primary' style='--fa-animation-duration: 1.2s;'></i> </h1>");
+                let emptyTitle = $("<h5 class='h5'>No Messages</h5>");
+                let emptyDescription = $("<small class='card-text text-muted'>This chat hasn't got any message yet to load</small>");
+                emptyDiv.append(emptyIcon);
+                emptyDiv.append(emptyTitle);
+                emptyDiv.append(emptyDescription);
+
+                $("#Preview_Container-Box").append(emptyDiv);
+            }
+
+            animatedClose(true, "smallside-box-container", true, true);
+            setTimeout(function () {
+                animatedOpen(false, "Preview_Container", false, false, false);
+            }, 200);
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
     });
 });
 $("#GetChatsShortly_Form").on("submit", function (event) {
@@ -1403,6 +1715,136 @@ $("#GetChatsShortly_Form").on("submit", function (event) {
         else alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
     });
 });
+
+$("#SwitchChatPreviewingOption_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            if (response.result == 1) {
+                $("#SPO_Value_Val").val(true);
+                $("#ChatPreviewing_Span").removeClass("text-primary");
+                $("#ChatPreviewing_Span").addClass("text-muted");
+                $("#ChatPreviewing_Span").text(" ∙ Off");
+            }
+            else if (response.result == 2) {
+                $("#SPO_Value_Val").val(false);
+                $("#ChatPreviewing_Span").addClass("text-primary");
+                $("#ChatPreviewing_Span").removeClass("text-muted");
+                $("#ChatPreviewing_Span").text(" ∙ On");
+            }
+            else alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Close", null, 0, null, null, null, 3.25);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Close", null, 0, null, null, null, 3.5);
+        }
+    });
+});
+
+$("#CheckPassword_Val").on("change", function () {
+    $("#CheckPassword_Form").submit();
+});
+$("#CheckPassword_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            $("#Password_Box").css("z-index", 0);
+            $("#Password_Box").css("top", "1200px");
+            $("#Password_Box").fadeOut(500);
+            $("#Preloaded_Container").css("pointer-events", "auto");
+            $("#Preloaded_Container").removeClass("bg-blur");
+            $("#SendMessage_Text_Val").css("pointer-events", "auto");
+            $("#SendMessage_SbmtBtn").css("pointer-events", "auto");
+            $(".btn-message-example").css("pointer-events", "auto");
+        }
+        else {
+            $("#CheckPassword_Val").val(null);
+            $("#Password_Box_Main_Icon").addClass("fa-shake");
+            $("#Password_Box_Main_Icon").css("--fa-animation-iteration-count", "1");
+            $("#Password_Box_Main_Icon").css("--fa-animation-duration", "1.25s");
+            $("#PasswordDescription_Lbl").html("<span class='text-danger'> <i class='fa-regular fa-circle-xmark'></i> " + response.alert + "</span>");
+            setTimeout(function () {
+                $("#Password_Box_Main_Icon").removeClass("fa-shake");
+                $("#PasswordDescription_Lbl").html("Enter the password to continue");
+            }, 3500);
+        }
+    });
+});
+$("#SetPassword_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-solid fa-lock text-primary"></i>', response.alert, "Done", null, 0, null, null, null, 3.5);
+            $("#SetPassword_Password_Val").val(null);
+            $("#SetPassword_Password_Val").attr('data-bs-html', "You've got a password for this chat");
+            formSleeping("SetPassword_Password_Val", $("#SetPassword_Password_Val").attr("data-bs-html"));
+            $("#RemovePasswordSbmt_Btn").attr("disabled", false);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Close", null, 0, null, null, null, 3.25);
+        }
+    });
+});
+$("#RemovePassword_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-solid fa-lock-open"></i>', response.alert, "Done", null, 0, null, null, null, 3.5);
+            $("#SetPassword_Password_Val").val(null);
+            $("#SetPassword_Password_Val").attr('data-bs-html', "You haven't got any password for this chat");
+            formSleeping("SetPassword_Password_Val", $("#SetPassword_Password_Val").attr("data-bs-html"));
+            $("#RemovePasswordSbmt_Btn").attr("disabled", true);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Close", null, 0, null, null, null, 3.25);
+        }
+    });
+});
+$("#SetPassword_Password_Val").on("change", function () {
+    $("#SetPassword_Form").submit();
+});
+
+$("#SendChatPasswordViaEmail_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $("#SendChatPasswordViaEmailSbmt_Btn").html(' <i class="fa-solid fa-spinner fa-spin-pulse"></i> Sending...');
+    $("#SendChatPasswordViaEmailSbmt_Btn").attr("disabled", true);
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let timeOut = 75;
+            let timeOutLblValue = timeOut;
+            let timeOutInterval = setInterval(function () {
+                timeOutLblValue--;
+                $("#SendChatPasswordViaEmailSbmt_Btn").attr("disabled", true);
+                $("#SendChatPasswordViaEmailSbmt_Btn").html("Resend in " + timeOutLblValue + " sec.");
+            }, 1000);
+            setTimeout(function () {
+                clearInterval(timeOutInterval);
+                $("#SendChatPasswordViaEmailSbmt_Btn").html("Send Password");
+                $("#SendChatPasswordViaEmailSbmt_Btn").attr("disabled", false);
+            }, timeOut * 1000);
+            alert('<i class="fa-regular fa-envelope-open text-primary"></i>', response.alert, "Done", null, 0, null, null, null, 4);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', response.alert, "Close", null, 0, null, null, null, 3.75);
+        }
+    });
+});
+
 $(document).on("click", ".forward-chat-msg", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != "") {
@@ -2225,7 +2667,7 @@ $("#SetDiscussionStatus_Form").on("submit", function (event) {
             setTimeout(function () {
                 botNavbarOpen("Preloaded_BotOffNavbar");
             }, 125);
-            $("#FifthMain_Btn").fadeOut(300);
+            $("#OpenBotOffNavbar_Btn").attr("disabled", true);
             $("#StatusBar_Lbl-2").html(response.result);
             setTimeout(function () {
                 $("#SetStatus_Val").val("");
@@ -2735,7 +3177,17 @@ $("#PreviewTheMessage_Btn").on("click", function () {
     if (text.length > 0 && text.length <= 3400) $("#SendPreviewedMessage_Btn").attr("disabled", false);
     else $("#SendPreviewedMessage_Btn").attr("disabled", true);
 
-    animatedOpen(false, "MessagePreview_Container", true, true, true);
+    if (parseInt($("#MainTextEditor_Box").css("margin-bottom")) >= 0) {
+        insideBoxClose(false, "MainTextEditor_Box");
+        setTimeout(function () {
+            $("#MessagePreview_Box").fadeIn(150);
+            insideBoxOpen("MainTextEditor_Box");
+        }, 700);
+    }
+    else {
+        $("#MessagePreview_Box").fadeIn(150);
+        insideBoxOpen("MainTextEditor_Box");
+    }
 });
 
 $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
@@ -3951,6 +4403,7 @@ $("#EditChatMessage_Btn").on("click", function () {
         let messageText = textDecoder($("#" + trueId + "-ChatOptionMsgText_Lbl").html(), null);
         let messageTextWithoutSigns = textUncoder(messageText);
         $("#EM_Id_Val").val(trueId);
+        $("#RM_ReplyId_Val").val(0);
         $("#DDM_Id_Val").val(0);
         $("#Forward_MsgId_Val").val(0);
         $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-regular fa-pen-to-square"></i> ');
@@ -3984,6 +4437,7 @@ $("#ReplyChatMessage_Btn").on("click", function () {
 
             $("#RM_ReplyId_Val").val(trueId);
             $("#DDM_Id_Val").val(0);
+            $("#EM_Id_Val").val(0);
             $("#Forward_MsgId_Val").val(0);
             $("#RM_ReplyText_Val").val(messageText);
             $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fas fa-reply"></i> ');
@@ -4256,8 +4710,59 @@ $(document).on("click", ".chat-options", function (event) {
         $("#CGMI_Id_Val").val(0);
     }
 });
+$(document).on("click", ".chat-select-to-preview", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        $("#PTC_Id_Val").val(trueId);
+        $("#PreviewTheChat_Form").submit();
+    }
+    else {
+        $("#PTC_Id_Val").val(0);
+    }
+});
 //Chat Message Options//
+//Secret Chat Message Options//
+$(document).on("click", ".secret-chat-options", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        let currentUserId = $("#SM_UserId_Val").val();
+        let messageText = textDecoder($("#" + trueId + "-ChatOptionMsgText_Lbl").html(), null);
+        let isMessageSentByCurrentUser = $("#" + trueId + "-ChatNMMsgBox").hasClass("cur-user-msg-box");
+        let messageSenderId = isMessageSentByCurrentUser ? $("#SM_UserId_Val").val() : $("#SM_ReceiverId_Val").val();
+        let messageSentAt = $("#" + trueId + "-ChatMsgDateAndTime_Lbl").text();
+        let messageIsEdited = $("#" + trueId + "-ChatMsgIsEdited_Lbl").text();
+        let isChecked = null;
+        //EditChatMessage_Btn
+        if (isMessageSentByCurrentUser && currentUserId == messageSenderId) {
+            $("#EditChatMsg_Col").fadeIn(250);
+            $("#DeleteChatMsg_Col").fadeIn(250);
 
+            isChecked = $("#" + trueId + "-ChatMsgIsChecked_Lbl").html();
+            if (messageIsEdited != "") $("#ChatMsgOptionAdditionalInfo_Lbl").html("sent " + messageSentAt + ", " + messageIsEdited + " " + isChecked);
+            else $("#ChatMsgOptionAdditionalInfo_Lbl").html("sent " + messageSentAt + " " + isChecked);
+        }
+        else {
+            $("#EditChatMsg_Col").fadeOut(250);
+            $("#DeleteChatMsg_Col").fadeOut(250);
+            if (messageIsEdited != "") $("#ChatMsgOptionAdditionalInfo_Lbl").html("sent " + messageSentAt + ", " + messageIsEdited);
+            else $("#ChatMsgOptionAdditionalInfo_Lbl").html("sent " + messageSentAt);
+        }
+
+        $("#CurrentGotChatMsg_Id_Val").val(trueId);
+        $("#ChatOptionMessageText_Lbl").html(messageText);
+
+        if (parseInt($("#ChatMessageOptions_Box").css("margin-bottom")) > 0) {
+            insideBoxClose(true, null);
+            setTimeout(function () {
+                insideBoxOpen("ChatMessageOptions_Box");
+            }, 700);
+        }
+        else {
+            insideBoxOpen("ChatMessageOptions_Box");
+        }
+    }
+});
+//Secret Chat Message Options//
 $(document).on("click", ".set-autodelete-duration", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
@@ -4402,6 +4907,13 @@ $(document).on("click", ".btn-slide-to-prev", function (event) {
     }
 });
 
+$(document).on("click", ".btn-slide-to-bottom", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        slideToTheBottom(trueId);
+    }
+});
+
 $(document).on("click", ".btn-close-sidebar", function () {
     closeSidebar();
 });
@@ -4519,8 +5031,18 @@ $(document).on("click", ".set-style", function (event) {
                 $("#PreparedText2_Val").attr("placeholder", "Enter your text here");
                 break;
         }
-
-        animatedOpen(false, "TextEditorSettings_Container", true, true);
+        $("#TextEditorSettings-Box").slideDown(450);
+        //if (parseInt($("#MainTextEditor_Box").css("margin-bottom")) >= 0) {
+        //    insideBoxClose(false, "MainTextEditor_Box");
+        //    setTimeout(function () {
+        //        $("#TextEditorSettings-Box").fadeIn(150);
+        //        insideBoxOpen("MainTextEditor_Box");
+        //    }, 700);
+        //}
+        //else {
+        //    $("#TextEditorSettings-Box").fadeIn(150);
+        //    insideBoxOpen("MainTextEditor_Box");
+        //}text-editor
     }
 });
 
@@ -4629,7 +5151,7 @@ $("#AddTextToTheTextEditor_Btn").on("click", function () {
 
     if (preparedText1 != undefined && preparedText2 != undefined) {
         textEditor(type + "-TextEditorStyle", preparedText1, preparedText2, pasteTo);
-        animatedOpen(false, widgetId, true, true);
+        insideBoxClose(false, "MainTextEditor_Box");
     }
 });
 
@@ -4711,6 +5233,7 @@ $(document).on("click", ".text-editor", function (event) {
     let pasteTo = $("#" + event.target.id).attr("data-bs-paste-to");
 
     if (elementId != undefined && pasteTo != undefined) {
+        $("#TextEditorSettings-Box").slideUp(550);
         textEditor(elementId, null, null, pasteTo);
     }
 });
@@ -4859,54 +5382,6 @@ $(document).on("click", ".btn-set-status", function (event) {
     }, 100);
 });
 
-$(document).on("click", ".return-main-bot-navbar", function (event) {
-    botNavbarClose(true, null);
-
-    botOffNavbarH = $("#MainBotOffNavbar").innerHeight();
-    let topNavbarH = $(".top-navbar").innerHeight();
-    let neededH = fullHeight - 24 - botOffNavbarH - topNavbarH;
-    $(".mh-max").css("height", neededH + "px");
-    $(".main-container").css("bottom", botOffNavbarH + 1 + "px");
-    $(".main-container").css("max-height", neededH + 1 + "px");
-    $(".messages-container").css("bottom", botOffNavbarH + 8 + "px");
-
-    $("#FifthMain_Btn").fadeIn(350);
-    setTimeout(function () {
-        botNavbarOpen("MainBotOffNavbar");
-    }, 100);
-});
-$(document).on("click", ".open-bot-off-navbar", function (event) {
-    let trueId = getTrueId(event.target.id);
-    if (trueId != null) {
-        let reservedBtn = $("#" + event.target.id).attr("data-bs-title");
-        let btnHtml = $("#" + event.target.id).attr("data-bs-html");
-        botNavbarClose(true, null);
-
-        setTimeout(function () {
-            botNavbarOpen(trueId, reservedBtn, btnHtml);
-        }, 125);
-    }
-});
-$(document).on("click", ".open-main-bot-navbar", function () {
-    let trueId = $("#FifthMain_Btn").attr("data-bs-html");
-    if (trueId != null) {
-        botNavbarClose(true, null);
-
-        botOffNavbarH = $("#" + trueId).innerHeight();
-        let topNavbarH = $(".top-navbar").innerHeight();
-        let neededH = fullHeight - 24 - botOffNavbarH - topNavbarH;
-        $(".mh-max").css("height", neededH + "px");
-        $(".main-container").css("bottom", botOffNavbarH + 1 + "px");
-        $(".main-container").css("max-height", neededH + 1 + "px");
-        $(".messages-container").css("bottom", botOffNavbarH + 8 + "px");
-        $("#FifthMain_Btn").fadeOut(350);
-
-        setTimeout(function () {
-            botNavbarOpen(trueId);
-        }, 100);
-    }
-});
-
 $(document).on("click", ".open-built-in-box", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != null) {
@@ -4949,32 +5424,32 @@ function closeSidebar() {
     }
 }
 
-function ytVideoOptimizer(link) {
-    let trueLink;
-    if (link != null) {
-        if (link.toLowerCase().includes("/embed")) {
-            trueLink = link;
-        }
-        else if (link.toLowerCase().includes("watch")) {
-            if (link.includes("&")) link = link.substring(link.indexOf("?") + 3, link.indexOf("&"));
-            else link = link.substring(link.indexOf("?") + 3);
-            trueLink = "https://www.youtube.com/embed/" + link;
-        }
-        else {
-            link = link.substring(link.lastIndexOf("/") + 1);
-            trueLink = "https://www.youtube.com/embed/" + link;
-        }
+//function ytVideoOptimizer(link) {
+//    let trueLink;
+//    if (link != null) {
+//        if (link.toLowerCase().includes("/embed")) {
+//            trueLink = link;
+//        }
+//        else if (link.toLowerCase().includes("watch")) {
+//            if (link.includes("&")) link = link.substring(link.indexOf("?") + 3, link.indexOf("&"));
+//            else link = link.substring(link.indexOf("?") + 3);
+//            trueLink = "https://www.youtube.com/embed/" + link;
+//        }
+//        else {
+//            link = link.substring(link.lastIndexOf("/") + 1);
+//            trueLink = "https://www.youtube.com/embed/" + link;
+//        }
 
-        $("#YoutubeMiniPlayer_Frame").attr("src", trueLink);
-        $("#YTNoCurrentView_Box").fadeOut(0);
-        $("#YTMiniPlayer_Box").fadeIn(0);
-    }
-    else {
-        $("#YoutubeMiniPlayer_Frame").attr("src", null);
-        $("#YTNoCurrentView_Box").fadeIn(0);
-        $("#YTMiniPlayer_Box").fadeOut(0);
-    }
-}
+//        $("#YoutubeMiniPlayer_Frame").attr("src", trueLink);
+//        $("#YTNoCurrentView_Box").fadeOut(0);
+//        $("#YTMiniPlayer_Box").fadeIn(0);
+//    }
+//    else {
+//        $("#YoutubeMiniPlayer_Frame").attr("src", null);
+//        $("#YTNoCurrentView_Box").fadeIn(0);
+//        $("#YTMiniPlayer_Box").fadeOut(0);
+//    }
+//}
 
 function commandLineOptions(command) {
     $(".command-box").fadeOut(300);
@@ -5047,18 +5522,8 @@ function slideToLeft(element) {
         $("#" + element).fadeOut(0);
         $("#" + element).css("filter", "none");
     }, 650);
-
-    //$("#" + element).css("background-color", "transparent");
-    //$("#" + element).css("backdrop-filter", "blur(9px)");
-    //setTimeout(function () {
-    //    $("#" + element).css("transition", "all ease 0.5s");
-    //    $("#" + element).css("margin-left", "-1200px");
-    //}, 350);
-    //setTimeout(function () {
-    //    $("#" + element).fadeOut(450);
-    //}, 600);
 }
-
+//return-main-bot-navbar
 function setUrgencyIcon(value) {
     switch (parseInt(value)) {
         case 1:
@@ -5198,7 +5663,6 @@ function deleteAllEndEmptyChars(value) {
 
 function textEditor(elementId, preparedText1, preparedText2, pasteTo) {
     let element = parseInt(elementId);
-    //set-style
     let cursorStartPos = $("#" + pasteTo).prop("selectionStart");
     let cursorEndPos = $("#" + pasteTo).prop("selectionEnd");
     let selectedText = null;
@@ -5543,7 +6007,14 @@ function additionalBtnSelector(width) {
 
 function slideToTheBottom(element) {
     let preloadedDiv = document.getElementById(element);
-    preloadedDiv.scroll({ top: preloadedDiv.scrollHeight, behavior: 'smooth' });
+    let scrollHeight = preloadedDiv.scrollHeight;
+    let scrollInterval = setInterval(function () {
+        scrollHeight = preloadedDiv.scrollHeight;
+        if (scrollHeight > 0) {
+            preloadedDiv.scroll({ top: preloadedDiv.scrollHeight, behavior: "instant" });
+            clearInterval(scrollInterval);
+        }
+    }, 150);
 }
 
 function slide(forAll, element) {
@@ -5603,16 +6074,13 @@ function botNavbarClose(isForAll, element) {
         $("#" + element).fadeOut(350);
     }
 }
-function botNavbarOpen(element, reservedBtn, reservedBtnHtml) {
+function botNavbarOpen(element, reservedBtn) {
     $("#" + element).fadeIn(0);
     $("#" + element).css("bottom", 0);
+
     if (reservedBtn != null) {
-
-        if (reservedBtnHtml != null) $("#FifthMain_Btn").html(reservedBtnHtml);
-        else $("#FifthMain_Btn").html(' <i class="fa-solid fa-angle-left"></i> ');
-
-        $("#FifthMain_Btn").attr("data-bs-html", reservedBtn);
-        $("#FifthMain_Btn").fadeIn(350);
+        $("#OpenBotOffNavbar_Btn").attr("data-bs-html", reservedBtn);
+        $("#OpenBotOffNavbar_Btn").attr("disabled", true);
     }
 }
 
@@ -5621,10 +6089,10 @@ function headerScrollTransformation(mainElement) {
     $("#" + mainElement + "_PostHeader").css("position", "fixed");
     $("#" + mainElement + "-Header").css("width", $("#" + mainElement).innerWidth() + "px");
     $("#" + mainElement + "_PostHeader").css("width", $("#" + mainElement).innerWidth() + "px");
-    if (fullWidth < 768) $("#" + mainElement + "_PostHeader").css("top", $("#" + mainElement + "-Header").innerHeight() * 2.22 + "px");
-    else if (fullWidth >= 768 && fullWidth < 1024) $("#" + mainElement + "_PostHeader").css("top", $("#" + mainElement + "-Header").innerHeight() * 2.1225 + "px");
-    else if (fullWidth >= 1024 && fullWidth < 1367) $("#" + mainElement + "_PostHeader").css("top", $("#" + mainElement + "-Header").innerHeight() * 2.1345 + "px");
-    else $("#" + mainElement + "_PostHeader").css("top", $("#" + mainElement + "-Header").innerHeight() * 2.14 + "px");
+    if (fullWidth < 768) $("#" + mainElement + "_PostHeader").css("top", $("#" + mainElement + "-Header").innerHeight() * 2 + "px");
+    else if (fullWidth >= 768 && fullWidth < 1024) $("#" + mainElement + "_PostHeader").css("top", $("#" + mainElement + "-Header").innerHeight() * 1.9 + "px");
+    else if (fullWidth >= 1024 && fullWidth < 1367) $("#" + mainElement + "_PostHeader").css("top", $("#" + mainElement + "-Header").innerHeight() * 1.925 + "px");
+    else $("#" + mainElement + "_PostHeader").css("top", $("#" + mainElement + "-Header").innerHeight() * 1.925 + "px");
 }
 function headerScrollReturn(mainElement) {
     $("#" + mainElement + "-Header").css("width", "auto");
@@ -5708,6 +6176,7 @@ function insideBoxClose(closeAll, element) {
         }
         else $("#" + element).css("margin-bottom", "24px");
         setTimeout(function () {
+            $("#" + element + " .inside-box-container").slideUp(250);
             $("#" + element).css("margin-bottom", "-1200px");
             $(".messages-container-by-height").fadeOut(300);
         }, 400);
@@ -5781,7 +6250,6 @@ function animatedOpen(forAll, element, sticky, closeAllOtherContainers, disableO
         }
 
         if (!closeAllOtherContainers) {
-
             $("#" + element).fadeIn(200);
             if (sticky) {
                 $("#" + element).css("bottom", botOffNavbarH + 18 + "px");
@@ -5975,6 +6443,22 @@ function alert(icon, text, btn1Text, btn2Text, btn1Action, btn2Action, btn1WhatT
     }
 } 
 
+function formAwakening(element, placeholder) {
+    if (element != null) {
+        $("#" + element).attr("disabled", false);
+        $("#" + element).addClass("form-pulsation");
+        if (placeholder != null) $("#" + element).attr("placeholder", placeholder);
+    }
+}
+
+function formSleeping(element, placeholder) {
+    if (element != null) {
+        $("#" + element).attr("disabled", true);
+        $("#" + element).removeClass("form-pulsation");
+        if (placeholder != null) $("#" + element).attr("placeholder", placeholder);
+    }
+}
+
 function displayCorrect(width) {
     let allBotNavbars = document.getElementsByClassName("bot-navbar");
     for (let i = 0; i < allBotNavbars.length; i++) {
@@ -6055,25 +6539,6 @@ function displayCorrect(width) {
     }
 }
 
-$("#EcoModeOnAt").on("change", function () {
-    let batteryLevel = $(this).val();
-    if (batteryLevel <= 100 && batteryLevel > 75) {
-        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-full"></i> ' + batteryLevel + "%");
-    }
-    else if (batteryLevel <= 75 && batteryLevel > 50) {
-        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-three-quarters"></i> ' + batteryLevel + "%");
-    }
-    else if (batteryLevel <= 50 && batteryLevel > 20) {
-        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-half"></i> ' + batteryLevel + "%");
-    }
-    else if (batteryLevel <= 20 && batteryLevel > 5) {
-        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-quarter text-danger"></i> ' + batteryLevel + "%");
-    }
-    else {
-        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-empty text-danger"></i> ' + batteryLevel + "%");
-    }
-});
-
 function getBatteryLevel(indicateTheLevel) {
     let batteryLevel = 0;
     let isCharging = false;
@@ -6119,6 +6584,81 @@ function getBatteryLevel(indicateTheLevel) {
     }
 }
 
+$("#EcoModeOnAt").on("change", function () {
+    let batteryLevel = $(this).val();
+    if (batteryLevel <= 100 && batteryLevel > 75) {
+        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-full"></i> ' + batteryLevel + "%");
+    }
+    else if (batteryLevel <= 75 && batteryLevel > 50) {
+        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-three-quarters"></i> ' + batteryLevel + "%");
+    }
+    else if (batteryLevel <= 50 && batteryLevel > 20) {
+        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-half"></i> ' + batteryLevel + "%");
+    }
+    else if (batteryLevel <= 20 && batteryLevel > 5) {
+        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-quarter text-danger"></i> ' + batteryLevel + "%");
+    }
+    else {
+        $("#BatteryLevelIndicator_Span").html('<i class="fas fa-battery-empty text-danger"></i> ' + batteryLevel + "%");
+    }
+});
+
+$("#ReturnMainBotNavbar_Btn").on("click", function () {
+    botNavbarClose(true, null);
+
+    botOffNavbarH = $("#MainBotOffNavbar").innerHeight();
+    let topNavbarH = $(".top-navbar").innerHeight();
+    let neededH = fullHeight - 24 - botOffNavbarH - topNavbarH;
+    $(".mh-max").css("height", neededH + "px");
+    $(".main-container").css("bottom", botOffNavbarH + 1 + "px");
+    $(".main-container").css("max-height", neededH + 1 + "px");
+    $(".messages-container").css("bottom", botOffNavbarH + 8 + "px");
+
+    $("#OpenBotOffNavbar_Btn").attr("disabled", false);
+    setTimeout(function () {
+        botNavbarOpen("MainBotOffNavbar", null);
+    }, 100);
+});
+$("#OpenBotOffNavbar_Btn").on("click", function (event) {
+    let reservedBtn = $("#" + event.target.id).attr("data-bs-html");
+    if (reservedBtn == "") reservedBtn = "Preloaded_BotOffNavbar";
+
+    botNavbarClose(true, null);
+    setTimeout(function () {
+        botNavbarOpen(reservedBtn, reservedBtn);
+    }, 125);
+    setTimeout(function () {
+        botOffNavbarH = $("#" + reservedBtn).innerHeight();
+        let topNavbarH = $(".top-navbar").innerHeight();
+        let neededH = fullHeight - 24 - botOffNavbarH - topNavbarH;
+        $(".mh-max").css("height", neededH + "px");
+        $(".main-container").css("bottom", botOffNavbarH + 1 + "px");
+        $(".main-container").css("max-height", neededH + 1 + "px");
+        $(".messages-container").css("bottom", botOffNavbarH + 8 + "px");
+    }, 250);
+});
+
+$(document).on("click", ".btn-form-awakening", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        let placeholder = $(this).attr("data-bs-html");
+        placeholder = placeholder == undefined ? null : placeholder;
+        placeholder = placeholder == "" ? null : placeholder;
+
+        formAwakening(trueId, placeholder);
+    }
+});
+$(document).on("focusout", ".natural-form-control", function () {
+    let trueId = $(this).attr("id");
+    if (trueId != "") {
+        let placeholder = $(this).attr("data-bs-html");
+        placeholder = placeholder == undefined ? null : placeholder;
+        placeholder = placeholder == "" ? null : placeholder;
+
+        formSleeping(trueId, placeholder);
+    }
+});
+
 $(document).on("change", ".checkbox-select", function (event) {
     let value = $("#" + event.target.id).prop("checked");
     let description = $("#" + event.target.id).attr("data-bs-html");
@@ -6149,11 +6689,15 @@ $(".main-container").on("scroll", function (event) {
             }
         }
     }
+
+    if (scrollH < maxScrollH - 1000) {
+        $(".btn-slide-to-bottom").css("bottom", "65px");
+    }
+    else {
+        $(".btn-slide-to-bottom").css("bottom", "-65px");
+    }
 });
 
-$("#YTMiniPlayer_Search").on("change", function () {
-    ytVideoOptimizer($(this).val());
-});
 
 $(document).on("mouseover", ".info-popover", function () {
     $(this).popover("show");

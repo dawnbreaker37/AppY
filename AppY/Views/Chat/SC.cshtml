@@ -1,0 +1,636 @@
+﻿@model User
+@{
+    ViewData["Title"] = "Secret Chat";
+    User? UserInfo = ViewBag.UserInfo;
+    User? SecondUserInfo = ViewBag.SecondUserInfo;
+    SecretChat? ChatInfo = ViewBag.ChatInfo;
+}
+
+<div class="main-sidebar" id="Main_SideBar">
+    <div class="d-none">
+        <input type="hidden" id="SentMessagesCount_Val" value="0" />
+        <input type="hidden" id="LastMessageSentCount_Val" value="1" />
+        <input type="hidden" id="CurrentUserId_Val" value="@UserInfo.Id" />
+    </div>
+</div>
+
+<div class="main-container mh-max shadow-standard" id="Preloaded_Container">
+    <div class="box-container p-2" style="display: none; margin-left: -1200px;" id="Preloaded_Container_ShowBox">
+        <button type="button" class="btn btn-light btn-standard-asset btn-sm float-start me-1 discussion-header-return" id="Preloaded_Container_ShowBox-Return">Back</button>
+        <button type="button" class="btn btn-standard-asset btn-sm float-end ms-1 btn-light" id="AboutSecretChats_Collapse-Trigger" data-bs-toggle="collapse" data-bs-target="#AboutSecretChats_Collapse" aria-expanded="false" aria-controls="AboutSecretChats_Collapse">About</button>
+        <div class="box-container text-center">
+            <div class="image-picture-none-container text-center bg-neon-purple mx-auto" id="UnpicturedAvatar_Box">
+                <div class="unpictured-container-label text-light" id="UnpicturedAvatar_Lbl">SC</div>
+            </div>
+            <span class="h3 text-truncate" id="ChatName_Span">@ChatInfo.Name</span>
+            <div></div>
+            <small class="card-text text-muted">Any chat content will be immediately deleted upon connection loss. Please exercise caution with the data you share in this chat or save in your messages</small>
+        </div>
+        <div class="box-container mt-4">
+            <div class="collapse" id="AboutSecretChats_Collapse">
+                <div class="bordered-container p-2">
+                    <div class="box-container text-center bg-light p-2">
+                        <h1 class="h1 style-font">Secret Chats</h1>
+                        <small class="card-text text-muted">a quick glance on secret chats</small>
+                    </div>
+                    <div class="box-container mt-3">
+                        <div class="box-container text-center slider-container" id="SCInfo_Box-Part0">
+                            <h3 class="h3 text-primary"> <i class="fa-solid fa-fingerprint"></i> </h3>
+                            <h5 class="h5">Max Privacy</h5>
+                            <small class="card-text text-muted">These chats are not stored anywhere, and your messages do not pass through our servers</small>
+                        </div>
+                        <div class="box-container text-center slider-container" id="SCInfo_Box-Part1" style="display: none">
+                            <h3 class="h3 text-danger"> <i class="fa-solid fa-eraser"></i> </h3>
+                            <h5 class="h5">Single-Use</h5>
+                            <small class="card-text text-muted">Any chat content will be immediately deleted once the connection between you and your conversation partner is lost</small>
+                        </div>
+                        <div class="box-container text-center slider-container" id="SCInfo_Box-Part2" style="display: none">
+                            <h3 class="h3 text-warning"> <i class="fa-solid fa-gauge-high"></i> </h3>
+                            <h5 class="h5">Flashy</h5>
+                            <small class="card-text text-muted">Actions in this chat are approximately <span class="fw-500">2.0x-2.5x</span> faster than in standard chats, as there’s no need to save and process messages</small>
+                        </div>
+                        <div class="box-container text-center slider-container" id="SCInfo_Box-Part3" style="display: none">
+                            <h3 class="h3 text-success"> <i class="fa-solid fa-crop"></i> </h3>
+                            <h5 class="h5">Frameless</h5>
+                            <small class="card-text text-muted">These kind of chats has got all functions that regular chats have</small>
+                        </div>
+                        <div class="box-container bg-light text-center p-2 mt-2">
+                            <div class="d-none">
+                                <input type="hidden" id="SCInfo_Box-StepVal" value="0" />
+                                <input type="hidden" id="SCInfo_Box-MaxStepVal" value="3" />
+                            </div>
+                            <button type="button" class="btn btn-standard btn-sm btn-slide-to-prev" id="SCInfo_Box-PrevSlide" disabled> <i class="fa-solid fa-arrow-left"></i> Prev. Step</button>
+                            <button type="button" class="btn btn-standard btn-sm btn-slide-to-next" id="SCInfo_Box-NextSlide">Next Step <i class="fa-solid fa-arrow-right"></i> </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="header-container special-container-header bg-light p-2" id="Preloaded_Container-Header">
+        <small class="badge bg-neon-purple text-light rounded-2 style-font float-end ms-1">Secret Chat</small>
+        <span class="h5 text-truncate p-1 discussion-header w-75" id="Preloaded_Container_ShowBox-Open">@ChatInfo.Name</span>
+        <div></div>
+        <small class="card-text text-muted ms-1 btn-set-status" id="ChatStatusBar_Lbl"><span class="status-slider" id="StatusBar_Lbl-0">tap to know more</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">secret chat with @SecondUserInfo.PseudoName</span><span class="status-slider" id="StatusBar_Lbl-2" style="display: none;">0 messages sent so far</span></small>
+    </div>
+    <div class="box-container p-2 pt-1 mt-1 discussion-box" id="Prealoded_Container-Box">
+        <div class="box-container" id="Messages_Box">
+            <div class="box-container text-center bg-light p-2" id="NoSentMessages_Box">
+                <h1 class="h1"> <i class="fa-solid fa-ghost"></i> </h1>
+                <h4 class="h4">Start Your Conversation</h4>
+                <small class="card-text text-muted">Begin your conversation in this chat now. Keep in mind that nothing is saved, so you should manually save any important messages in your saved messages</small>
+            </div>
+            <div class="box-container" id="HaveSentMessages_Box" style="display: none;">
+
+            </div>
+        </div>
+
+        <div class="messages-container bordered-container overflow-hidden p-2 shadow-sm" style="display: none; margin-bottom: -1200px; background-color: transparent;" id="ChatMessageOptions_Box">
+            <div class="box-container">
+                <div class="d-none">
+                    <input type="hidden" class="got-msg-id-value" id="CurrentGotChatMsg_Id_Val" value="0" />
+                </div>
+                <button type="button" class="btn btn-standard btn-sm copy-to-clipboard float-end" id="ChatOptionMessageText_Lbl-CopyToTheClipboard"> <i class="fa-regular fa-copy text-primary"></i> Copy</button>
+                <small class="card-text text-muted got-msg-datetime" id="ChatMsgOptionAdditionalInfo_Lbl">sent date, time, is checked and edited</small>
+                <div class="mt-1">
+                    <button type="button" class="btn btn-standard-asset btn-light btn-sm delete-message-options" id="ChatMessageOptions_Box-Close"> <i class="fa-solid fa-xmark text-primary"></i> Cancel</button>
+                    <small class="card-text got-msg-text" id="ChatOptionMessageText_Lbl">Message Text</small>
+                </div>
+            </div>
+            <div class="box-container mt-3">
+                <div class="row">
+                    <div class="col" id="EditChatMsg_Col">
+                        <button type="button" class="btn btn-standard btn-sm w-100" id="EditChatMessage_Btn"> <i class="fa-regular fa-pen-to-square text-primary"></i> Edit</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard btn-sm w-100" id="ReplyChatMessage_Btn"> <i class="fa-solid fa-reply text-primary"></i> Reply</button>
+                    </div>
+                    <div class="col">
+                        <form method="get" asp-controller="Chat" asp-action="GetChatsShortly" id="GetChatsShortly_Form">
+                            <input type="hidden" name="ChatId" value="@ChatInfo.Id" />
+                            <input type="hidden" name="IsForForwarding" value="true" />
+                            <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-share text-primary"></i> Forward</button>
+                        </form>
+                    </div>
+                    <div class="col" id="DeleteChatMsg_Col">
+                        <button type="button" class="btn btn-standard btn-sm text-danger w-100" id="DeleteChatMessageSbmt_Btn"> <i class="fa-regular fa-trash-can"></i> Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="messages-container bg-light box-container overflow-hidden p-2 shadow-sm" style="display: none; margin-bottom: -1200px;" id="MainTextEditor_Box">
+            <div class="box-container">
+                <div class="box-container d-inline-block w-100">
+                    <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1 fw-bold" id="0-TextEditorStyle" data-bs-paste-to="SendMessage_Text_Val"> B </button>
+                    <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1 fst-italic" id="1-TextEditorStyle" data-bs-paste-to="SendMessage_Text_Val"> It </button>
+                    <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1 text-decoration-underline" id="2-TextEditorStyle" data-bs-paste-to="SendMessage_Text_Val"> U </button>
+                    <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1 style-font" id="3-TextEditorStyle" data-bs-paste-to="SendMessage_Text_Val"> AF </button>
+                    <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="4-SetStyle"> <i class="fa-solid fa-palette set-style" id="4-SetStyleX"></i> </button>
+                    <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="5-SetStyle"> <i class="fa-solid fa-link set-style" id="5-SetStyleX"></i> </button>
+                    <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="6-SetStyle"> <i class="fa-regular fa-message set-style" id="6-SetStyleX"></i> </button>
+                    <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="7-SetStyle"> <i class="fa-regular fa-note-sticky set-style" id="7-SetStyleX"></i> </button>
+                    <button type="button" class="btn btn-sm btn-standard me-1 mt-1"> <i class="fa-regular fa-copy"></i> </button>
+                </div>
+                <div class="box-container mt-2">
+                    <button class="btn btn-standard ps-1 pe-1 btn-sm" type="button" disabled> <span class="text-muted"><i class="fa-regular fa-circle-xmark"></i></span> Auto-Deletable Messages: <span class="text-muted" id="AutoDeleteDelay-Icon">unavailable</span></button>
+                    <div></div>
+                    <small class="card-text text-muted ms-1">Auto-deletable messages are not available in secret chats. See more by <a asp-controller="Home" asp-action="AboutSC" class="text-decoration-none text-primary">this link</a></small>
+                </div>
+                <div class="box-container inside-box-container mt-2 bg-white p-2" id="MessagePreview_Box" style="display: none;">
+                </div>
+                <div class="bordered-container inside-box-container p-2 mt-2" id="TextEditorSettings-Box" style="display: none;">
+                    <div class="box-container w-auto">
+                        <button type="button" class="btn btn-standard-asset bg-white btn-sm" id="AddTextToTheTextEditor_Btn"> <i class="fa-regular fa-rectangle-list"></i> Type: <span class="text-primary" id="TES_Type_Span"></span></button>
+                        <div class="mt-1"></div>
+                        <small class="card-text text-muted ms-1">Tap on <span class="text-primary">type</span> shower to insert sample to your message</small>
+                    </div>
+                    <div class="mt-2">
+                        <div class="form-floating">
+                            <div class="d-none">
+                                <input type="hidden" id="TextType_Val" value="0" />
+                                <input type="hidden" id="PasteTo_Val" value="SendMessage_Text_Val" />
+                                <input type="hidden" id="WidgetId_Val" value="Preloaded_Container" />
+                            </div>
+                            <input type="text" id="PreparedText1_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
+                            <label for="PreparedText1_Val" class="fw-500" id="PreparedText1_Lbl">Prepared Text, 1</label>
+                        </div>
+                        <div class="form-floating mt-2">
+                            <input type="text" id="PreparedText2_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
+                            <label for="PreparedText2_Val" class="fw-500" id="PreparedText2_Lbl">Prepared Text, 2</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-container text-center mt-2">
+                    <button type="button" class="btn btn-standard btn-close-inside-box btn-sm w-100" id="MainTextEditor_Box-Close"> <i class="fa-solid fa-xmark"></i> Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="fixed-bottom bot-navbar shadow-sm p-2" id="Preloaded_BotOffNavbar">
+    <div class="box-container" id="SendMessage_FirstInside_Box">
+        <div class="box-container">
+            <div class="border-bottom pb-1" id="EditingOrReplying_Box" style="display: none;">
+                <div class="box-container text-start">
+                    <button type="button" class="btn btn-standard-asset text-primary float-end ms-1 btn-sm" id="CancelChatMessageSettings_Btn"> <i class="fa-solid fa-xmark"></i> </button>
+                    <span class="card-text fs-6 text-primary" id="EditingOrReplyingMsgIcon_Lbl"> <i class="fa-regular fa-pen-to-square"></i> </span>
+                    <span class="card-text fs-6 fw-500 text-primary" id="EditingOrReplyingMsgStatus_Lbl">Edit Message</span>
+                </div>
+                <div class="box-container mt-2 pb-1 text-start">
+                    <small class="card-text me-auto" id="EditingOrReplyingMsgText_Lbl">Message Text...</small>
+                </div>
+            </div>
+            <div class="d-none">
+                <input type="hidden" name="Id" id="EM_Id_Val" value="0" />
+                <input type="hidden" name="MessageId" id="RM_ReplyId_Val" value="0" />
+                <input type="hidden" name="ReplyText" id="RM_ReplyText_Val" />
+                <input type="hidden" name="UserId" id="SM_UserId_Val" value="@UserInfo.Id" />
+                <input type="hidden" name="ChatId" id="SC_ChatId_Val" value="@ChatInfo.Id" />
+                <input type="hidden" name="ReceiverId" id="SM_ReceiverId_Val" value="@SecondUserInfo.Id" />
+                <input type="file" class="send-message-files" id="SendMessage_Images_Val" name="Images" accept=".png, .jpg, .jpeg" multiple max="6" />
+            </div>
+
+            <div class="hstack gap-2" id="TextSendingBox">
+                <button type="button" class="btn btn-standard btn-sm" id="ReturnMainBotNavbar_Btn"> <i class="fa-solid fa-chevron-down"></i> </button>
+                <textarea name="Text" id="SendMessage_Text_Val" class="send-message-form-control message-form-control me-auto form-control-check-input w-100 overflow-hidden" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendMessage_SbmtBtn"></textarea>
+                <button type="button" class="btn btn-message-example btn-sm open-animated-collapse btn-open-inside-box" id="MainTextEditor_Box-Open"> <i class="fa-solid fa-plus btn-open-inside-box" id="MainTextEditor_Box-OpenY"></i> </button>
+                <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="SendAFileInMessage_Btn" data-bs-html="SendMessage_Images_Val"> <i class="fa-regular fa-file-image"></i> </button>
+                <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="PreviewTheMessage_Btn" style="display: none;"> <i class="fa-solid fa-align-left"></i> </button>
+                <button type="submit" class="btn rounded-pill btn-sm btn-submit-msg-sending bg-primary text-light" id="SendMessage_SbmtBtn" disabled>Send</button>
+            </div>
+
+        </div>
+    </div>
+    <button type="button" class="btn btn-light text-primary btn-slide-to-bottom btn-slide-to-bottom-style shadow-sm" id="Preloaded_Container-SlideToBottom" style="bottom: -75px;"> <i class="fa-solid fa-angle-down btn-slide-to-bottom" id="Preloaded_Container-SlideToBottomX"></i> </button>
+</div>
+
+<div class="alert-container mx-auto shadow-sm p-3" role="alert" id="MessageAlert_Container">
+    <div class="box-container">
+        <button type="button" class="btn btn-standard text-primary btn-sm ms-1 float-end shadow-none btn-send-reply-via-alert" data-bs-toggle="collapse" data-bs-target="#Reply_Collapse" aria-expanded="false" aria-controls="Reply_Collapse">Reply</button>
+        <h6 class="h6" id="MessageFrom_Lbl">From</h6>
+        <p class="card-text" id="MessageText_Lbl">Message Content</p>
+    </div>
+    <div class="collapse" id="Reply_Collapse">
+        <div class="box-container mt-3">
+            <div class="hstack gap-3">
+                <input type="hidden" id="ReplyingMsg_ChatId_Val" value="0" />
+                <input type="hidden" id="ReplyingMsg_ReceiverId_Val" value="0" />
+                <input type="text" id="ReplyingMsg_Message_Val" class="message-form-control shadow-none w-100" placeholder="Enter your reply here..." maxlength="3400" />
+                <button type="button" class="btn btn-standard-asset btn-primary btn-sm rounded-pill" id="SendReply_FromAlert_Btn">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+<script>
+    const hubConnection = new signalR.HubConnectionBuilder().withUrl("/chat").build();
+
+    async function start() {
+        try {
+            hubConnection.start();
+        }
+        catch (error) {
+            console.log(error.toString());
+            setTimeout(function () {
+                start();
+            }, 1500);
+        }
+    }
+
+    hubConnection.onclose(async function () {
+        await start();
+    });
+    start();
+
+    document.getElementById("SendMessage_SbmtBtn").addEventListener("click", function (event) {
+        event.preventDefault();
+        const initialText = deleteAllEndEmptyChars($("#SendMessage_Text_Val").val());
+        const senderId = parseInt($("#SM_UserId_Val").val());
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        const chatId = parseInt($("#SC_ChatId_Val").val());
+        const editId = parseInt($("#EM_Id_Val").val());
+        const replyId = parseInt($("#RM_ReplyId_Val").val());
+
+        if (editId <= 0) {
+            if (replyId > 0) {
+                let replyText = deleteAllEndEmptyChars($("#RM_ReplyText_Val").val());
+                replyText = textUncoder(replyText);
+
+                hubConnection.invoke("SecretReply", replyId, replyText, initialText, senderId, receiverId, chatId).catch(function (err) {
+                    console.log(err.toString());
+                });
+            }
+            else {
+                hubConnection.invoke("SecretSend", initialText, senderId, receiverId, chatId).catch(function (err) {
+                    console.log(err.toString());
+                });
+            }
+        }
+        else {
+            hubConnection.invoke("SecretEdit", editId, initialText, senderId, receiverId, chatId).catch(function (err) {
+                console.log(err.toString());
+            });
+        }
+    });
+
+    hubConnection.on("SecretReceive", function (message, senderId, receiverId, chatId) {
+        let currentChatId = parseInt($("#SC_ChatId_Val").val());
+        if (currentChatId == chatId) {
+            let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
+            let lastMsgId = parseInt($("#LastMessageSentCount_Val").val());
+
+            let messageMainBox = document.createElement("div");
+            let messageNotMainBox = document.createElement("div");
+            let mainText = document.createElement("p");
+            let styleBox = document.createElement("div");
+            let statsBox = document.createElement("div");
+            let dateAndTime = document.createElement("small");
+            let isEdited = document.createElement("small");
+
+            messageMainBox.classList.add("message-box");
+            messageNotMainBox.classList.add("other-user-msg-box");
+            styleBox.classList.add("other-user-styled-msg-box");
+            styleBox.classList.add("p-2");
+            mainText.classList.add("card-text");
+            mainText.classList.add("white-space-on");
+            mainText.classList.add("message-label");
+            mainText.classList.add("reply-to-chat-message");
+            mainText.classList.add("secret-chat-options");
+            statsBox.classList.add("ms-1");
+            dateAndTime.classList.add("card-text");
+            dateAndTime.classList.add("text-muted");
+            isEdited.classList.add("card-text");
+            isEdited.classList.add("text-muted");
+            isEdited.style.display = "none";
+
+            // let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+            // let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
+            // let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
+
+            messageMainBox.setAttribute("id", lastMsgId + "-ChatMsgBox");
+            isEdited.setAttribute("id", lastMsgId + "-ChatMsgIsEdited_Lbl");
+            dateAndTime.setAttribute("id", lastMsgId + "-ChatMsgDateAndTime_Lbl");
+            mainText.setAttribute("id", lastMsgId + "-ChatOptionMsgText_Lbl");
+
+            let currentDate = new Date();
+            let newMessage = textDecoder(message, null);
+            mainText.innerHTML = newMessage;
+            dateAndTime.innerHTML = dateAndTimeTranslator(currentDate);
+
+            styleBox.appendChild(mainText);
+            statsBox.appendChild(dateAndTime);
+            statsBox.appendChild(isEdited);
+            messageNotMainBox.appendChild(styleBox);
+            messageNotMainBox.appendChild(statsBox);
+            messageMainBox.appendChild(messageNotMainBox);
+
+            if (sentMessagesCount > 0) {
+                document.getElementById("HaveSentMessages_Box").appendChild(messageMainBox);
+            }
+            else {
+                slideToLeft("NoSentMessages_Box");
+                slideToRight("HaveSentMessages_Box");
+                document.getElementById("HaveSentMessages_Box").appendChild(messageMainBox);
+            }
+
+            lastMsgId++;
+            sentMessagesCount++;
+            $("#LastMessageSentCount_Val").val(lastMsgId);
+            $("#SentMessagesCount_Val").val(sentMessagesCount);
+            $("#StatusBar_Lbl-2").text(sentMessagesCount + " messages sent so far");
+        }
+    });
+
+    hubConnection.on("CallerSecretReceive", function (message, senderId) {
+        let currentUserId = $("#CurrentUserId_Val").val();
+        if (currentUserId == senderId) {
+            let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
+            let lastMsgId = parseInt($("#LastMessageSentCount_Val").val());
+
+            let messageMainBox = document.createElement("div");
+            let messageNotMainBox = document.createElement("div");
+            let mainText = document.createElement("p");
+            let styleBox = document.createElement("div");
+            let statsBox = document.createElement("div");
+            let isChecked = document.createElement("small");
+            let dateAndTime = document.createElement("small");
+            let isEdited = document.createElement("small");
+
+            messageMainBox.classList.add("message-box");
+            messageNotMainBox.classList.add("cur-user-msg-box");
+            styleBox.classList.add("cur-user-styled-msg-box");
+            styleBox.classList.add("p-2");
+            mainText.classList.add("card-text");
+            mainText.classList.add("white-space-on");
+            mainText.classList.add("message-label");
+            mainText.classList.add("secret-chat-options");
+            statsBox.classList.add("float-end");
+            statsBox.classList.add("me-1");
+            isChecked.classList.add("card-text");
+            dateAndTime.classList.add("card-text");
+            dateAndTime.classList.add("text-muted");
+            isEdited.classList.add("card-text");
+            isEdited.classList.add("text-muted");
+            isEdited.style.display = "none";
+
+            // let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+            // let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
+            // let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
+
+            let currentDate = new Date();
+            let newMessage = textDecoder(message, null);
+            mainText.innerHTML = newMessage;
+            dateAndTime.innerHTML = dateAndTimeTranslator(currentDate);
+            isChecked.innerHTML = ' <i class="fa-solid fa-check text-muted"></i> ';
+
+            styleBox.appendChild(mainText);
+            statsBox.appendChild(isChecked);
+            statsBox.appendChild(dateAndTime);
+            statsBox.appendChild(isEdited);
+            messageNotMainBox.appendChild(styleBox);
+            messageNotMainBox.appendChild(statsBox);
+            messageMainBox.appendChild(messageNotMainBox);
+
+            messageMainBox.setAttribute("id", lastMsgId + "-ChatMsgBox");
+            messageNotMainBox.setAttribute("id", lastMsgId + "-ChatNMMsgBox");
+            isEdited.setAttribute("id", lastMsgId + "-ChatMsgIsEdited_Lbl");
+            isChecked.setAttribute("id", lastMsgId + "-ChatMsgIsChecked_Lbl");
+            dateAndTime.setAttribute("id", lastMsgId + "-ChatMsgDateAndTime_Lbl");
+            mainText.setAttribute("id", lastMsgId + "-ChatOptionMsgText_Lbl");
+
+            document.getElementById("HaveSentMessages_Box").appendChild(messageMainBox);
+            setTimeout(function () {
+                $("#SendMessage_SbmtBtn").attr("disabled", false);
+            }, 1500);
+
+            if (sentMessagesCount > 0) {
+                document.getElementById("HaveSentMessages_Box").appendChild(messageMainBox);
+            }
+            else {
+                slideToLeft("NoSentMessages_Box");
+                setTimeout(function () {
+                    document.getElementById("HaveSentMessages_Box").style.display = "block";
+                    document.getElementById("HaveSentMessages_Box").appendChild(messageMainBox);
+                }, 650);
+            }
+
+            lastMsgId++;
+            sentMessagesCount++;
+            $("#LastMessageSentCount_Val").val(lastMsgId);
+            $("#SentMessagesCount_Val").val(sentMessagesCount);
+            $("#StatusBar_Lbl-2").text(sentMessagesCount + " messages sent so far");
+            insideBoxClose(true, null);
+
+            $("#SendMessage_Text_Val").val(null);
+        }
+    });
+
+    hubConnection.on("CallerSecretReply", function (replyId, replyText, message, senderId) {
+        let currentUserId = $("#CurrentUserId_Val").val();
+        if (currentUserId == senderId) {
+            let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
+            let lastMsgId = parseInt($("#LastMessageSentCount_Val").val());
+
+            let messageMainBox = document.createElement("div");
+            let messageNotMainBox = document.createElement("div");
+            let mainText = document.createElement("p");
+            let styleBox = document.createElement("div");
+            let replyBox = document.createElement("div");
+            let repliedTo = document.createElement("small");
+            let repliedText = document.createElement("p");
+            let statsBox = document.createElement("div");
+            let isChecked = document.createElement("small");
+            let dateAndTime = document.createElement("small");
+            let isEdited = document.createElement("small");
+
+            replyBox.classList.add("cur-user-reply-container");
+            replyBox.classList.add("mb-1");
+            replyBox.classList.add("reply-element");
+            repliedTo.classList.add("card-text");
+            repliedTo.classList.add("fw-500");
+            repliedTo.classList.add("reply-element");
+            repliedText.classList.add("card-text");
+            repliedText.classList.add("white-space-on");
+            repliedText.classList.add("message-label");
+            repliedText.classList.add("reply-element");
+
+            messageMainBox.classList.add("message-box");
+            messageNotMainBox.classList.add("cur-user-msg-box");
+            styleBox.classList.add("cur-user-styled-msg-box");
+            styleBox.classList.add("p-2");
+            mainText.classList.add("card-text");
+            mainText.classList.add("white-space-on");
+            mainText.classList.add("message-label");
+            mainText.classList.add("secret-chat-options");
+            statsBox.classList.add("float-end");
+            statsBox.classList.add("me-1");
+            isChecked.classList.add("card-text");
+            dateAndTime.classList.add("card-text");
+            dateAndTime.classList.add("text-muted");
+            isEdited.classList.add("card-text");
+            isEdited.classList.add("text-muted");
+            isEdited.style.display = "none";
+            // let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+            // let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
+            // let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
+
+            let currentDate = new Date();
+            let newMessage = textDecoder(message, null);
+            let newReply = textDecoder(replyText, null);
+
+            mainText.innerHTML = newMessage;
+            repliedText.innerHTML = newReply;
+            repliedTo.innerHTML = ' <i class="fa-solid fa-reply"></i> Replied to';
+            dateAndTime.innerHTML = dateAndTimeTranslator(currentDate);
+            isChecked.innerHTML = ' <i class="fa-solid fa-check text-muted"></i> ';
+
+
+            replyBox.appendChild(repliedTo);
+            replyBox.appendChild(repliedText);
+            styleBox.appendChild(replyBox);
+            styleBox.appendChild(mainText);
+            statsBox.appendChild(isChecked);
+            statsBox.appendChild(dateAndTime);
+            statsBox.appendChild(isEdited);
+            messageNotMainBox.appendChild(styleBox);
+            messageNotMainBox.appendChild(statsBox);
+            messageMainBox.appendChild(messageNotMainBox);
+
+            replyBox.setAttribute("id", replyId + "-RepliedMsgBox");
+            repliedText.setAttribute("id", replyId + "-RepliedMsgText");
+            messageMainBox.setAttribute("id", lastMsgId + "-ChatMsgBox");
+            messageNotMainBox.setAttribute("id", lastMsgId + "-ChatNMMsgBox");
+            isEdited.setAttribute("id", lastMsgId + "-ChatMsgIsEdited_Lbl");
+            isChecked.setAttribute("id", lastMsgId + "-ChatMsgIsChecked_Lbl");
+            dateAndTime.setAttribute("id", lastMsgId + "-ChatMsgDateAndTime_Lbl");
+            mainText.setAttribute("id", lastMsgId + "-ChatOptionMsgText_Lbl");
+
+            document.getElementById("HaveSentMessages_Box").appendChild(messageMainBox);
+            setTimeout(function () {
+                $("#SendMessage_SbmtBtn").attr("disabled", false);
+            }, 1500);
+
+            document.getElementById("HaveSentMessages_Box").appendChild(messageMainBox);
+
+            lastMsgId++;
+            sentMessagesCount++;
+            $("#LastMessageSentCount_Val").val(lastMsgId);
+            $("#SentMessagesCount_Val").val(sentMessagesCount);
+            $("#StatusBar_Lbl-2").text(sentMessagesCount + " messages sent so far");
+
+            insideBoxClose(true, null);
+            $("#EditingOrReplying_Box").slideUp(250);
+            $("#EM_Id_Val").val(0);
+            $("#RM_ReplyId_Val").val(0);
+            $("#RM_ReplyText_Val").val(null);
+            $("#SendMessage_Text_Val").val(null);
+        }
+    });
+
+    hubConnection.on("SecretReply", function (replyId, replyText, message, receiverId, chatId) {
+        let currentChatId = parseInt($("#SC_ChatId_Val").val());
+        if (currentChatId == chatId) {
+            let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
+            let lastMsgId = parseInt($("#LastMessageSentCount_Val").val());
+
+            let messageMainBox = document.createElement("div");
+            let messageNotMainBox = document.createElement("div");
+            let mainText = document.createElement("p");
+            let replyBox = document.createElement("div");
+            let repliedTo = document.createElement("small");
+            let repliedText = document.createElement("p");
+            let styleBox = document.createElement("div");
+            let statsBox = document.createElement("div");
+            let dateAndTime = document.createElement("small");
+            let isEdited = document.createElement("small");
+
+            replyBox.classList.add("other-user-reply-container");
+            replyBox.classList.add("mb-1");
+            replyBox.classList.add("reply-element");
+            repliedTo.classList.add("card-text");
+            repliedTo.classList.add("fw-500");
+            repliedTo.classList.add("reply-element");
+            repliedTo.classList.add("reply-to-chat-message");
+            repliedText.classList.add("card-text");
+            repliedText.classList.add("white-space-on");
+            repliedText.classList.add("message-label");
+            repliedText.classList.add("reply-element");
+
+            messageMainBox.classList.add("message-box");
+            messageNotMainBox.classList.add("other-user-msg-box");
+            styleBox.classList.add("other-user-styled-msg-box");
+            styleBox.classList.add("p-2");
+            mainText.classList.add("card-text");
+            mainText.classList.add("white-space-on");
+            mainText.classList.add("message-label");
+            mainText.classList.add("reply-to-chat-message");
+            mainText.classList.add("secret-chat-options");
+            statsBox.classList.add("ms-1");
+            dateAndTime.classList.add("card-text");
+            dateAndTime.classList.add("text-muted");
+            isEdited.classList.add("card-text");
+            isEdited.classList.add("text-muted");
+            isEdited.style.display = "none";
+
+            // let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+            // let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
+            // let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
+
+            replyBox.setAttribute("id", replyId + "-RepliedMsgBox");
+            repliedText.setAttribute("id", replyId + "-RepliedMsgText");
+            messageMainBox.setAttribute("id", lastMsgId + "-ChatMsgBox");
+            isEdited.setAttribute("id", lastMsgId + "-ChatMsgIsEdited_Lbl");
+            dateAndTime.setAttribute("id", lastMsgId + "-ChatMsgDateAndTime_Lbl");
+            mainText.setAttribute("id", lastMsgId + "-ChatOptionMsgText_Lbl");
+
+            let currentDate = new Date();
+            let newMessage = textDecoder(message, null);
+            mainText.innerHTML = newMessage;
+            repliedTo.innerHTML = ' <i class="fa-solid fa-reply"></i> Replied to';
+            repliedText.innerHTML = textDecoder(replyText, null);
+            dateAndTime.innerHTML = dateAndTimeTranslator(currentDate);
+
+            replyBox.appendChild(repliedTo);
+            replyBox.appendChild(repliedText);
+            styleBox.appendChild(replyBox);
+            styleBox.appendChild(mainText);
+            statsBox.appendChild(dateAndTime);
+            statsBox.appendChild(isEdited);
+            messageNotMainBox.appendChild(styleBox);
+            messageNotMainBox.appendChild(statsBox);
+            messageMainBox.appendChild(messageNotMainBox);
+
+            document.getElementById("HaveSentMessages_Box").appendChild(messageMainBox);
+
+            lastMsgId++;
+            sentMessagesCount++;
+            $("#LastMessageSentCount_Val").val(lastMsgId);
+            $("#SentMessagesCount_Val").val(sentMessagesCount);
+            $("#StatusBar_Lbl-2").text(sentMessagesCount + " messages sent so far");
+        }
+    });
+
+    hubConnection.on("CallerSecretEdit", function (id, message, senderId) {
+        $("#" + id + "-ChatOptionMsgText_Lbl").html(textDecoder(message, null));
+        $("#" + id + "-RepliedMsgText").html(textDecoder(message, null));
+        $("#" + id + "-ChatMsgIsEdited_Lbl").html(" edited");
+        $("#" + id + "-ChatMsgIsEdited_Lbl").fadeIn(275);
+        $("#EM_Id_Val").val(0);
+        $("#EditingOrReplying_Box").slideUp(250);
+        $("#SendMessage_Text_Val").val(null);
+    });
+
+    hubConnection.on("SecretEdit", function (id, message, senderId, receiverId, chatId) {
+        let currentChatId = parseInt($("#SC_ChatId_Val").val());
+        if (currentChatId == chatId) {
+            $("#" + id + "-ChatOptionMsgText_Lbl").html(textDecoder(message, null));
+            $("#" + id + "-RepliedMsgText").html(textDecoder(message, null));
+            $("#" + id + "-ChatMsgIsEdited_Lbl").html(" edited");
+            $("#" + id + "-ChatMsgIsEdited_Lbl").fadeIn(275);
+        }  
+    });
+</script>
+

@@ -12,14 +12,16 @@ namespace AppY.Controllers
     {
         private readonly Context _context;
         private readonly IUser _user;
+        private readonly IMailMessages _mailMessages;
         private readonly IChat _chat;
         private readonly ChatMessageAbstraction _messages;
         
-        public ChatController(Context context, ChatMessageAbstraction messages, IUser user, IChat chat)
+        public ChatController(Context context, ChatMessageAbstraction messages, IUser user, IChat chat, IMailMessages mailMessages)
         {
             _context = context;
             _user = user;
             _messages = messages;
+            _mailMessages = mailMessages;
             _chat = chat;
         }
 
@@ -49,6 +51,7 @@ namespace AppY.Controllers
                                         int SentMessagesCount = await _messages.SentMessagesCountAsync(Id);
                                         int SecondUserId = await _chat.ChatSecondUserIdAsync(Id, CurrentUserId);
                                         bool IsMuted = await _chat.IsChatMutedAsync(Id, CurrentUserId);
+                                        ChatPasswordSettings? ChatPasswordInfo = await _chat.GetChatPasswordInfoAsync(Id, CurrentUserId);
                                         User? SecondUserInfo = await _user.GetUserSuperShortInfoEvenIfPrivateAsync(SecondUserId);
                                         int CurrentChatUserId = await _context.ChatUsers.AsNoTracking().Where(c => c.UserId == CurrentUserId && c.ChatId == Id).Select(c => c.Id).FirstOrDefaultAsync();
                                         ChatInfo.Name = ChatInfo.Name == null ? "New Chat" : ChatInfo.Name;
@@ -65,6 +68,8 @@ namespace AppY.Controllers
                                         ViewBag.AutodeleteDelayValue = _user.AutodeleteDelay(UserInfo.AreMessagesAutoDeletable);
                                         ViewBag.SecondUserInfo = SecondUserInfo;
                                         ViewBag.ChatInfo = ChatInfo;
+                                        ViewBag.PasswordSettings = ChatPasswordInfo;
+                                        ViewBag.IsChatLocked = ChatPasswordInfo != null ? true : false;
                                         ViewBag.IsMuted = IsMuted;
                                         ViewBag.DisabledTimeLeft = DisabledTimeLeft;
                                         ViewBag.Messages = Messages;
@@ -81,6 +86,56 @@ namespace AppY.Controllers
                 }
             }
             return Json(new { success = false, alert = "You have no access to this chat" });
+        }
+
+        public async Task<IActionResult> SC(int Id)
+        {
+            if(Id > 0)
+            {
+                if (Request.Cookies.ContainsKey("CurrentUserId"))
+                {
+                    string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                    if (CurrentUserId_Str != null)
+                    {
+                        bool TryToParse = Int32.TryParse(CurrentUserId_Str, out int CurrentUserId);
+                        if (TryToParse)
+                        {
+                            SecretChat? SecretChatInfo = await _chat.GetSecretChatInfoAsync(Id, CurrentUserId);
+                            if (SecretChatInfo != null)
+                            {
+                                User? UserInfo = await _user.GetMainUserInfoAsync(CurrentUserId);
+                                User? SecondUserInfo = await _user.GetUserSuperShortInfoAsync(await _chat.GetChatSecondUserInfoAsync(Id, CurrentUserId));
+
+                                ViewBag.ChatInfo = SecretChatInfo;
+                                ViewBag.UserInfo = UserInfo;
+                                ViewBag.SecondUserInfo = SecondUserInfo;
+
+                                return View();
+                            }
+                        }
+                    }
+                }
+            }
+            return RedirectToAction("Index", "Home");
+        }
+
+        public async Task<IActionResult> CreateSecretChat(int Id)
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                if (Request.Cookies.ContainsKey("CurrentUserId"))
+                {
+                    string? CurrentUserId = Request.Cookies["CurrentUserId"];
+                    bool TryParse = Int32.TryParse(CurrentUserId, out int UserId);
+                    if (TryParse)
+                    {
+                        int Result = await _chat.CreateSecretChat(UserId, Id);
+                        if (Result > 0) return RedirectToAction("SC", "Chat", new { Id = Result });
+                    }
+                }
+                return RedirectToAction("Index", "Home");
+            }
+            return RedirectToAction("Create", "Account");
         }
 
         [HttpPost]
@@ -185,6 +240,139 @@ namespace AppY.Controllers
                 }
             }
             return Json(new { success = false, alert = "Sorry, but we can't find any info about your chats" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SwitchPreviewOption(int Id, bool Value)
+        {
+            if (Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                if(CurrentUserId_Str != null)
+                {
+                    bool TryParse = Int32.TryParse(CurrentUserId_Str, out int UserId);
+                    if (TryParse)
+                    {
+                        int Result = await _chat.SwitchPreviewingOptionAsync(Id, UserId, Value);
+                        if (Result >= 1 && Result <= 2) return Json(new { success = true, result = Result });
+                        else return Json(new { success = false, alert = "You can't edit previewing settings of this chat" });
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "We're sorry, but something went wrong. Please, try to edit previewing settings a bit later" });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Preview(int Id, int UserId, int SkipCount)
+        {
+            bool IsAvailableToBePreviewed = await _chat.CheckChatAvailabilityToBeViewed(Id, UserId);
+            if (IsAvailableToBePreviewed)
+            {
+                IQueryable<ChatMessage>? Messages_Preview = _messages.GetMessagesShortly(Id, SkipCount, 65);
+                if(Messages_Preview != null)
+                {
+                    List<ChatMessage>? Messages = await Messages_Preview.ToListAsync();
+                    if (Messages != null) return Json(new { success = true, id = Id, userId = UserId, result = Messages, count = Messages.Count, fullCount = SkipCount + Messages.Count });
+                }
+                return Json(new { success = false, alert = "No more messages to load for previewing" });
+            }
+            return Json(new { success = false, alert = "This chat cannot be previewed" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CheckPassword(int Id, string? Password)
+        {
+            if (Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                if (CurrentUserId_Str != null)
+                {
+                    bool TryParse = Int32.TryParse(CurrentUserId_Str, out int UserId);
+                    if (TryParse)
+                    {
+                        bool Result = await _chat.CheckChatPasswordAsync(Id, UserId, Password);
+                        if (Result) return Json(new { success = true });
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "Incorrect chat password. Try again or receive it to your email" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SetPassword(int Id, string? Password)
+        {
+            if (Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                if (CurrentUserId_Str != null)
+                {
+                    bool TryParse = Int32.TryParse(CurrentUserId_Str, out int UserId);
+                    if (TryParse)
+                    {
+                        bool Result = await _chat.SetPasswordAsync(Id, UserId, Password);
+                        if (Result) return Json(new { success = true, alert = "Your password for this chat has been successfully set" });
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "You can't set a password for this chat" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RemovePassword(int Id)
+        {
+            if (Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                if (CurrentUserId_Str != null)
+                {
+                    bool TryParse = Int32.TryParse(CurrentUserId_Str, out int UserId);
+                    if (TryParse)
+                    {
+                        bool Result = await _chat.SetPasswordAsync(Id, UserId, null);
+                        if (Result) return Json(new { success = true, alert = "Your password for this chat has been removed" });
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "We're sorry, but something unexpected happened. Please, try to remove your password a bit later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendChatPasswordViaEmail(int Id)
+        {
+            if (Id > 0)
+            {
+                if (Request.Cookies.ContainsKey("CurrentUserId"))
+                {
+                    string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                    if (CurrentUserId_Str != null)
+                    {
+                        bool TryParse = Int32.TryParse(CurrentUserId_Str, out int UserId);
+                        if (TryParse)
+                        {
+                            bool CheckChatAvailability = await _chat.CheckUserAvailabilityInChat(Id, UserId);
+                            if(CheckChatAvailability)
+                            {
+                                string? ChatPassword = await _context.ChatUsers.AsNoTracking().Where(c => c.ChatId == Id && c.UserId == UserId).Select(c => c.Password).FirstOrDefaultAsync();
+                                string? UserMail = await _context.Users.AsNoTracking().Where(u => u.Id == UserId).Select(u => u.Email).FirstOrDefaultAsync();
+                                if(ChatPassword != null && UserMail != null)
+                                {
+                                    SendEmail sendEmail = new SendEmail()
+                                    {
+                                        SentFrom = "bluejade@mail.ru",
+                                        Body = "<h1 style=\"text-align: center;\"><span style='font-family: \"Trebuchet MS\", Helvetica, sans-serif; color: rgb(134, 91, 233); font-size: 48px;'>" + ChatPassword + "</span></h1>\r\n<p style=\"text-align: center;\"><span style='font-size: 20px; font-family: \"Trebuchet MS\", Helvetica, sans-serif;'>Hello! You've recently requested one of your chats password. Please, enter provided password and write down it somewhere in addition to not lost it again <br/>With Love, Bluejade</span>\r\n<hr>\r\n<h3 style=\"text-align: center; line-height: 1;\"><span style='font-size: 24px; font-family: \"Trebuchet MS\", Helvetica, sans-serif; color: rgb(134, 91, 233);'>Attention</span></h3>\r\n<p style=\"text-align: center;\"><span style='font-size: 20px; font-family: \"Trebuchet MS\", Helvetica, sans-serif;'>If this request was not sent by you, immediately enter and change your chat's password</span></p>\r\n<p style=\"text-align: center;\"><br></p>\r\n<p style=\"text-align: center;\"><span style=\"text-align: inherit;\"><span style=\"font-family: 'Trebuchet MS', Helvetica, sans-serif;\">&nbsp;</span></span></p>",
+                                        SendTo = UserMail,
+                                        Subject = "Chat Password Request",
+                                        Title = "Bluejade"
+                                    };
+                                    bool Result = await _mailMessages.SendMessageAsync(new MailKitModel(), sendEmail);
+                                    if (Result) return Json(new { success = true, alert = "Chat password has been sent to your inbox" });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "We're sorry, but something unexpected happened. Please, try to get your chat's password again a bit later" });
         }
 
         [HttpGet]

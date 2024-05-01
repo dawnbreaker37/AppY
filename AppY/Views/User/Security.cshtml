@@ -6,13 +6,14 @@
 }
 
 <div class="main-sidebar" id="Main_SideBar">
+    <div class="d-none">
+        @if(UserInfo.AvatarUrl == null)
+        {
+            <input type="hidden" id="AvatarSticker_Hdn_Val" value="@ViewBag.UnpicturedAvatarInfo" />
+        }
+    </div>
     <div class="smallside-box-container shadow-standard" id="SecuritySettings_Container">
         <div class="header-container p-2 pb-0 text-center" id="SecuritySettings_Container-Header">
-            <div class="float-start me-1">
-                <form method="post" asp-controller="Account" asp-action="SignOut">
-                    <button type="submit" class="btn btn-light btn-standard-asset btn-sm text-danger">Sign Out</button>
-                </form>
-            </div>
             <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="SecuritySettings_Container-Close"></button>
             <h5 class="h5 text-truncate p-1">Security Settings</h5>
         </div>
@@ -103,7 +104,7 @@
                 </div>
                 <form method="post" asp-controller="Account" asp-action="SendSingleUseCode" id="SendSingleUseCode_Form">
                     <div class="d-none">
-                        <input name="Email" value="@UserInfo.Email" />
+                        <input name="Email" id="SSUC_Email_Val" value="@UserInfo.Email" />
                     </div>
                     <div class="mt-2">
                         <button type="submit" class="btn btn-light text-neon-purple btn-standard-asset w-100" id="SendSingleUseCode_SbmtBtn">Send Code</button>
@@ -187,6 +188,73 @@
             </div>
         </div>
     </div>
+
+    <div class="smallside-box-container shadow-standard" id="TwoFactorDisable_Container">
+        <div class="header-container p-2 pb-0 text-center" id="TwoFactorDisable_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="TwoFactorDisable_Container-Close"></button>
+            <span class="h5 text-truncate p-1 pb-0">Two-Factor Authentication</span>
+            <div></div>
+            <small class="card-text text-muted">disable 2FA</small>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="TwoFactorDisable_Container-Box">
+            <div class="box-container p-2 text-center">
+                <h1 class="h1"> <i class="fa-solid fa-toggle-off"></i> </h1>
+                <span class="h5">Turn Off 2FA</span>
+                <div></div>
+                <small class="card-text text-muted">enter the code sent to your email address to turn off 2FA</small>
+                <div class="box-container mt-3">
+                    <form method="post" asp-controller="Account" asp-action="DisableTwoFactorAuthentication" id="DisableTwoFactorAuthentication_Form">
+                        <div>
+                            <input type="hidden" name="Email" id="DTFA_Email_Val" value="@UserInfo.Email" />
+                        </div>
+                        <div>
+                            <input type="text" class="special-form-control" name="Code" id="DTFA_Code_Val" maxlength="8" placeholder="8-digit Code" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="TwoFactorEnable_Container">
+        <div class="header-container p-2 pb-0 text-center" id="TwoFactorEnable_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="TwoFactorEnable_Container-Close"></button>
+            <h5 class="h5 text-truncate p-1">Two-Factor Authentication</h5>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="TwoFactorEnable_Container-Box">
+            <div class="box-container p-2 text-center">
+                <h1 class="h1 text-neon-purple"> <i class="fa-solid fa-envelope-circle-check"></i> </h1>
+                <h5 class="h5">Two-Factor Verification</h5>
+                <small class="card-text text-muted">enhance the security of your account by implementing one-time code verification during sign-in</small>
+                <div class="box-container mt-3">
+                    <form method="post" asp-controller="Account" asp-action="SendTwoFactorAuthenticationCode" id="SendTwoFactorAuthenticationCode_Form">
+                        <div>
+                            <input type="hidden" name="Email" id="STFAC_Email_Val" value="@UserInfo.Email" />
+                        </div>
+                        <button type="submit" class="btn bg-neon-purple text-light btn-standard-asset btn-sm w-100" id="Send2FAEnableCodeSbmt_Btn">Enable <br/><small class="card-text">you'll receive a code on your email</small></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="smallside-box-container shadow-standard" id="TwoFactorEnabling_Container">
+        <div class="header-container p-2 pb-0 text-center" id="TwoFactorEnabling_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="TwoFactorEnabling_Container-Close"></button>
+            <h5 class="h5 text-truncate p-1">Two-Factor Enabling</h5>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="TwoFactorEnabling_Container-Box">
+            <div>
+                <form method="post" asp-controller="Account" asp-action="EnableTwoFactorAuthentication" id="EnableTwoFactorAuthentication_Form">
+                    <div>
+                        <input type="hidden" name="Email" id="ETFA_Email_Val" />
+                    </div>
+                    <div>
+                        <input name="Code" id="ETFD_Code_Val" class="special-form-control w-100" placeholder="12-digit code" maxlength="12" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 <div class="main-container shadow-standard" id="Preloaded_Container">
     <div class="header-container p-2 text-center" id="Preloaded_Container-Header">
@@ -230,7 +298,7 @@
                             <div class="box-container bg-light p-2 mt-2">
                                 <small class="card-text fw-500">Last Change</small>
                                 <div></div>
-                                <small class="card-text text-muted" id="PasswordChangedDaysPassed_Lbl"><span class="fw-500" id="PasswordChangedDaysPassed_Span">@UserInfo.PasswordChanged.Value.ToString("dd/MM/yyyy"), at @UserInfo.PasswordChanged.Value.ToShortTimeString()</span></small>
+                                <small class="card-text text-muted" id="PasswordChangedDaysPassed_Lbl"><span class="fw-500" id="PasswordChangedDaysPassed_Span">@UserInfo.PasswordChanged.Value.ToString("dd/MM/yyyy"), at @UserInfo.PasswordChanged.Value.ToShortTimeString()</span> (@ViewBag.DaysPassed days passed)</small>
                                 <div></div>
                             </div>
                             <div class="box-container bg-light p-2 mt-2">
@@ -270,17 +338,34 @@
                     <div class="box-container p-2">
                         <h5 class="h5">Authentication</h5>
                         <div class="box-container bg-light mt-2 p-2">
-                            <small class="card-text fw-500">Authentication</small>
-                            <div></div>
+                            <small class="card-text fw-500">Two-Factor Authentication</small>
                             @if (UserInfo.TwoFactorEnabled)
                             {
-                                <small class="card-text text-muted" id="IsTwoFactorEnabled_Lbl">Two-factor authentication enabled by your email</small>
+                                <small class="card-text text-primary style-font" id="AuthenticationStatus_Icon">On</small>
+                                <div></div>
+                                <small class="card-text text-muted" id="IsTwoFactorEnabled_Lbl">Two-Factor authentication enabled by your email</small>
+                                <div class="mt-1"></div>
+                                <div id="Disable2FA_Box">
+                                    <form method="post" asp-controller="Account" asp-action="Send2FADisablingCode" id="Send2FADisablingCode_Form">
+                                        <input type="hidden" name="Email" value="@UserInfo.Email" />
+                                        <button type="submit" class="btn btn-standard text-danger btn-sm" id="S2FDCSbmt_Btn"> <i class="fa-solid fa-lock-open"></i> Disable</button>
+                                    </form>
+                                </div>
+                                <button type="button" class="btn btn-standard btn-sm btn-smallside-open-container" id="TwoFactorEnable_Container-Open" style="display: none;"> <i class="fa-solid fa-key"></i> Enable</button>
                             }
                             else
                             {
-                                <small class="card-text text-muted" id="IsTwoFactorEnabled_Lbl">Two-factor authentication disabled. Click to activate it by your email</small>
+                                <small class="card-text text-muted style-font" id="AuthenticationStatus_Icon">Off</small>
+                                <div></div>
+                                <small class="card-text text-muted" id="IsTwoFactorEnabled_Lbl">Two-Factor authentication disabled. Click to activate it by your email</small>
                                 <div class="mt-1"></div>
-                                <button type="button" class="btn btn-standard btn-sm"> <i class="fa-solid fa-key"></i> Enable</button>
+                                <button type="button" class="btn btn-standard btn-sm btn-smallside-open-container" id="TwoFactorEnable_Container-Open"> <i class="fa-solid fa-key"></i> Enable</button>
+                                <div id="Disable2FA_Box" style="display: none;">
+                                    <form method="post" asp-controller="Account" asp-action="Send2FADisablingCode" id="Send2FADisablingCode_Form">
+                                        <input type="hidden" name="Email" value="@UserInfo.Email" />
+                                        <button type="submit" class="btn btn-standard text-danger btn-sm" id="S2FDCSbmt_Btn"> <i class="fa-solid fa-lock-open"></i> Disable</button>
+                                    </form>
+                                </div>
                             }
                         </div>
                         <div class="box-container bg-light p-2 mt-2">

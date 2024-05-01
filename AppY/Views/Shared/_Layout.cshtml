@@ -21,6 +21,7 @@
                     </div>
                     <a asp-controller="Home" asp-action="Create" class="btn btn-standard d-inline-block"> <i class="fa-regular fa-square-plus"></i> </a>
                     <a asp-controller="Command" asp-action="Info" class="btn btn-standard d-inline-block"> <i class="fa-solid fa-terminal"></i> </a>
+                    <button type="button" class="btn btn-standard d-inline" id="OpenBotOffNavbar_Btn" data-bs-html="Preloaded_BotOffNavbar"> <i class="fa-solid fa-chevron-up"></i> </button>
                 }
             </div>
         </nav>
@@ -54,10 +55,7 @@
                     @if (User.Identity.IsAuthenticated)
                     {
                         <div class="col">
-                            <a asp-controller="User" asp-action="Notifications" class="btn btn-navbar w-100" id="FifthMain_Btn"> <i class="fa-regular fa-bell text-muted"></i> <br /><small>Notifications</small>
-
-                        </a>
-                            <button type="button" class="btn btn-navbar w-100" style="display: none;" id="FifthReserve_Btn"></button>
+                            <a asp-controller="User" asp-action="Notifications" class="btn btn-navbar w-100" id="FifthMain_Btn"> <i class="fa-regular fa-bell text-muted"></i> <br /><small>Notifications</small></a>
                         </div>
                     }
                     <div class="col">

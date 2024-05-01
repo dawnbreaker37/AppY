@@ -266,5 +266,15 @@ namespace AppY.Repositories
         {
             return await _context.DiscussionMessages.AsNoTracking().CountAsync(d => d.DiscussionId == Id && d.IsPinned && !d.IsDeleted);
         }
+
+        public async override Task<int> EditAllRepliedMessageTextsAsync(int Id, string? Text)
+        {
+            if (Text != null) Text = Text.Length >= 40 ? Text.Substring(0, 40) : Text;
+            else Text = "Empty Text";
+
+            int Result = await _context.DiscussionMessages.AsNoTracking().Where(d => d.RepliedMessageId == Id).ExecuteUpdateAsync(d => d.SetProperty(d => d.RepliesMsgShortText, Text));
+            if (Result > 0) return Id;
+            else return 0;
+        }
     }
 }

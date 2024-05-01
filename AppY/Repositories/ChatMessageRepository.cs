@@ -39,7 +39,7 @@ namespace AppY.Repositories
                         ChatUserId = Model.CurrentChatUserId,
                         IsEdited = false,
                         IsPinned = false,
-                        SendAt = DateTime.Now
+                        SentAt = DateTime.Now
                     };
                     await _context.AddAsync(chatMessage);
                     await _context.SaveChangesAsync();
@@ -67,7 +67,7 @@ namespace AppY.Repositories
                         IsChecked = false,
                         IsDeleted = false,
                         ChatUserId = Model.CurrentChatUserId,
-                        SendAt = DateTime.Now,
+                        SentAt = DateTime.Now,
                         IsAutodeletable = Model.IsAutoDeletable,
                         IsEdited = false,
                         IsPinned = false,
@@ -126,7 +126,7 @@ namespace AppY.Repositories
 
         public override IQueryable<IGrouping<DateTime, DiscussionMessage>>? GetMessages(int Id, int UserId, int SkipCount, int LoadCount)
         {
-            if (Id > 0 && UserId > 0) return _context.ChatMessages.AsNoTracking().Where(c => c.ChatId == Id && !c.IsDeleted).Select(c => new DiscussionMessage { Id = c.Id, UserId = c.UserId, IsAutoDeletable = c.IsAutodeletable, IsEdited = c.IsEdited, IsChecked = c.IsChecked, RepliedMessageId = c.RepliedMessageId, RepliesMsgShortText = c.RepliesMessageText, IsPinned = c.IsPinned, SentAt = c.SendAt, Text = c.Text }).OrderBy(c => c.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(c => c.SentAt.Date);
+            if (Id > 0 && UserId > 0) return _context.ChatMessages.AsNoTracking().Where(c => c.ChatId == Id && !c.IsDeleted).Select(c => new DiscussionMessage { Id = c.Id, UserId = c.UserId, IsAutoDeletable = c.IsAutodeletable, IsEdited = c.IsEdited, IsChecked = c.IsChecked, RepliedMessageId = c.RepliedMessageId, RepliesMsgShortText = c.RepliesMessageText, IsPinned = c.IsPinned, SentAt = c.SentAt, Text = c.Text }).OrderBy(c => c.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(c => c.SentAt.Date);
             else return null;
         }
 
@@ -144,7 +144,7 @@ namespace AppY.Repositories
         }
         public async override Task<DiscussionMessage?> GetMessageInfoAsync(int Id, int UserId)
         {
-            if (Id > 0 && UserId > 0) return await _context.ChatMessages.AsNoTracking().Select(c => new DiscussionMessage { Id = c.Id, UserId = c.UserId, Text = c.Text, SentAt = c.SendAt, IsEdited = c.IsEdited, IsPinned = c.IsPinned, IsChecked = c.IsChecked }).FirstOrDefaultAsync(c => c.Id == Id);
+            if (Id > 0 && UserId > 0) return await _context.ChatMessages.AsNoTracking().Select(c => new DiscussionMessage { Id = c.Id, UserId = c.UserId, Text = c.Text, SentAt = c.SentAt, IsEdited = c.IsEdited, IsPinned = c.IsPinned, IsChecked = c.IsChecked }).FirstOrDefaultAsync(c => c.Id == Id);
             else return null;
         }
 
@@ -169,7 +169,7 @@ namespace AppY.Repositories
                         ChatUserId = Model.CurrentChatUserId,
                         RepliedMessageId = Model.MessageId,
                         RepliesMessageText = Model.ForwardingText,
-                        SendAt = DateTime.Now,
+                        SentAt = DateTime.Now,
                         UserId = Model.UserId
                     };
                     await _context.AddAsync(chatMessage);
@@ -179,6 +179,22 @@ namespace AppY.Repositories
                 }
             }
             return null;
+        }
+
+        public override IQueryable<ChatMessage>? GetMessagesShortly(int Id, int SkipCount, int LoadCount)
+        {
+            if (Id > 0) return _context.ChatMessages.AsNoTracking().Where(c => c.ChatId == Id && !c.IsDeleted).Select(c => new ChatMessage { Text = c.Text, RepliedMessageId = c.RepliedMessageId, RepliesMessageText = c.RepliesMessageText, SentAt = c.SentAt, IsChecked = c.IsChecked, IsEdited = c.IsEdited, UserId = c.UserId }).OrderBy(c => c.SentAt).Skip(SkipCount).Take(LoadCount);
+            else return null;
+        }
+
+        public async override Task<int> EditAllRepliedMessageTextsAsync(int Id, string? Text)
+        {
+            if (Text != null) Text = Text.Length >= 40 ? Text.Substring(0, 40) : Text;
+            else Text = "Empty Text";
+
+            int Result = await _context.ChatMessages.AsNoTracking().Where(d => d.RepliedMessageId == Id).ExecuteUpdateAsync(d => d.SetProperty(d => d.RepliesMessageText, Text));
+            if (Result > 0) return Id;
+            else return 0;
         }
     }
 }

@@ -4,6 +4,7 @@ using AppY.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppY.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20240430125612_30042024-edit")]
+    partial class _30042024edit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -145,10 +148,6 @@ namespace AppY.Migrations
 
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Password")
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -583,52 +582,6 @@ namespace AppY.Migrations
                     b.ToTable("ScheduledMessages");
                 });
 
-            modelBuilder.Entity("AppY.Models.SecretChat", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Encryption")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("InitiatorId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SecretChats");
-                });
-
-            modelBuilder.Entity("AppY.Models.SecretChatUsers", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("SecretChatId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SecretChatId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("SecretChatUsers");
-                });
-
             modelBuilder.Entity("AppY.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -912,21 +865,6 @@ namespace AppY.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("SecretChatUser", b =>
-                {
-                    b.Property<int>("SecretChatsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UsersId")
-                        .HasColumnType("int");
-
-                    b.HasKey("SecretChatsId", "UsersId");
-
-                    b.HasIndex("UsersId");
-
-                    b.ToTable("SecretChatUser");
-                });
-
             modelBuilder.Entity("AppY.Models.ChatMessage", b =>
                 {
                     b.HasOne("AppY.Models.Chat", "Chat")
@@ -1108,25 +1046,6 @@ namespace AppY.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AppY.Models.SecretChatUsers", b =>
-                {
-                    b.HasOne("AppY.Models.SecretChat", "SecretChat")
-                        .WithMany()
-                        .HasForeignKey("SecretChatId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppY.Models.User", "User")
-                        .WithMany("SecretChatUsers")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SecretChat");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("ChatUser", b =>
                 {
                     b.HasOne("AppY.Models.Chat", null)
@@ -1208,21 +1127,6 @@ namespace AppY.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SecretChatUser", b =>
-                {
-                    b.HasOne("AppY.Models.SecretChat", null)
-                        .WithMany()
-                        .HasForeignKey("SecretChatsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppY.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("UsersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("AppY.Models.Chat", b =>
                 {
                     b.Navigation("ChatMessages");
@@ -1274,8 +1178,6 @@ namespace AppY.Migrations
                     b.Navigation("Notifications");
 
                     b.Navigation("ScheduledMessages");
-
-                    b.Navigation("SecretChatUsers");
                 });
 #pragma warning restore 612, 618
         }

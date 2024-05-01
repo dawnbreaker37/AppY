@@ -154,7 +154,7 @@ namespace AppY.Repositories
         {
             if (Id > 0)
             {
-                return _context.ChatUsers.AsNoTracking().Where(c => c.UserId == Id && !c.IsBlocked && (!c.DeletedAt.HasValue || c.DeletedAt.Value.AddDays(5) >= DateTime.Now)).Select(c => new ChatUsers { Id = c.Id, ChatId = c.ChatId, ChatName = c.Chat!.Name, IsPinned = c.IsPinned, DeletedAt = c.DeletedAt, IsDeleted = c.IsDeleted, IsMuted = c.IsMuted, LastMessageInfo = c.ChatMessages != null ? c.ChatMessages.Select(c => new ChatMessage { Text = c.Text, SenderPseudoname = c.User != null ? c.User.PseudoName : "Unknown User" }).FirstOrDefault() : null }).OrderBy(c => c.DeletedAt).ThenByDescending(c => c.IsPinned);
+                return _context.ChatUsers.AsNoTracking().Where(c => c.UserId == Id && !c.IsBlocked && (!c.DeletedAt.HasValue || c.DeletedAt.Value.AddDays(5) >= DateTime.Now)).Select(c => new ChatUsers { Id = c.Id, ChatId = c.ChatId, ChatName = c.Chat!.Name, IsPinned = c.IsPinned, DeletedAt = c.DeletedAt, IsDeleted = c.IsDeleted, IsMuted = c.IsMuted, PasswordAvailability = c.Password == null ? false : true, LastMessageInfo = c.ChatMessages != null ? c.ChatMessages.Select(c => new ChatMessage { Text = c.Text, SenderPseudoname = c.User != null ? c.User.PseudoName : "Unknown User" }).FirstOrDefault() : null }).OrderBy(c => c.DeletedAt).ThenByDescending(c => c.IsPinned);
             }
             else return null;
         }
@@ -246,6 +246,98 @@ namespace AppY.Repositories
         {
             if (Id > 0) return _context.ChatUsers.AsNoTracking().Where(c => c.UserId == Id && c.ChatId != CurrentChatId && !c.IsDeleted).Select(c => new ChatUsers { Id = c.Id, ChatId = c.ChatId, ChatName = c.Chat != null ? c.Chat.Name : "New Chat" });
             else return null;
+        }
+
+        public async Task<bool> CheckChatAvailabilityToBeViewed(int Id, int UserId)
+        {
+            return await _context.ChatUsers.AsNoTracking().AnyAsync(c => c.ChatId == Id && c.UserId == UserId && !c.IsDeleted && !c.IsBlocked && (c.Chat != null && !c.Chat.UnablePreview));
+        }
+
+        public async Task<int> SwitchPreviewingOptionAsync(int Id, int UserId, bool IsUnableToPreview)
+        {
+            bool IsUserFromThisChat = await CheckUserAvailabilityInChat(Id, UserId);
+            if (IsUserFromThisChat)
+            {
+                if (IsUnableToPreview)
+                {
+                    await _context.Chats.AsNoTracking().Where(c => c.Id == Id).ExecuteUpdateAsync(c => c.SetProperty(c => c.UnablePreview, false));
+                    return 2;
+                }
+                else
+                {
+                    await _context.Chats.AsNoTracking().Where(c => c.Id == Id).ExecuteUpdateAsync(c => c.SetProperty(c => c.UnablePreview, true));
+                    return 1;
+                }
+            }
+            return 0;
+        }
+
+        public async Task<bool> SetPasswordAsync(int Id, int UserId, string? Password)
+        {
+            if(Id > 0 && UserId > 0)
+            {
+                await _context.ChatUsers.AsNoTracking().Where(c => c.ChatId == Id && c.UserId == UserId).ExecuteUpdateAsync(c => c.SetProperty(c => c.Password, Password));
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<bool> CheckChatPasswordAsync(int Id, int UserId, string? Password)
+        {
+            return await _context.ChatUsers.AsNoTracking().AnyAsync(c => c.ChatId == Id && c.UserId == UserId && c.Password != null && c.Password.Equals(Password));
+        }
+
+        public async Task<ChatPasswordSettings?> GetChatPasswordInfoAsync(int Id, int UserId)
+        {
+            return await _context.ChatUsers.AsNoTracking().Where(c => c.ChatId == Id && c.UserId == UserId && c.Password != null).Select(c => new ChatPasswordSettings { Id = c.ChatId, UserId = UserId, Password = c.Password }).FirstOrDefaultAsync();
+        }
+
+        public async Task<int> CreateSecretChat(int Id1, int Id2)
+        {
+            if(Id1 != Id2)
+            {
+                await _context.SecretChats.AsNoTracking().Where(c => c.InitiatorId == Id1 || c.InitiatorId == Id2).ExecuteDeleteAsync();
+                SecretChat secretChat = new SecretChat
+                {
+                    Name = Guid.NewGuid().ToString("N").Substring(0, 12),
+                    Encryption = null,
+                    InitiatorId = Id1
+                };
+                await _context.AddAsync(secretChat);
+                await _context.SaveChangesAsync();
+
+                SecretChatUsers secretChatUsers1 = new SecretChatUsers
+                {
+                    SecretChatId = secretChat.Id,
+                    UserId = Id1
+                };
+                SecretChatUsers secretChatUsers2 = new SecretChatUsers
+                {
+                    SecretChatId = secretChat.Id,
+                    UserId = Id2
+                };
+
+                await _context.AddRangeAsync(secretChatUsers1, secretChatUsers2);
+                await _context.SaveChangesAsync();
+
+                return secretChat.Id;
+            }
+            return 0;
+        }
+
+        public async Task<SecretChat?> GetSecretChatInfoAsync(int Id, int UserId)
+        {
+            bool CheckUserAvailability = await _context.SecretChatUsers.AnyAsync(c => c.SecretChatId == Id && c.UserId == UserId);
+            if (CheckUserAvailability)
+            {
+                return await _context.SecretChats.AsNoTracking().Select(c => new SecretChat { Id = c.Id, Name = c.Name, InitiatorId = c.InitiatorId }).FirstOrDefaultAsync(c => c.Id == Id);
+            }
+            else return null;
+        }
+
+        public async Task<int> GetChatSecondUserInfoAsync(int Id, int FirstUserId)
+        {
+            return await _context.SecretChatUsers.AsNoTracking().Where(c => c.SecretChatId == Id && c.UserId != FirstUserId).Select(c => c.UserId).FirstOrDefaultAsync();
         }
     }
 }

@@ -1,9 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AppY.Models
 {
     public class ChatUsers : Base
     {
+        [DataType(DataType.Password)]
+        [MaxLength(16)]        
+        public string? Password { get; set; }
         public DateTime? DeletedAt { get; set; }
         public DateTime JoinedAt { get; set; }
         public bool IsBlocked { get; set; }
@@ -16,6 +20,8 @@ namespace AppY.Models
         public Chat? Chat { get; set; }
         public User? User { get; set; }
         public List<ChatMessage>? ChatMessages { get; set; }
+        [NotMapped]
+        public bool PasswordAvailability { get; set; }
         [NotMapped]
         public string? ChatName { get; set; }
         [NotMapped]

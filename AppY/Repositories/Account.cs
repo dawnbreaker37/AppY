@@ -4,6 +4,7 @@ using AppY.Models;
 using AppY.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AppY.Repositories
 {
@@ -14,14 +15,16 @@ namespace AppY.Repositories
         private readonly SignInManager<User> _signInManager;
         private readonly IUser _userRepository;
         private readonly INotification _notification;
+        private readonly IMemoryCache _memoryCache;
 
-        public Account(Context context, UserManager<User> userManager, SignInManager<User> signInManager, IUser userRepository, INotification notification) : base(context)
+        public Account(Context context, UserManager<User> userManager, SignInManager<User> signInManager, IUser userRepository, INotification notification, IMemoryCache memoryCache) : base(context)
         {
             _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
             _userRepository = userRepository;
             _notification = notification;
+            _memoryCache = memoryCache;
         }
 
         public IQueryable<LinkedAccount_ViewModel>? GetLinkedAccounts(int Id)
@@ -73,22 +76,41 @@ namespace AppY.Repositories
             return false;
         }
 
-        public async Task<bool> SignInAsync(SignIn SignInModel)
+        public async Task<SignInSuccess?> SignInAsync(SignIn SignInModel)
         {
             if(SignInModel != null && (!String.IsNullOrEmpty(SignInModel.Email) && !String.IsNullOrEmpty(SignInModel.Password)))
             {
-                SignInResult? Result = null;
-                if(SignInModel.IsViaUsername)
-                {
-                    Result = await _signInManager.PasswordSignInAsync(SignInModel.Email, SignInModel.Password, true, true);
-                }
-                else
-                {
-                    User? UserInfo = await _userManager.FindByEmailAsync(SignInModel.Email);
-                    if (UserInfo != null) Result = await _signInManager.PasswordSignInAsync(UserInfo, SignInModel.Password, true, true);
-                }
+                User? UserInfo;
+                SignInResult? Result;
 
-                if (Result != null && Result.Succeeded) return true;
+                if (SignInModel.IsViaUsername) UserInfo = await _userManager.FindByNameAsync(SignInModel.Email);
+                else UserInfo = await _userManager.FindByEmailAsync(SignInModel.Email);
+
+                if(UserInfo != null)
+                {
+                    if (!UserInfo.TwoFactorEnabled) Result = await _signInManager.PasswordSignInAsync(UserInfo, SignInModel.Password, true, true);
+                    else Result = await _signInManager.CheckPasswordSignInAsync(UserInfo, SignInModel.Password, true);
+
+                    if (Result != null && Result.Succeeded)
+                    {
+                        if (UserInfo.TwoFactorEnabled) return new SignInSuccess() { Email = UserInfo.Email, Result = 1, Password = SignInModel.Password };
+                        else return new SignInSuccess() { Email = null, Result = 2, Password = null };
+                    }
+                }
+            }
+            return null;
+        }
+
+        public async Task<bool> TFASignInAsync(User? User, string? Password, string? Code)
+        {
+            if(User != null && Code != null)
+            {
+                bool TryGetValue = _memoryCache.TryGetValue(User.Email + "_singleUseCode", out string? CacheCode);
+                if(TryGetValue && CacheCode != null && CacheCode.Equals(Code))
+                {
+                    SignInResult? Result = await _signInManager.PasswordSignInAsync(User, Password, true, true);
+                    if(Result.Succeeded) return true;
+                }
             }
             return false;
         }
@@ -218,6 +240,58 @@ namespace AppY.Repositories
                     {
                         await _signInManager.SignInAsync(UserInfo, true);
                         return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public async Task<bool> Enable2FAAsync(string? Email, string? Code)
+        {
+            if (Email != null && Code != null)
+            {
+                bool TryGetValue = _memoryCache.TryGetValue(Email + "_singleUseCode", out string? CacheCode);
+                if (TryGetValue && Code.Equals(CacheCode))
+                {
+                    bool TryGetTheToken = _memoryCache.TryGetValue(Email + "_2FAtoken", out string? Token);
+                    if (TryGetTheToken)
+                    {
+                        User? UserInfo = await _userManager.FindByEmailAsync(Email);
+                        if (UserInfo != null && Token != null)
+                        {
+                            bool VerificationResult = await _userManager.VerifyTwoFactorTokenAsync(UserInfo, TokenOptions.DefaultProvider, Token);
+                            if (VerificationResult)
+                            {
+                                IdentityResult? Result = await _userManager.SetTwoFactorEnabledAsync(UserInfo, true);
+                                if (Result.Succeeded) return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public async Task<bool> Disable2FAAsync(string? Email, string? Code)
+        {
+            if(Email != null && Code != null)
+            {
+                bool TryGetValue = _memoryCache.TryGetValue(Email + "_singleUseCode", out string? CacheCode);
+                if(TryGetValue && Code.Equals(CacheCode))
+                {
+                    User? UserInfo = await _userManager.FindByEmailAsync(Email);
+                    if(UserInfo != null)
+                    {
+                        _memoryCache.TryGetValue(Email + "_singleUseToken", out string? Token);                 
+                        if(Token != null)
+                        {
+                            bool ValidationResult = await _userManager.VerifyTwoFactorTokenAsync(UserInfo, TokenOptions.DefaultProvider, Token);
+                            if(ValidationResult)
+                            {
+                                IdentityResult? Result =  await _userManager.SetTwoFactorEnabledAsync(UserInfo, false);
+                                if(Result.Succeeded) return true;
+                            }
+                        }
                     }
                 }
             }

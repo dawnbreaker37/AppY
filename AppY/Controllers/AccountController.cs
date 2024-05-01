@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 namespace AppY.Controllers
 {
@@ -64,10 +65,22 @@ namespace AppY.Controllers
         {
             if (ModelState.IsValid)
             {
-                bool Result = await _account.SignInAsync(Model);
-                if (Result) return Json(new { success = true });
+                SignInSuccess? Result = await _account.SignInAsync(Model);
+                if (Result != null) return Json(new { success = true, result = Result });
             }
             return Json(new { success = false, alert = "Wrong username/email or password. Please, check all datas and try again" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> TFASignIn(string Email, string? Password, string? Code)
+        {
+            User? UserInfo = await _userManager.FindByEmailAsync(Email);
+            if(UserInfo != null)
+            {
+                bool Result = await _account.TFASignInAsync(UserInfo, Password, Code);
+                if (Result) return Json(new { success = true });
+            }
+            return Json(new { success = false, alert = "Wrong code. Please, check your email once again" });
         }
 
         [HttpPost]
@@ -130,7 +143,7 @@ namespace AppY.Controllers
                         SendTo = Email,
                         SentFrom = "bluejade@mail.ru",
                         Subject = "Account Reserve Code",
-                        Title = "Your Reserve Code"
+                        Title = "Bluejade"
                     };
                     bool MailMessageSentResult = await _mailMessages.SendMessageAsync(new MailKitModel(), Model);
                     if (MailMessageSentResult)
@@ -145,6 +158,91 @@ namespace AppY.Controllers
                 else return Json(new { success = false, alert = "We're sorry, but haven't get any account bound created by this email" });
             }
             return Json(new { success = false, alert = "Wrong email address. Unable to send a message to this email" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendTwoFactorAuthenticationCode(string Email, bool AlternativeText)
+        {
+            if(Email != null)
+            {
+                User? UserInfo = await _userManager.FindByEmailAsync(Email);
+                if(UserInfo != null)
+                {
+                    string? Code = Guid.NewGuid().ToString("N").Substring(4, 12);
+                    string? TwoFactorToken = await _userManager.GenerateTwoFactorTokenAsync(UserInfo, TokenOptions.DefaultProvider);
+                    string? BodyText;
+                    if (AlternativeText) BodyText = "<h1 style=\"text-align: center;\"><span style='font-family: \"Trebuchet MS\", Helvetica, sans-serif; color: rgb(134, 91, 233); font-size: 48px;'>" + Code + "</span></h1>\r\n<p style=\"text-align: center;\"><span style='font-size: 20px; font-family: \"Trebuchet MS\", Helvetica, sans-serif;'>Hello! This is your two-factor authentication code. Please enter the provided code to sign-in into your account. This code is active only 12 minutes. Lately, you'll need a new one</span>\r\n<hr>\r\n<h3 style=\"text-align: center; line-height: 1;\"><span style='font-size: 24px; font-family: \"Trebuchet MS\", Helvetica, sans-serif; color: rgb(134, 91, 233);'>Attention</span></h3>\r\n<p style=\"text-align: center;\"><span style='font-size: 20px; font-family: \"Trebuchet MS\", Helvetica, sans-serif;'>If this request was not sent by you, immediately enter and change your account's password. Thank You</span></p>\r\n<p style=\"text-align: center;\"><br></p>\r\n<p style=\"text-align: center;\"><span style=\"text-align: inherit;\"><span style=\"font-family: 'Trebuchet MS', Helvetica, sans-serif;\">&nbsp;</span></span></p>";
+                    else BodyText = "<h1 style=\"text-align: center;\"><span style='font-family: \"Trebuchet MS\", Helvetica, sans-serif; color: rgb(134, 91, 233); font-size: 48px;'>" + Code + "</span></h1>\r\n<p style=\"text-align: center;\"><span style='font-size: 20px; font-family: \"Trebuchet MS\", Helvetica, sans-serif;'>Hello! This is your two-factor verification code. Please enter the provided code to enable two-factor verification. This code is active only 12 minutes. Lately, you'll need a new one to enable your two-factor authentication</span>\r\n<hr>\r\n<h3 style=\"text-align: center; line-height: 1;\"><span style='font-size: 24px; font-family: \"Trebuchet MS\", Helvetica, sans-serif; color: rgb(134, 91, 233);'>Attention</span></h3>\r\n<p style=\"text-align: center;\"><span style='font-size: 20px; font-family: \"Trebuchet MS\", Helvetica, sans-serif;'>If this request was not sent by you, immediately enter and change your account's password. Thank You</span></p>\r\n<p style=\"text-align: center;\"><br></p>\r\n<p style=\"text-align: center;\"><span style=\"text-align: inherit;\"><span style=\"font-family: 'Trebuchet MS', Helvetica, sans-serif;\">&nbsp;</span></span></p>";
+                    SendEmail Model = new SendEmail()
+                    {
+                        SendTo = Email,
+                        SentFrom = "bluejade@mail.ru",
+                        Title = "BlueJade",
+                        Subject = "Two-Factor Authentication Enabling Code",
+                        Body = BodyText
+                    };
+
+                    bool MailMsgSentResult = await _mailMessages.SendMessageAsync(new MailKitModel(), Model);
+                    if (MailMsgSentResult)
+                    {
+                        _memoryCache.Remove(Email + "_singleUseCode");
+                        _memoryCache.Remove(Email + "_2FAtoken");
+                        _memoryCache.Set(Email + "_singleUseCode", Code, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(12)));
+                        _memoryCache.Set(Email + "_2FAtoken", TwoFactorToken, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(12)));
+                        return Json(new { success = true, alert = "A verification code has been sent to your email. Please, check your mail and set that code in the form below" });
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "We're sorry, but we can't send a code to your email due to some error. Please, try to enable your verification later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Send2FADisablingCode(string Email)
+        {
+            if(Email != null)
+            {
+                User? UserInfo = await _userManager.FindByEmailAsync(Email);
+                if(UserInfo != null)
+                {
+                    string? Code = Guid.NewGuid().ToString("N").Substring(6, 8);
+                    string? Token = await _userManager.GenerateTwoFactorTokenAsync(UserInfo, TokenOptions.DefaultProvider);
+                    SendEmail sendEmail = new SendEmail()
+                    {
+                        Body = "<h1 style=\"text-align: center;\"><span style='font-family: \"Trebuchet MS\", Helvetica, sans-serif; color: rgb(134, 91, 233); font-size: 48px;'>" + Code + "</span></h1>\r\n<p style=\"text-align: center;\"><span style='font-size: 20px; font-family: \"Trebuchet MS\", Helvetica, sans-serif;'>Hello! Here's your Two-Step Verification Code. Please, input the given code to deactivate Two-Step Verification for your account. Please be aware that your account may become more susceptible to unauthorized access without 2FA. This code is active only 12 minutes. Lately, you'll need a new one to enable your two-factor authentication</span>\r\n<hr>\r\n<h3 style=\"text-align: center; line-height: 1;\"><span style='font-size: 24px; font-family: \"Trebuchet MS\", Helvetica, sans-serif; color: rgb(134, 91, 233);'>Attention</span></h3>\r\n<p style=\"text-align: center;\"><span style='font-size: 20px; font-family: \"Trebuchet MS\", Helvetica, sans-serif;'>If this request was not sent by you, immediately enter and change your account's password. Thank You</span></p>\r\n<p style=\"text-align: center;\"><br></p>\r\n<p style=\"text-align: center;\"><span style=\"text-align: inherit;\"><span style=\"font-family: 'Trebuchet MS', Helvetica, sans-serif;\">&nbsp;</span></span></p>",
+                        SentFrom = "bluejade@mail.ru",
+                        SendTo = Email,
+                        Subject = "2FA Disabling Code",
+                        Title = "Bluejade"
+                    };
+                    bool Result = await _mailMessages.SendMessageAsync(new MailKitModel(), sendEmail);
+                    if(Result)
+                    {
+                        _memoryCache.Remove(Email + "_singleUseCode");
+                        _memoryCache.Remove(Email + "_singleUseToken");
+                        _memoryCache.Set(Email + "_singleUseCode", Code);
+                        _memoryCache.Set(Email + "_singleUseToken", Token);
+
+                        return Json(new { success = true, alert = "A 2FA disabling code has been sent to your inbox. Please, check your inbox and enter sent code here to disable your 2FA" });
+                    }
+                }
+            }
+            return Json(new { success = false, alert = "Unable to send a message to your email. Please, try again later" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EnableTwoFactorAuthentication(string Email, string Code)
+        {
+            bool EnableResult = await _account.Enable2FAAsync(Email, Code);
+            if (EnableResult) return Json(new { success = true, alert = "Well done! You've successfully enabled 2FA for your account" });
+            return Json(new { success = false, alert = "Something went wrong. May be wrong code or something else" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DisableTwoFactorAuthentication(string? Email, string? Code)
+        {
+            bool Result = await _account.Disable2FAAsync(Email, Code);
+            if (Result) return Json(new { success = true, alert = "2FA for your account has been disabled" });
+            else return Json(new { success = false, alert = "Wrong verification code. Please, check your inbox again" });
         }
 
         [HttpGet]

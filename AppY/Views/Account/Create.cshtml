@@ -34,8 +34,36 @@
                         <label asp-for="Password" for="LogIn_Password_Val" class="fw-500"></label>
                     </div>
                     <div class="mt-2">
-                        <button type="submit" class="btn btn-primary btn-standard-asset w-100">Log In</button>
+                        <button type="submit" class="btn btn-primary btn-standard-asset w-100" id="LogInSbmt_Btn">Log In</button>
                         <button type="button" class="btn btn-light btn-standard-asset text-primary w-100 mt-2 btn-smallside-open-container" id="ForgotPassword_Container-Open">Forgot Password?</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="2FASignIn_Container">
+        <div class="header-container p-2 pb-0 text-center" id="2FASignIn_Container-Header">
+            <h5 class="h5 text-truncate p-1">Two-Factor Authentication</h5>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="2FASignIn_Container-Box">
+            <div class="box-container bg-light p-2 text-center mt-1">
+                <h2 class="h2 text-neon-purple"> <i class="fa-solid fa-key fa-flip"></i> </h2>
+                <h4 class="h4">Submit the Code</h4>
+                <small class="card-text text-muted">A special code has been sent to your email. Enter that code here to sign in</small>
+            </div>
+            <div class="box-container mt-2">
+                <div class="d-none">
+                    <form method="post" asp-controller="Account" asp-action="SendTwoFactorAuthenticationCode" id="SendTwoFactorAuthenticationCode_Form">
+                        <input type="hidden" name="Email" id="STFAC_Email_Val" />
+                        <input type="hidden" name="AlternativeText" value="true" />
+                    </form>
+                </div>
+                <form method="post" asp-controller="Account" asp-action="TFASignIn" id="TFASignInAsync_Form">
+                    <input type="hidden" name="Email" id="TFA_Email_Val" />
+                    <input type="hidden" name="Password" id="TFA_Password_Val" />
+                    <div>
+                        <input type="text" maxlength="12" class="special-form-control" name="Code" id="TFA_Code_Val" placeholder="12-digit code..." />
                     </div>
                 </form>
             </div>
@@ -163,7 +191,6 @@
 
 <div class="main-container shadow-standard" id="Preloaded_Container">
     <div class="header-container p-2 text-center" id="Preloaded_Container-Header">
-@*         <button type="button" class="btn btn-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Preloaded_Container-Close"></button> *@
         <h5 class="h5 text-truncate p-1">Sign Up</h5>
     </div>
     <div class="box-container p-2 pt-1 mt-1" id="Preloaded_Container-Box">

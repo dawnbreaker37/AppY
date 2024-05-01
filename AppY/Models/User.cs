@@ -36,6 +36,8 @@ namespace AppY.Models
         public List<DiscussionUsers>? DiscussionUsers { get; set; }
         public List<LinkedAccount>? LinkedAccounts { get; set; }
         public List<ChatUsers>? ChatUsers { get; set; }
+        public List<SecretChat>? SecretChats { get; set; }
+        public List<SecretChatUsers>? SecretChatUsers { get; set; }
         [NotMapped]
         public string? UnpicturedAvatarInfo { get; set; }
         [NotMapped]

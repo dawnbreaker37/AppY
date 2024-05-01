@@ -73,12 +73,10 @@ namespace AppY.Controllers
                 {
                     bool IsAbleToChange = false;
                     double DaysFromLastPasswordChange = 0;
-                    string? DaysPassed_Str = null;
                     if (UserInfo.PasswordChanged != null)
                     {
-                        DaysFromLastPasswordChange = Math.Round(DateTime.Now.Subtract(UserInfo.PasswordChanged.Value).TotalDays, 1);
+                        DaysFromLastPasswordChange = Math.Round(DateTime.Now.Subtract(UserInfo.PasswordChanged.Value).TotalDays, 0);
                         if (DaysFromLastPasswordChange > 28) IsAbleToChange = true;
-                        DaysPassed_Str = _user.SetLastSeenText(UserInfo.PasswordChanged.Value);
                     }
                     else IsAbleToChange = true;
 
@@ -86,7 +84,6 @@ namespace AppY.Controllers
                     ViewBag.UnpicturedAvatarInfo = _user.UnpicturedAvatarSelector(UserInfo);
                     ViewBag.IsAbleToChange = IsAbleToChange;
                     ViewBag.DaysPassed = DaysFromLastPasswordChange;
-                    ViewBag.DateOfPasswordChange = DaysPassed_Str;
 
                     return View();
                 }
