@@ -14,6 +14,7 @@ namespace AppY.Interfaces
         public Task<bool> CheckChatPasswordAsync(int Id, int UserId, string? Password);
         public Task<ChatPasswordSettings?> GetChatPasswordInfoAsync(int Id, int UserId);
         public Task<int> SwitchPreviewingOptionAsync(int Id, int UserId, bool IsUnableToPreview);
+        public Task<int> SwitchForwardingSettingsAsync(int Id, int UserId, bool IsForwardForbidden);
         public Task<int> PinTheChatAsync(int Id, int UserId);
         public Task<int> UnpinTheChatAsync(int Id, int UserId);
         public Task<bool> IsChatMutedAsync(int Id, int UserId);

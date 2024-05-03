@@ -262,6 +262,23 @@ namespace AppY.Controllers
             return Json(new { success = false, alert = "We're sorry, but something went wrong. Please, try to edit previewing settings a bit later" });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> SwitchForwardingSettings(int Id, bool Value)
+        {
+            if(Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId_Str = Request.Cookies["CurrentUserId"];
+                bool TryParse = Int32.TryParse(CurrentUserId_Str, out int UserId);
+                if(TryParse)
+                {
+                    int Result = await _chat.SwitchForwardingSettingsAsync(Id, UserId, Value);
+                    if (Result > 0) return Json(new { success = true, result = Result });
+                    else return Json(new { success = false, alert = "Unable to change that setting in this chat" });
+                }
+            }
+            return Json(new { success = false, alert = "You've no access to edit settings in this chat" });
+        }
+
         [HttpGet]
         public async Task<IActionResult> Preview(int Id, int UserId, int SkipCount)
         {

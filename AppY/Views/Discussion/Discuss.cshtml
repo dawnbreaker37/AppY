@@ -610,12 +610,13 @@
                                         <div class="float-end me-1" id="@message.Id-DiscussionMsgStatsBox">
                                             @if (message.IsChecked)
                                             {
-                                                <small class="card-text text-primary"> <i class="fa-solid fa-check-double"></i> </small>
+                                                <small class="card-text" id="@message.Id-DiscussionMsgIsChecked_Lbl"> <i class="fa-solid fa-check-double text-primary"></i> </small>
                                             }
                                             else
                                             {
-                                                <small class="card-text text-muted discussion-options" id="@message.Id-DiscussionMsgDateNTimeInfo_Lbl" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-check"></i> </small>
+                                                <small class="card-text discussion-options" id="@message.Id-DiscussionMsgIsChecked_Lbl" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-check text-muted"></i> </small>
                                             }
+                                            <input type="hidden" id="@message.Id-DiscussionMsgFullDate_Val" value="@message.SentAt.ToString("dd/MM, HH:mm")" />
                                             <small class="card-text text-muted">@message.SentAt.ToShortTimeString()</small>
                                             @if(message.IsEdited)
                                             {
@@ -657,6 +658,7 @@
                                             <p class="card-text white-space-on message-label reply-to-discussion-message" id="@message.Id-DiscussionOptionMsgText_Lbl">@message.Text</p>
                                         </div>
                                         <div class="ms-1">
+                                            <input type="hidden" id="@message.Id-DiscussionMsgFullDate_Val" value="@message.SentAt.ToString("dd/MM, HH:mm")" />
                                             <small class="card-text text-muted">@message.SentAt.ToShortTimeString()</small>
                                             @if (message.IsEdited)
                                             {

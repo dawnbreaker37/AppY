@@ -12,6 +12,71 @@
         <input type="hidden" id="LastMessageSentCount_Val" value="1" />
         <input type="hidden" id="CurrentUserId_Val" value="@UserInfo.Id" />
     </div>
+
+    <div class="smallside-box-container shadow-standard" id="Discussions_Container">
+        <div class="header-container p-2 pb-0 text-center" id="Discussions_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Discussions_Container-Close"></button>
+            <span class="h5 text-truncate p-1" id="Discussions_Container_Header">Discussions</span>
+            <div></div>
+            <small class="card-text text-muted" id="DiscussionsCount_Lbl"><span id="DiscussionsCount_Span">0</span> discussion(s)</small>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="Discussions_Container-Box">
+        </div>
+    </div>
+    <div class="smallside-box-container shadow-standard" id="Chats_Container">
+        <div class="header-container p-2 pb-0 text-center" id="Chats_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Chats_Container-Close"></button>
+            <span class="h5 text-truncate p-1" id="Chats_Container_Header">Chats</span>
+            <div></div>
+            <small class="card-text text-muted" id="ChatsCount_Lbl"><span id="ChatsCount_Span">0</span> chat(s)</small>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="Chats_Container-Box">
+        </div>
+
+        <div class="box-container p-2 pt-1 mt-1" id="MessageForwarding_Box" style="display: none;">
+            <div class="box-container bg-light p-2">
+                <span class="card-text"> <i class="fa-solid fa-share"></i>  </span>
+                <span class="card-text white-space-on" id="ForwardingMsgText_Lbl">Message...</span>
+                <div class="border-top mt-1 pt-1"></div>
+                <span class="card-text">Forwarding to <span class="fw-500" id="ForwardingChatName_Lbl">unknown chat</span></span>
+                <div></div>
+                <small class="card-text text-muted">choose your desired chat to forward</small>
+            </div>
+            <div class="box-container mt-2 bottom-0">
+                <div class="d-none">
+                    <input type="hidden" name="FromChatId" id="Forward_FromChatId_Val" value="@ChatInfo.Id" />
+                    <input type="hidden" name="ToChatId" id="Forward_ToChatId_Val" value="0" />
+                    <input type="hidden" name="MessageId" id="Forward_MsgId_Val" value="0" />
+                </div>
+                <div class="hstack gap-3">
+                    <button type="button" class="btn btn-standard btn-sm"> <i class="fa-solid fa-align-left"></i> </button>
+                    <textarea class="form-control rounded-pill shadow-none" placeholder="Add a caption here..." rows="1" maxlength="3400" name="Caption" id="Forward_Caption_Val"></textarea>
+                    <button type="submit" class="btn btn-standard-asset btn-primary btn-sm rounded-pill" id="ForwardAMessageSbmt_Btn" disabled>Forward</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-bot-navbar shadow-standard" style="display: none; bottom: -300px;" id="SmallsideBotNavbar">
+        <div class="box-container p-2">
+            <div class="row">
+                <div class="col">
+                    <div>
+                        <form method="get" asp-controller="Chat" asp-action="GetChats" id="GetChats_Form">
+                            <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-regular fa-comments"></i> <br />Chats</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="col">
+                    <div>
+                        <form method="get" asp-controller="Discussion" asp-action="GetDiscussions" id="GetDiscussions_Form">
+                            <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-quote-right"></i> <br />Discussions</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="main-container mh-max shadow-standard" id="Preloaded_Container">
@@ -276,9 +341,60 @@
         }
     });
 
+    document.getElementById("DeleteChatMessageSbmt_Btn").addEventListener("click", function (event) {
+        event.preventDefault();
+        const id = parseInt($("#CurrentGotChatMsg_Id_Val").val());
+        const senderId = parseInt($("#SM_UserId_Val").val());
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        const chatId = parseInt($("#SC_ChatId_Val").val());
+
+        hubConnection.invoke("SecretDelete", id, senderId, receiverId, chatId).catch(function (err) {
+            console.log(err.toString());
+        });
+    });
+
+    hubConnection.on("SecretDelete", function (id, receiverId, chatId) {
+        let currentChatId = $("#SC_ChatId_Val").val();
+        let currentUserId = $("#SM_UserId_Val").val();
+        if (currentChatId == chatId && receiverId == currentUserId) {
+            let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
+            sentMessagesCount--
+
+            slideToLeft(id + "-ChatMsgBox");
+            if (sentMessagesCount <= 0) {
+                slideToLeft(id + "-ChatMsgBox");
+                setTimeout(function () {
+                    $("#HaveSentMessages_Box").fadeOut(0);
+                    $("#NoSentMessages_Box").fadeIn(0);
+                    slideToRight("NoSentMessages_Box");
+                }, 600);
+            }
+            $("#SentMessagesCount_Val").val(sentMessagesCount);
+            $("#StatusBar_Lbl-2").text(sentMessagesCount + " messages sent so far");
+        }
+    });
+    hubConnection.on("CallerSecretDelete", function (id, senderId) {
+        let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
+        sentMessagesCount--
+
+        slideToLeft(id + "-ChatMsgBox");
+        if (sentMessagesCount <= 0) {
+            slideToLeft(id + "-ChatMsgBox");
+            setTimeout(function () {
+                $("#HaveSentMessages_Box").fadeOut(0);
+                $("#NoSentMessages_Box").fadeIn(0);
+                slideToRight("NoSentMessages_Box");
+            }, 600);
+        }
+        $("#SentMessagesCount_Val").val(sentMessagesCount);
+        $("#StatusBar_Lbl-2").text(sentMessagesCount + " messages sent so far");
+        insideBoxClose(true, null);
+    });
+
     hubConnection.on("SecretReceive", function (message, senderId, receiverId, chatId) {
-        let currentChatId = parseInt($("#SC_ChatId_Val").val());
-        if (currentChatId == chatId) {
+        let currentChatId = $("#SC_ChatId_Val").val();
+        let currentUserId = $("#SM_UserId_Val").val();
+        if (currentChatId == chatId && receiverId == currentUserId) {
             let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
             let lastMsgId = parseInt($("#LastMessageSentCount_Val").val());
 
@@ -531,8 +647,9 @@
     });
 
     hubConnection.on("SecretReply", function (replyId, replyText, message, receiverId, chatId) {
-        let currentChatId = parseInt($("#SC_ChatId_Val").val());
-        if (currentChatId == chatId) {
+        let currentChatId = $("#SC_ChatId_Val").val();
+        let currentUserId = $("#SM_UserId_Val").val();
+        if (currentChatId == chatId && receiverId == currentUserId) {
             let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
             let lastMsgId = parseInt($("#LastMessageSentCount_Val").val());
 
@@ -624,8 +741,9 @@
     });
 
     hubConnection.on("SecretEdit", function (id, message, senderId, receiverId, chatId) {
-        let currentChatId = parseInt($("#SC_ChatId_Val").val());
-        if (currentChatId == chatId) {
+        let currentChatId = $("#SC_ChatId_Val").val();
+        let currentUserId = $("#SM_UserId_Val").val();
+        if (currentChatId == chatId && receiverId == currentUserId) {
             $("#" + id + "-ChatOptionMsgText_Lbl").html(textDecoder(message, null));
             $("#" + id + "-RepliedMsgText").html(textDecoder(message, null));
             $("#" + id + "-ChatMsgIsEdited_Lbl").html(" edited");

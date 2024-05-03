@@ -4,6 +4,7 @@ using AppY.Interfaces;
 using AppY.Repositories;
 using AppY.ViewModels;
 using Microsoft.AspNetCore.SignalR;
+using NuGet.Protocol.Plugins;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace AppY.ChatHub
@@ -125,6 +126,10 @@ namespace AppY.ChatHub
                 await this.Clients.User(ReceiverId.ToString()).SendAsync("ReplyReceive", Result, Caption, ForwardingText, MessageId, ToChatId);
                 await this.Clients.Caller.SendAsync("Forward_Success");
             }
+            else
+            {
+                await this.Clients.Caller.SendAsync("ForwardDeny");
+            }
         }
 
         public async Task Reply(int MessageId, string? ReplyText, int UserId, int ChatId, string? Text, int IsAutodeletable, int ReceiverId, int CurrentChatUserId)
@@ -195,6 +200,12 @@ namespace AppY.ChatHub
         {
             await this.Clients.Caller.SendAsync("CallerSecretEdit", Id, Message, SenderId);
             await this.Clients.User(ReceiverId).SendAsync("SecretEdit", Id, Message, SenderId, ReceiverId, ChatId);
+        }
+
+        public async Task SecretDelete(int Id, int SenderId, string ReceiverId, int ChatId)
+        {
+            await this.Clients.Caller.SendAsync("CallerSecretDelete", Id, SenderId);
+            await this.Clients.User(ReceiverId).SendAsync("SecretDelete", Id, ReceiverId, ChatId);
         }
         //Secret Chats//
     }

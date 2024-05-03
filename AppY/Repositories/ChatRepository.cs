@@ -109,7 +109,7 @@ namespace AppY.Repositories
 
         public async Task<Chat?> GetChatInfoAsync(int Id)
         {
-            if (Id > 0) return await _context.Chats.AsNoTracking().Select(c => new Chat { Id = c.Id, CreatedAt = c.CreatedAt, Name = c.Name, CreatorId = c.CreatorId, IsDeleted = c.IsDeleted, UnablePreview = c.UnablePreview }).FirstOrDefaultAsync(c => c.Id == Id && !c.IsDeleted);
+            if (Id > 0) return await _context.Chats.AsNoTracking().Select(c => new Chat { Id = c.Id, CreatedAt = c.CreatedAt, Name = c.Name, CreatorId = c.CreatorId, IsDeleted = c.IsDeleted, UnablePreview = c.UnablePreview, ForbidMessageForwarding = c.ForbidMessageForwarding }).FirstOrDefaultAsync(c => c.Id == Id && !c.IsDeleted);
             else return null;
         }
 
@@ -338,6 +338,21 @@ namespace AppY.Repositories
         public async Task<int> GetChatSecondUserInfoAsync(int Id, int FirstUserId)
         {
             return await _context.SecretChatUsers.AsNoTracking().Where(c => c.SecretChatId == Id && c.UserId != FirstUserId).Select(c => c.UserId).FirstOrDefaultAsync();
+        }
+
+        public async Task<int> SwitchForwardingSettingsAsync(int Id, int UserId, bool IsForwardForbidden)
+        {
+            bool CheckUserAvailabilityInChat = await _context.ChatUsers.AsNoTracking().AnyAsync(c => c.ChatId == Id && c.UserId == UserId && !c.IsDeleted && !c.IsBlocked);
+            if(CheckUserAvailabilityInChat)
+            {
+                int Result = await _context.Chats.AsNoTracking().Where(c => c.Id == Id && !c.IsDeleted).ExecuteUpdateAsync(c => c.SetProperty(c => c.ForbidMessageForwarding, !IsForwardForbidden));
+                if(Result > 0)
+                {
+                    if (IsForwardForbidden) return 1;
+                    else return 2;
+                }
+            }
+            return 0;
         }
     }
 }

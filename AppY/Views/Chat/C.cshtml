@@ -244,6 +244,26 @@
                         </form>
                     </div>
                 }
+                @if(ChatInfo.ForbidMessageForwarding)
+                {
+                    <div class="w-100">
+                        <form method="post" asp-controller="Chat" asp-action="SwitchForwardingSettings" id="SwitchForwardingSettings">
+                            <input type="hidden" name="Value" id="SFS_Value_Val" value="true" />
+                            <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                            <button type="submit" class="btn btn-group-member btn-top-rounded w-100" id="SwitchForwardingSettingsSbmt_Btn"> <i class="fa-solid fa-share"></i> Forwarding Messages to This Chat <span class="text-muted style-font" id="ForwardingSettings_Span"> ∙ Off</span></button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="w-100">
+                        <form method="post" asp-controller="Chat" asp-action="SwitchForwardingSettings" id="SwitchForwardingSettings">
+                            <input type="hidden" name="Value" id="SFS_Value_Val" value="false" />
+                            <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                            <button type="submit" class="btn btn-group-member btn-top-rounded w-100" id="SwitchForwardingSettingsSbmt_Btn"> <i class="fa-solid fa-share"></i> Forwarding Messages to This Chat <span class="text-primary style-font" id="ForwardingSettings_Span"> ∙ On</span></button>
+                        </form>
+                    </div>
+                }
                 <div class="w-100">
                     <form method="post" asp-controller="Chat" asp-action="SwitchAutoDestructionOption" id="SwitchAutoDesctructionOption_Form">
                         <input type="hidden" name="Value" id="SADO_Value_Val" value="false" />
@@ -404,12 +424,13 @@
                                         <div class="float-end me-1" id="@message.Id-ChatMsgStatsBox">
                                             @if (message.IsChecked)
                                             {
-                                                <small class="card-text text-primary"> <i class="fa-solid fa-check-double"></i> </small>
+                                                <small class="card-text text-primary" id="@message.Id-ChatMsgIsChecked_Lbl"> <i class="fa-solid fa-check-double"></i> </small>
                                             }
                                             else
                                             {
-                                                <small class="card-text text-muted discussion-options" id="@message.Id-ChatMsgDateNTimeInfo_Lbl" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-check"></i> </small>
+                                                <small class="card-text text-muted discussion-options" id="@message.Id-ChatMsgIsChecked_Lbl" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-check"></i> </small>
                                             }
+                                            <input type="hidden" id="@message.Id-ChatMsgFullDate_Val" value="@message.SentAt.ToString("dd/MM, HH:mm")" />
                                             <small class="card-text text-muted">@message.SentAt.ToShortTimeString()</small>
                                             @if (message.IsEdited)
                                             {
@@ -447,9 +468,10 @@
                                                     <p class="card-text reply-to-chat-message message-label white-space-on reply-element" id="@message.Id-RepliedMsgText" data-bs-msg-id="@message.Id">@message.RepliesMsgShortText</p>
                                                 </div>
                                             }
-                                            <p class="card-text white-space-on message-label reply-to-chat-message" id="@message.Id-ChatOptionMsgText_Lbl">@message.Text</p>
+                                            <p class="card-text white-space-on message-label reply-to-chat-message chat-options" id="@message.Id-ChatOptionMsgText_Lbl">@message.Text</p>
                                         </div>
                                         <div class="ms-1">
+                                            <input type="hidden" id="@message.Id-ChatMsgFullDate_Val" value="@message.SentAt.ToString("dd/MM, HH:mm")" />
                                             <small class="card-text text-muted">@message.SentAt.ToShortTimeString()</small>
                                             @if (message.IsEdited)
                                             {
@@ -976,6 +998,7 @@
             let styleBox = document.createElement("div");
             let statsBox = document.createElement("div");
             let isChecked = document.createElement("small");
+            let dateAndTimeFullValue = document.createElement("input");
             let dateAndTime = document.createElement("small");
             let isEdited = document.createElement("small");
 
@@ -996,12 +1019,20 @@
             isEdited.classList.add("card-text");
             isEdited.classList.add("text-muted");
             isEdited.style.display = "none";
+            dateAndTimeFullValue.classList.add("d-none");
 
             // let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
             // let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
             // let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
 
             let currentDate = new Date();
+            let day = currentDate.getDate() < 10 ? "0" + currentDate.getDate() : currentDate.getDate();
+            let month = parseInt(currentDate.getMonth()) + 1;
+            month = month < 10 ? "0" + month : month;
+            let hrs = currentDate.getHours() < 10 ? "0" + currentDate.getHours() : currentDate.getHours();
+            let mins = currentDate.getMinutes() < 10 ? "0" + currentDate.getMinutes() : currentDate.getMinutes();
+
+            dateAndTimeFullValue.value = day + "." + month + ", " + hrs + ":" + mins;
             let newMessage = textDecoder(message, null);
             mainText.innerHTML = newMessage;
             dateAndTime.innerHTML = dateAndTimeTranslator(currentDate);
@@ -1010,6 +1041,7 @@
             styleBox.appendChild(isAutodeletableSmall);
             styleBox.appendChild(mainText);
             statsBox.appendChild(isChecked);
+            statsBox.appendChild(dateAndTimeFullValue);
             statsBox.appendChild(dateAndTime);
             statsBox.appendChild(isEdited);
             messageNotMainBox.appendChild(styleBox);
@@ -1017,7 +1049,10 @@
             messageMainBox.appendChild(messageNotMainBox);
 
             messageMainBox.setAttribute("id", id + "-ChatMsgBox");
+            messageNotMainBox.setAttribute("id", id + "-ChatMsgNmBox");
             isEdited.setAttribute("id", id + "-ChatMsgIsEdited_Lbl");
+            isChecked.setAttribute("id", id + "-ChatMsgIsChecked_Lbl");
+            dateAndTimeFullValue.setAttribute("id", id + "-ChatMsgFullDate_Val");
             dateAndTime.setAttribute("id", id + "-ChatMsgDateAndTime_Lbl");
             mainText.setAttribute("id", id + "-ChatOptionMsgText_Lbl");
 
@@ -1050,6 +1085,7 @@
             let mainText = document.createElement("p");
             let styleBox = document.createElement("div");
             let statsBox = document.createElement("div");
+            let dateAndTimeFullValue = document.createElement("input");
             let dateAndTime = document.createElement("small");
             let isEdited = document.createElement("small");
 
@@ -1062,23 +1098,35 @@
             mainText.classList.add("white-space-on");
             mainText.classList.add("message-label");
             mainText.classList.add("reply-to-chat-message");
+            mainText.classList.add("chat-options");
             statsBox.classList.add("ms-1");
             dateAndTime.classList.add("card-text");
             dateAndTime.classList.add("text-muted");
             isEdited.classList.add("card-text");
             isEdited.classList.add("text-muted");
             isEdited.style.display = "none";
+            dateAndTimeFullValue.classList.add("d-none");
 
             // let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
             // let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
             // let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
 
             messageMainBox.setAttribute("id", id + "-ChatMsgBox");
+            messageNotMainBox.setAttribute("id", id + "-ChatMsgNmBox");
             isEdited.setAttribute("id", id + "-ChatMsgIsEdited_Lbl");
+            dateAndTimeFullValue.setAttribute("id", id + "-ChatMsgFullDate_Val");
+            dateAndTimeFullValue.setAttribute("type", "hidden");
             dateAndTime.setAttribute("id", id + "-ChatMsgDateAndTime_Lbl");
             mainText.setAttribute("id", id + "-ChatOptionMsgText_Lbl");
 
             let currentDate = new Date();
+            let day = currentDate.getDate() < 10 ? "0" + currentDate.getDate() : currentDate.getDate();
+            let month = parseInt(currentDate.getMonth()) + 1;
+            month = month < 10 ? "0" + month : month;
+            let hrs = currentDate.getHours() < 10 ? "0" + currentDate.getHours() : currentDate.getHours();
+            let mins = currentDate.getMinutes() < 10 ? "0" + currentDate.getMinutes() : currentDate.getMinutes();
+
+            dateAndTimeFullValue.value = day + "." + month + ", " + hrs + ":" + mins;
             let newMessage = textDecoder(message, null);
             mainText.innerHTML = newMessage;
             dateAndTime.innerHTML = dateAndTimeTranslator(currentDate);
@@ -1086,6 +1134,7 @@
             styleBox.appendChild(isAutodeletableSmall);
             styleBox.appendChild(mainText);
             statsBox.appendChild(dateAndTime);
+            statsBox.appendChild(dateAndTimeFullValue);
             statsBox.appendChild(isEdited);
             messageNotMainBox.appendChild(styleBox);
             messageNotMainBox.appendChild(statsBox);
@@ -1127,6 +1176,7 @@
         let replyBox = document.createElement("div");
         let repliedTo = document.createElement("small");
         let repliedText = document.createElement("p");
+        let dateAndTimeFullValue = document.createElement("input");
         let statsBox = document.createElement("div");
         let isChecked = document.createElement("small");
         let dateAndTime = document.createElement("small");
@@ -1160,8 +1210,17 @@
         isEdited.classList.add("card-text");
         isEdited.classList.add("text-muted");
         isEdited.style.display = "none";
+        dateAndTimeFullValue.classList.add("d-none");
 
         let currentDate = new Date();
+        let day = currentDate.getDate() < 10 ? "0" + currentDate.getDate() : currentDate.getDate();
+        let month = parseInt(currentDate.getMonth()) + 1;
+        month = month < 10 ? "0" + month : month;
+        let hrs = currentDate.getHours() < 10 ? "0" + currentDate.getHours() : currentDate.getHours();
+        let mins = currentDate.getMinutes() < 10 ? "0" + currentDate.getMinutes() : currentDate.getMinutes();
+
+        dateAndTimeFullValue.value = day + "." + month + ", " + hrs + ":" + mins;
+        console.log(dateAndTimeFullValue.value);
         let newMessage = textDecoder(text, null);
         let newRepliedText = textDecoder(replyText, null);
         repliedTo.innerHTML = " <i class='fa-solid fa-reply'></i> Replied to";
@@ -1176,6 +1235,7 @@
         styleBox.appendChild(replyBox);
         styleBox.appendChild(mainText);
         statsBox.appendChild(isChecked);
+        statsBox.appendChild(dateAndTimeFullValue);
         statsBox.appendChild(dateAndTime);
         statsBox.appendChild(isEdited);
         messageNotMainBox.appendChild(styleBox);
@@ -1185,7 +1245,10 @@
         replyBox.setAttribute("id", messageId + "-RepliedMsgBox");
         repliedText.setAttribute("id", messageId + "-RepliedMsgText");
         messageMainBox.setAttribute("id", id + "-ChatMsgBox");
+        messageNotMainBox.setAttribute("id", id + "-ChatMsgNmBox");
         isEdited.setAttribute("id", id + "-ChatMsgIsEdited_Lbl");
+        isChecked.setAttribute("id", id + "-ChatMsgIsChecked_Lbl");
+        dateAndTimeFullValue.setAttribute("id", id + "-ChatMsgFullDate_Val");
         dateAndTime.setAttribute("id", id + "-ChatMsgDateAndTime_Lbl");
         mainText.setAttribute("id", id + "-ChatOptionMsgText_Lbl");
 
@@ -1224,6 +1287,7 @@
             let repliedTo = document.createElement("small");
             let repliedText = document.createElement("p");
             let statsBox = document.createElement("div");
+            let dateAndTimeFullValue = document.createElement("input");
             let dateAndTime = document.createElement("small");
             let isEdited = document.createElement("small");
 
@@ -1255,8 +1319,16 @@
             isEdited.classList.add("card-text");
             isEdited.classList.add("text-muted");
             isEdited.style.display = "none";
+            dateAndTimeFullValue.classList.add("d-none");
 
             let currentDate = new Date();
+            let day = currentDate.getDate() < 10 ? "0" + currentDate.getDate() : currentDate.getDate();
+            let month = parseInt(currentDate.getMonth()) + 1;
+            month = month < 10 ? "0" + month : month;
+            let hrs = currentDate.getHours() < 10 ? "0" + currentDate.getHours() : currentDate.getHours();
+            let mins = currentDate.getMinutes() < 10 ? "0" + currentDate.getMinutes() : currentDate.getMinutes();
+
+            dateAndTimeFullValue.value = day + "." + month + ", " + hrs + ":" + mins;
             let newMessage = textDecoder(text, null);
             let newRepliedText = textDecoder(replyText, null);
             repliedTo.innerHTML = " <i class='fa-solid fa-reply'></i> Replied to";
@@ -1270,6 +1342,7 @@
             styleBox.appendChild(replyBox);
             styleBox.appendChild(mainText);
             statsBox.appendChild(dateAndTime);
+            statsBox.appendChild(dateAndTimeFullValue);
             statsBox.appendChild(isEdited);
             messageNotMainBox.appendChild(styleBox);
             messageNotMainBox.appendChild(statsBox);
@@ -1278,7 +1351,10 @@
             replyBox.setAttribute("id", messageId + "-RepliedMsgBox");
             repliedText.setAttribute("id", messageId + "-RepliedMsgText");
             messageMainBox.setAttribute("id", id + "-ChatMsgBox");
+            messageNotMainBox.setAttribute("id", id + "-ChatMsgNmBox");
             isEdited.setAttribute("id", id + "-ChatMsgIsEdited_Lbl");
+            dateAndTimeFullValue.setAttribute("id", id + "-ChatMsgFullDate_Val");
+            dateAndTimeFullValue.setAttribute("type", "hidden");
             dateAndTime.setAttribute("id", id + "-ChatMsgDateAndTime_Lbl");
             mainText.setAttribute("id", id + "-ChatOptionMsgText_Lbl");
 
@@ -1311,6 +1387,10 @@
             $("#Forward_MessageId_Val").val(0);
             $("#MessageForwarding_Box").fadeOut(300);
         }, 500);
+    });
+
+    hubConnection.on("ForwardDeny", function () {
+        alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', "Forwarding denied due to chat security settings (selected chat has turned off the ability to get any forwarded messages)", "Close", null, 0, null, null, null, 4);
     });
 
     hubConnection.on("EditReceive", function (message, id) {
