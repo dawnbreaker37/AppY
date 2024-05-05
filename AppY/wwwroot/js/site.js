@@ -3247,6 +3247,7 @@ $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
                 let mainText;
                 let statsBox;
                 let isChecked;
+                let dateAndTimeValue;
                 let dateAndTime;
                 let isEdited;
                 let imgsLinkBtn;
@@ -3264,6 +3265,7 @@ $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
                     mainText = $("<p class='card-text white-space-on message-label discussion-options'></p>");
                     statsBox = $("<div class='discussion-options float-end me-1'></div>");
                     isChecked = $("<small class='card-text text-primary'></small>");
+                    dateAndTimeValue = $("<input type='hidden' />");
                     dateAndTime = $("<small class='card-text text-muted'></small>");
                     isEdited = $("<small class='card-text text-muted' style='display: none;'></small>");
                     imgsLinkBtn = $("<button type='button' class='btn btn-link btn-get-message-image btn-sm'></button>");
@@ -3326,12 +3328,17 @@ $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
                 messageNotMainBox.attr("id", response.result[index].id + "-DiscussionMsgNmBox");
                 styleBox.attr("id", response.result[index].id + "-DiscussionMsgStyledBox");
                 isEdited.attr("id", response.result[index].id + "-DiscussionMessageIsEdited_Lbl");
+                isChecked.attr("id", response.result[index].id + "-DiscussionMsgIsChecked_Lbl");
 
                 mainText.attr("id", response.result[index].id + "-DiscussionOptionMsgText_Lbl");
                 statsBox.attr("id", response.result[index].id + "-DiscussionMsgStatsBox");
+                dateAndTimeValue.attr("id", response.result[index].id + "-DiscussionMsgFullDate_Val");
                 dateAndTime.attr("id", response.result[index].id + "-DiscussionMsgDateNTimeInfo_Lbl");
 
                 let date = new Date(response.result[index].sentAt);
+                let day = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+                let month = date.getMonth() + 1;
+                month = month < 10 ? "0" + month : month;
                 let hrs = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
                 let mins = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
 
@@ -3339,7 +3346,8 @@ $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
                 let decodedText = textDecoder(response.result[index].text, null);
                 mainText.html(decodedText);
                 dateAndTime.text(hrs + ":" + mins);
-
+                dateAndTimeValue.val(day + "." + month + ", " + hrs + ":" + mins);
+      
                 if (response.result[index].isChecked) {
                     isChecked.html(' <i class="fa-solid fa-check-double text-primary"></i> ');
                 }
@@ -3372,6 +3380,7 @@ $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
                 }
                 styleBox.append(mainText);
                 statsBox.append(isChecked);
+                statsBox.append(dateAndTimeValue);
                 statsBox.append(dateAndTime);
                 statsBox.append(isEdited);
                 messageNotMainBox.append(styleBox);
@@ -3381,6 +3390,27 @@ $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
                 textDecoder(response.result[index].text, response.result[index].id + "-DiscussionOptionMsgText_Lbl");
                 $("#DiscussionMessages_MainBox").prepend(messageMainBox);
             });
+        }
+    });
+});
+
+$("#IsDiscussionMessagePinned_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.result) {
+            $("#UDM_Id_Val").val(response.id);
+            $("#PDM_Id_Val").val(0);
+            $("#PinTheMessage_Box").fadeOut(150);
+            $("#UnpinTheMessage_Box").fadeIn(150);
+        }
+        else {
+            $("#PDM_Id_Val").val(response.id);
+            $("#UDM_Id_Val").val(0);
+            $("#PinTheMessage_Box").fadeIn(150);
+            $("#UnpinTheMessage_Box").fadeOut(150);
         }
     });
 });
@@ -3410,7 +3440,7 @@ $("#GetPinnedMessageInfo_Form").on("submit", function (event) {
         }
         else alert('<i class="fa-regular fa-times-circle fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.25);
     });
-}); EditDiscussionMessage_Btn
+}); 
 $("#PinTheDiscussionMessage_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -3427,7 +3457,7 @@ $("#PinTheDiscussionMessage_Form").on("submit", function (event) {
             textDecoder(messageText, "CurrentPinnedMessagesText_Lbl");
             $("#CurrentPinnedMessagesText_Lbl").attr("data-bs-html", response.id);
 
-            if (currentPinnedMessagesCount <= 1) slideToRight("Preloaded_Container_PostHeader");
+            if (currentPinnedMessagesCount <= 1) $("#PinnedMessages_Box").slideDown(250);
             alert('<i class="fa-solid fa-thumbtack fa-bounce text-primary" style="--fa-animation-duration: 1.2s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Done", "Copy", 0, 2, null, "CurrentPinnedMessagesText_Lbl", 3.75);
         }
         else alert('<i class="fa-regular fa-times-circle fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
@@ -3452,7 +3482,7 @@ $("#UnpinTheDiscussionMessage_Form").on("submit", function (event) {
             $("#GPMI_SkipCount_Val").val(1);
             $("#CurrentPinnedMessagesText_Lbl").attr("data-bs-html", response.id);
 
-            if (currentPinnedMessagesCount <= 0) slideToLeft("Preloaded_Container_PostHeader");
+            if (currentPinnedMessagesCount <= 0) $("#PinnedMessages_Box").slideUp(250);
             alert('<i class="fa-solid fa-thumbtack fa-bounce text-primary" style="--fa-animation-duration: 1.2s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Done", "Copy", 0, 2, null, "CurrentPinnedMessagesText_Lbl", 3.75);
         }
         else alert('<i class="fa-solid fa-link-slash"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
@@ -3781,8 +3811,9 @@ $(document).on("submit", "#SendDiscussionMessageAnswer_Form", function (event) {
             dateAndTime.attr("id", response.id + "-AnswerDateAndTime_Lbl");
             isEdited.attr("id", response.id + "-IsEdited_Lbl");
 
+            let date = new Date();
             mainText.html(response.result.text);
-            dateAndTime.text(dateAndTimeConverter(response.result.createdAt));
+            dateAndTime.text(dateAndTimeTranslator(date));
 
             styleBox.append(mainText);
             statsBox.append(dateAndTime);
@@ -3895,8 +3926,9 @@ $("#GetDiscussionMessageAnswers_Form").on("submit", function (event) {
             $("#AnswersInfo_Box").empty();
         }, 300);
 
-        if (response.message.length >= 40) {
-            textDecoder(response.message + "...", "AnswerMsgText_Lbl");
+        response.message = textUncoder(response.message);
+        if (response.message.length >= 250) {
+            textDecoder(response.message.substring(0, 250) + "...", "AnswerMsgText_Lbl");
         }
         else textDecoder(response.message, "AnswerMsgText_Lbl");
         if (parseInt(response.count) <= 0) $("#AnswersCount_Lbl").text("no answers");
@@ -4256,9 +4288,10 @@ $("#CancelDiscussionMessageSettings_Btn").on("click", function () {
 $("#EditDiscussionMessage_Btn").on("click", function () {
     let trueId = $("#CurrentGotDiscussionMsg_Id_Val").val();
     if (trueId > 0) {
+        let text = $("#" + trueId + "-DiscussionOptionMsgText_Lbl").html();
         let uncodedText = textUncoder($("#" + trueId + "-DiscussionOptionMsgText_Lbl").html());
         insideBoxClose(false, "DiscussionOptions_Box");
-
+        //GetPinnedMessageInfo
         $("#EM_Id_Val").val(trueId);
         $("#SendMessage_Images_Val").val(null);
         $("#EditingOrReplyingMsgStatus_Lbl").text("Edit Message");
@@ -4272,12 +4305,12 @@ $("#EditDiscussionMessage_Btn").on("click", function () {
                 $("#EditingOrReplying_Box").slideUp(300);
                 setTimeout(function () {
                     $("#EditingOrReplying_Box").slideDown(300);
-                    $("#EditingOrReplyingMsgText_Lbl").html(textDecoder(uncodedText, null));
+                    $("#EditingOrReplyingMsgText_Lbl").html(text.length >= 250 ? text.substring(0, 250) + "..." : text);
                 }, 350);
             }
             else {
                 $("#EditingOrReplying_Box").slideDown(300);
-                $("#EditingOrReplyingMsgText_Lbl").html(textDecoder(uncodedText, null));
+                $("#EditingOrReplyingMsgText_Lbl").html(text.length >= 250 ? text.substring(0, 250) + "..." : text);
             }
         }, 400);
     }
@@ -4304,12 +4337,12 @@ $("#ReplyDiscussionMessage_Btn").on("click", function () {
                 $("#EditingOrReplying_Box").slideUp(300);
                 setTimeout(function () {
                     $("#EditingOrReplying_Box").slideDown(300);
-                    $("#EditingOrReplyingMsgText_Lbl").html(text);
+                    $("#EditingOrReplyingMsgText_Lbl").html(text.length >= 250 ? text.substring(0, 250) + "..." : text);
                 }, 350);
             }
             else {
                 $("#EditingOrReplying_Box").slideDown(300);
-                $("#EditingOrReplyingMsgText_Lbl").html(text);
+                $("#EditingOrReplyingMsgText_Lbl").html(text.length >= 250 ? text.substring(0, 250) + "..." : text);
             }
         }, 400);
     }
@@ -4445,12 +4478,65 @@ $("#DI_LoadAdditionalInfo_Btn").on("click", function () {
 //        }
 //    });
 //});
+$("#IsChatMessagePinned_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            if (!response.result) {
+                $("#PCM_Id_Val").val(response.id);
+                $("#UCM_Id_Val").val(0);
+                $("#PinTheMessage_Box").fadeIn(200);
+                $("#UnpinTheMessage_Box").fadeOut(200);
+            }
+            else {
+                $("#UCM_Id_Val").val(response.id);
+                $("#PCM_Id_Val").val(0);
+                $("#PinTheMessage_Box").fadeOut(200);
+                $("#UnpinTheMessage_Box").fadeIn(200);
+            }
+        }
+    });
+});
+
+$("#GetChatPinnedMessageInfo_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            let currentPinnedMessageValue = response.skipCount;
+            let pinnedMessagesMaxValue = parseInt($("#PinnedMessagesCount_Span").text());
+            currentPinnedMessageValue++;
+
+            if (currentPinnedMessageValue >= pinnedMessagesMaxValue) {
+                $("#GCPMI_SkipCount_Val").val(0);
+                currentPinnedMessageValue = 1;
+            }
+            else {
+                $("#GCPMI_SkipCount_Val").val(currentPinnedMessageValue);
+            }
+            $("#PinnedMessagesCurrentNumber_Span").text(++response.skipCount);
+
+            textDecoder(response.result.text, "CurrentPinnedMessagesText_Lbl");
+            $("#CurrentPinnedMessagesText_Lbl").attr("data-bs-msg-id", response.result.id);
+        }
+        else {
+             alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Done", null, 0, null, null, null, 3.5);
+        }
+    });
+});
 
 $("#CancelChatMessageSettings_Btn").on("click", function () {
     $("#EM_Id_Val").val(0);
+    $("#IMP_Id_Val").val(0);
     $("#RM_Id_Val").val(0);
     $("#DDM_Id_Val").val(0);
     $("#Forward_MsgId_Val").val(0);
+    $("#CurrentGotChatMsg_Id_Val").val(0);
     $("#SendMessage_Text_Val").val("");
     $("#RM_ReplyText_Val").val("");
     $("#ForwardingMsgText_Lbl").text("No Message Info");
@@ -4656,14 +4742,22 @@ $(document).on("click", ".discussion-options", function (event) {
         trueId = parseInt($("#" + event.target.id).attr("data-bs-msg-id"));
     }
 
-    if (trueId != null && trueId > 0) {//get pinned messages info from server
+    if (trueId != null && trueId > 0) {
         let trueId = getTrueId(event.target.id);
-        if (trueId != null) {
+        if (trueId != null) {//Answer
             let translatedDateAndTime = $("#" + trueId + "-DiscussionMsgFullDate_Val").val();
             let daysPassed = getDaysCountFromDate(translatedDateAndTime);
+            let messageText = $("#" + trueId + "-DiscussionOptionMsgText_Lbl").html();
 
             $("#CurrentGotDiscussionMsg_Id_Val").val(trueId);
-            $("#DiscussionOptionMessageText_Lbl").html(textDecoder($("#" + trueId + "-DiscussionOptionMsgText_Lbl").html(), null));
+            $("#DMP_Id_Val").val(trueId);
+            $("#GDMA_Id_Val").val(trueId);
+            $("#SDMA_MessageId_Val").val(trueId);
+            $("#IsDiscussionMessagePinned_Form").submit();
+
+            $("#CurrentGotDiscussionMsg_FullText_Val").html(messageText);
+            $("#GDMA_MsgText_Val").val(messageText);
+            $("#DiscussionOptionMessageText_Lbl").html(textDecoder(messageText.length > 400 ? messageText.substring(0, 400) + "..." : messageText, null));
             if ($("#" + trueId + "-DiscussionMsgNmBox").hasClass("cur-user-msg-box")) {
                 $("#DDM_Id_Val").val(trueId);
                 $("#EditDiscussionMsg_Col").fadeIn(250);
@@ -4800,12 +4894,19 @@ $(document).on("click", ".delete-notification", function (event) {
 
 $(document).on("click", ".chat-options", function (event) {
     let trueId = getTrueId(event.target.id);
-    if (trueId != null) {//get pinned messages info from server and edit all bugs
+    if (trueId != null) {
         let translatedDateAndTime = $("#" + trueId + "-ChatMsgFullDate_Val").val();
         let daysPassed = getDaysCountFromDate(translatedDateAndTime);
+        let messageText = $("#" + trueId + "-ChatOptionMsgText_Lbl").text();
+        let messageHtml = $("#" + trueId + "-ChatOptionMsgText_Lbl").html();
 
         $("#CurrentGotChatMsg_Id_Val").val(trueId);
-        $("#ChatOptionMessageText_Lbl").html(textDecoder($("#" + trueId + "-ChatOptionMsgText_Lbl").html(), null));
+        $("#IMP_Id_Val").val(trueId);
+        $("#IsChatMessagePinned_Form").submit();
+        $("#CurrentChatMsg_FullText_Val").text(messageText);
+        messageHtml = textDecoder(messageHtml, null);
+        $("#ForwardingMsgText_Lbl").html(messageHtml);
+        $("#ChatOptionMessageText_Lbl").html(messageHtml.length > 450 ? messageHtml.substring(0, 450) : messageHtml);
         if ($("#" + trueId + "-ChatMsgNmBox").hasClass("cur-user-msg-box")) {
             $("#DDM_Id_Val").val(trueId);
             $("#EditChatMsg_Col").fadeIn(250);
@@ -6241,20 +6342,11 @@ function botNavbarOpen(element, reservedBtn) {
 
 function headerScrollTransformation(mainElement) {
     $("#" + mainElement + "-Header").css("position", "fixed");
-    $("#" + mainElement + "_PostHeader").css("position", "fixed");
     $("#" + mainElement + "-Header").css("width", $("#" + mainElement).innerWidth() + "px");
-    $("#" + mainElement + "_PostHeader").css("width", $("#" + mainElement).innerWidth() + "px");
-    if (fullWidth < 768) $("#" + mainElement + "_PostHeader").css("top", $("#" + mainElement + "-Header").innerHeight() * 2 + "px");
-    else if (fullWidth >= 768 && fullWidth < 1024) $("#" + mainElement + "_PostHeader").css("top", $("#" + mainElement + "-Header").innerHeight() * 1.9 + "px");
-    else if (fullWidth >= 1024 && fullWidth < 1367) $("#" + mainElement + "_PostHeader").css("top", $("#" + mainElement + "-Header").innerHeight() * 1.925 + "px");
-    else $("#" + mainElement + "_PostHeader").css("top", $("#" + mainElement + "-Header").innerHeight() * 1.925 + "px");
-}
+}//IsChatMessagePinned_Form
 function headerScrollReturn(mainElement) {
     $("#" + mainElement + "-Header").css("width", "auto");
     $("#" + mainElement + "-Header").css("position", "relative");
-    $("#" + mainElement + "_PostHeader").css("width", "auto");
-    $("#" + mainElement + "_PostHeader").css("position", "relative");
-    $("#" + mainElement + "_PostHeader").css("top", 0);
 }
 
 function verySmallBoxClose(element) {

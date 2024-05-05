@@ -107,21 +107,34 @@ namespace AppY.Repositories
             }
             else return 0;
         }
-        public override Task<DiscussionMessage?> GetPinnedMessageInfoAsync(int Id, int SkipCount)
+        public override async Task<DiscussionMessage?> GetPinnedMessageInfoAsync(int Id, int SkipCount)
         {
-            throw new NotImplementedException();
+            return await _context.ChatMessages.AsNoTracking().Where(p => p.ChatId == Id && p.IsPinned).OrderByDescending(p => p.PinnedAt).Select(p => new DiscussionMessage { Id = p.Id, Text = p.Text }).Skip(SkipCount).FirstOrDefaultAsync();
         }
-        public override Task<int> GetPinnedMessagesCountAsync(int Id)
+        public override async Task<int> GetPinnedMessagesCountAsync(int Id)
         {
-            throw new NotImplementedException();
+            return await _context.ChatMessages.AsNoTracking().CountAsync(p => p.ChatId == Id && !p.IsDeleted && p.IsPinned);
         }
-        public override Task<int> PinMessageAsync(int Id, int UserId)
+        public override async Task<int> PinMessageAsync(int Id, int DiscussionOrChatId, int UserId)
         {
-            throw new NotImplementedException();
+            bool CheckUserAccess = await _chat.CheckUserAvailabilityInChat(DiscussionOrChatId, UserId);
+            if(CheckUserAccess)
+            {
+                int Result = await _context.ChatMessages.AsNoTracking().Where(c => c.Id == Id && !c.IsDeleted).ExecuteUpdateAsync(c => c.SetProperty(c => c.IsPinned, true).SetProperty(c => c.PinnedAt, DateTime.Now));
+                if (Result > 0) return Id;
+            }
+            return 0;
         }
-        public override Task<int> UnpinMessageAsync(int Id, int DiscussionOrChatId, int UserId)
+        public override async Task<int> UnpinMessageAsync(int Id, int DiscussionOrChatId, int UserId)
         {
-            throw new NotImplementedException();
+            bool CheckUserAccess = await _chat.CheckUserAvailabilityInChat(DiscussionOrChatId, UserId);
+            if(CheckUserAccess)
+            {
+                DateTime? NullDate = null;
+                int Result = await _context.ChatMessages.AsNoTracking().Where(c => c.Id == Id && !c.IsDeleted).ExecuteUpdateAsync(c => c.SetProperty(c => c.IsPinned, false).SetProperty(c => c.PinnedAt, NullDate));
+                if (Result > 0) return await _context.ChatMessages.AsNoTracking().Where(c => c.IsPinned && !c.IsDeleted && c.ChatId == DiscussionOrChatId).Select(c => c.Id).FirstOrDefaultAsync();
+            }
+            return 0;
         }
 
         public override IQueryable<IGrouping<DateTime, DiscussionMessage>>? GetMessages(int Id, int UserId, int SkipCount, int LoadCount)
@@ -199,6 +212,11 @@ namespace AppY.Repositories
             int Result = await _context.ChatMessages.AsNoTracking().Where(d => d.RepliedMessageId == Id).ExecuteUpdateAsync(d => d.SetProperty(d => d.RepliesMessageText, Text));
             if (Result > 0) return Id;
             else return 0;
+        }
+
+        public async override Task<bool> IsPinnedAsync(int Id)
+        {
+            return await _context.ChatMessages.AsNoTracking().AnyAsync(c => c.Id == Id && !c.IsDeleted && c.IsPinned);
         }
     }
 }

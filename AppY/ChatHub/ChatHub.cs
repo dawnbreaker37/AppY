@@ -180,6 +180,27 @@ namespace AppY.ChatHub
             }
         }
 
+        public async Task PinTheMessage(int Id, int UserId, string ReceiverId, int ChatId)
+        {
+            int Result = await _message.PinMessageAsync(Id, ChatId, UserId);
+            if(Result > 0)
+            {
+                await this.Clients.Caller.SendAsync("Caller_PinTheMessage", Id);
+                await this.Clients.User(ReceiverId).SendAsync("PinTheMessage", Id, ChatId);
+            }
+            else
+            {
+                await this.Clients.Caller.SendAsync("PinDenied");
+            }
+        }
+
+        public async Task UnpinTheMessage(int Id, int UserId, string ReceiverId, int ChatId)
+        {
+            int Result = await _message.UnpinMessageAsync(Id, ChatId, UserId);
+            await this.Clients.Caller.SendAsync("Caller_UnpinTheMessage", Id, Result);
+            await this.Clients.User(ReceiverId).SendAsync("UnpinTheMessage", Id, Result, ChatId);
+        }
+
         //Secret Chats//
         public async Task SecretSend(string? Message, int SenderId, string ReceiverId, int ChatId)
         {

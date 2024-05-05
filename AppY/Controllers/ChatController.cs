@@ -47,10 +47,12 @@ namespace AppY.Controllers
                                     if(ChatInfo != null)
                                     {
                                         string? DisabledTimeLeft = null;
+                                        DiscussionMessage? FirstPinnedMessageInfo = null;
                                         List<IGrouping<DateTime, DiscussionMessage>>? Messages = null;
                                         int SentMessagesCount = await _messages.SentMessagesCountAsync(Id);
                                         int SecondUserId = await _chat.ChatSecondUserIdAsync(Id, CurrentUserId);
                                         bool IsMuted = await _chat.IsChatMutedAsync(Id, CurrentUserId);
+                                        int PinnedMessagesCount = await _messages.GetPinnedMessagesCountAsync(Id);
                                         ChatPasswordSettings? ChatPasswordInfo = await _chat.GetChatPasswordInfoAsync(Id, CurrentUserId);
                                         User? SecondUserInfo = await _user.GetUserSuperShortInfoEvenIfPrivateAsync(SecondUserId);
                                         int CurrentChatUserId = await _context.ChatUsers.AsNoTracking().Where(c => c.UserId == CurrentUserId && c.ChatId == Id).Select(c => c.Id).FirstOrDefaultAsync();
@@ -63,11 +65,17 @@ namespace AppY.Controllers
                                             IQueryable<IGrouping<DateTime, DiscussionMessage>>?  Messages_Preview = _messages.GetMessages(Id, CurrentUserId, 0, 35);
                                             if(Messages_Preview != null) Messages = await Messages_Preview.ToListAsync();
                                         }
+                                        if(PinnedMessagesCount > 0)
+                                        {
+                                            FirstPinnedMessageInfo = await _messages.GetPinnedMessageInfoAsync(Id, 0);
+                                        }
 
                                         ViewBag.UserInfo = UserInfo;
                                         ViewBag.AutodeleteDelayValue = _user.AutodeleteDelay(UserInfo.AreMessagesAutoDeletable);
                                         ViewBag.SecondUserInfo = SecondUserInfo;
                                         ViewBag.ChatInfo = ChatInfo;
+                                        ViewBag.PinnedMessagesCount = PinnedMessagesCount;
+                                        ViewBag.FirstPinnedMessageInfo = FirstPinnedMessageInfo;
                                         ViewBag.PasswordSettings = ChatPasswordInfo;
                                         ViewBag.IsChatLocked = ChatPasswordInfo != null ? true : false;
                                         ViewBag.IsMuted = IsMuted;

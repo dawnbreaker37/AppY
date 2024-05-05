@@ -9,6 +9,7 @@ namespace AppY.Models
         [MaxLength(3400)]
         public string? Text { get; set; }
         public DateTime SentAt { get; set; }
+        public DateTime? PinnedAt { get; set; }
         public int IsAutodeletable { get; set; }
         public bool IsPinned { get; set; }
         public bool IsEdited { get; set; }

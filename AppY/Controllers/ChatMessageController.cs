@@ -17,6 +17,21 @@ namespace AppY.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> IsMessagePinned(int Id)
+        {
+            bool Result = await _message.IsPinnedAsync(Id);
+            return Json(new { success = true, result = Result, id = Id });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPinnedMessageInfo(int Id, int SkipCount)
+        {
+            DiscussionMessage? PinnedMesageInfo = await _message.GetPinnedMessageInfoAsync(Id, SkipCount);
+            if (PinnedMesageInfo != null) return Json(new { success = true, result = PinnedMesageInfo, skipCount = SkipCount });
+            else return Json(new { success = false, alert = "Unable to get any info about next pinned message" });
+        }
+
+        [HttpGet]
         public async Task<IActionResult> GetMessageInfo(int Id, int UserId)
         {
             DiscussionMessage? Result = await _message.GetMessageInfoAsync(Id, UserId);

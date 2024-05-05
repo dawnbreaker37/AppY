@@ -79,6 +79,13 @@ namespace AppY.Controllers
             else return Json(new { success = false, alert = "Sorry, but we're unable to get any information about that message" });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> IsMessagePinned(int Id)
+        {
+            bool Result = await _messages.IsPinnedAsync(Id);
+            return Json(new { success = true, id = Id, result = Result });
+        }
+
         [HttpPost]
         public async Task<IActionResult> Edit(SendEdit Model)
         {
@@ -125,9 +132,9 @@ namespace AppY.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Pin(int Id, int UserId)
+        public async Task<IActionResult> Pin(int Id, int DiscussionOrChatId, int UserId)
         {
-            int Result = await _messages.PinMessageAsync(Id, UserId);
+            int Result = await _messages.PinMessageAsync(Id, DiscussionOrChatId, UserId);
             if (Result > 0) return Json(new { success = true, alert = "Message has been successfully pinned", id = Result });
             else return Json(new { success = false, alert = "Sorry, but you can't pin this message" });
         }

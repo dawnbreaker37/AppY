@@ -224,11 +224,11 @@ namespace AppY.Repositories
             return null;
         }
 
-        public async override Task<int> PinMessageAsync(int Id, int UserId)
+        public async override Task<int> PinMessageAsync(int Id, int DiscussionOrChatId, int UserId)
         {
             if(Id > 0 && UserId > 0)
             {
-                bool CheckUsersAccess = await _context.DiscussionUsers.AsNoTracking().AnyAsync(u => u.UserId == UserId && u.AccessLevel > 0);
+                bool CheckUsersAccess = await _context.DiscussionUsers.AsNoTracking().AnyAsync(u => u.UserId == UserId && u.DiscussionId == DiscussionOrChatId && u.AccessLevel > 0);
                 if(CheckUsersAccess)
                 {
                     int Result = await _context.DiscussionMessages.AsNoTracking().Where(dm => dm.Id == Id && !dm.IsDeleted).ExecuteUpdateAsync(d => d.SetProperty(d => d.IsPinned, true).SetProperty(d => d.PinnedAt, DateTime.Now));
@@ -242,7 +242,7 @@ namespace AppY.Repositories
         {
             if (Id > 0 && DiscussionOrChatId > 0 && UserId > 0)
             {
-                bool CheckUsersAccess = await _context.DiscussionUsers.AsNoTracking().AnyAsync(u => u.UserId == UserId && u.AccessLevel > 0);
+                bool CheckUsersAccess = await _context.DiscussionUsers.AsNoTracking().AnyAsync(u => u.UserId == UserId && u.DiscussionId == DiscussionOrChatId && u.AccessLevel > 0);
                 if (CheckUsersAccess)
                 {
                     DateTime? NullDate = null;
@@ -275,6 +275,11 @@ namespace AppY.Repositories
             int Result = await _context.DiscussionMessages.AsNoTracking().Where(d => d.RepliedMessageId == Id).ExecuteUpdateAsync(d => d.SetProperty(d => d.RepliesMsgShortText, Text));
             if (Result > 0) return Id;
             else return 0;
+        }
+
+        public async override Task<bool> IsPinnedAsync(int Id)
+        {
+            return await _context.DiscussionMessages.AsNoTracking().AnyAsync(d => d.Id == Id && !d.IsDeleted && d.IsPinned);
         }
     }
 }

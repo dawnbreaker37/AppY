@@ -6,6 +6,7 @@
     User? SecondUserInfo = ViewBag.SecondUserInfo;
     Chat? ChatInfo = ViewBag.ChatInfo;
     List<IGrouping<DateTime, DiscussionMessage>>? ChatMessages = ViewBag.Messages;
+    DiscussionMessage? FirstPinnedMessage = ViewBag.FirstPinnedMessageInfo;
     bool IsMuted = ViewBag.IsMuted;
 }
 
@@ -21,6 +22,9 @@
         <form method="get" asp-controller="ChatMessage" asp-action="GetMessageInfo" id="GetChatMessageInfo_Form">
             <input type="hidden" name="Id" id="CGMI_Id_Val" value="0" />
             <input type="hidden" name="UserId" value="@UserInfo.Id" />
+        </form>
+        <form method="get" asp-controller="ChatMessage" asp-action="IsMessagePinned" id="IsChatMessagePinned_Form">
+            <input type="hidden" name="Id" id="IMP_Id_Val" value="0" />
         </form>
         <form method="post" asp-controller="Chat" asp-action="Mute" id="MuteTheChat_Form">
             <input type="hidden" name="Id" value="@ChatInfo.Id" />
@@ -65,7 +69,6 @@
                 <div class="d-none">
                     <input type="hidden" name="FromChatId" id="Forward_FromChatId_Val" value="@ChatInfo.Id" />
                     <input type="hidden" name="ToChatId" id="Forward_ToChatId_Val" value="0" />
-                    <input type="hidden" name="MessageId" id="Forward_MsgId_Val" value="0" />
                 </div>
                 <div class="hstack gap-3">
                     <button type="button" class="btn btn-standard btn-sm"> <i class="fa-solid fa-align-left"></i> </button>
@@ -367,6 +370,38 @@
         <span class="h5 text-truncate p-1 discussion-header w-75" id="Preloaded_Container_ShowBox-Open">@ChatInfo.Name</span>
         <div></div>
         <small class="card-text text-muted ms-1 btn-set-status" id="ChatStatusBar_Lbl"><span class="status-slider" id="StatusBar_Lbl-0">@SecondUserInfo.LastSeenText</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">chat with @SecondUserInfo.PseudoName</span><span class="status-slider" id="StatusBar_Lbl-2" style="display: none;">tap to edit settings</span></small>
+        @if(FirstPinnedMessage != null)
+        {
+            <div class="box-container ps-1 pe-1 mt-1" id="PinnedMessages_Box">
+                <div class="float-end ms-1">
+                    <form method="get" asp-controller="ChatMessage" asp-action="GetPinnedMessageInfo" id="GetChatPinnedMessageInfo_Form">
+                        <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                        <input type="hidden" name="SkipCount" id="GCPMI_SkipCount_Val" value="1" />
+                        <button type="submit" class="btn btn-standard btn-sm">Next <i class="fa-solid fa-angle-right"></i> </button>
+                    </form>
+                </div>
+                <small class="card-text fw-500 pt-1"> <i class="fa-solid fa-thumbtack fa-rotate-by text-primary me-1" style="--fa-rotate-angle: 45deg;"></i> Pinned Message, <span id="PinnedMessagesCurrentNumber_Span">1</span> of <span id="PinnedMessagesCount_Span">@ViewBag.PinnedMessagesCount</span></small>
+                <div class="box-container" id="CurrentPinnedMessageInfo_Box">
+                    <small class="card-text text-muted text-truncate message-label discussion-alternative-options" id="CurrentPinnedMessagesText_Lbl" data-bs-msg-id="@FirstPinnedMessage.Id">@FirstPinnedMessage.Text</small>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="box-container ps-1 pe-1 mt-1" id="PinnedMessages_Box" style="display: none;">
+                <div class="float-end ms-1">
+                    <form method="get" asp-controller="ChatMessage" asp-action="GetPinnedMessageInfo" id="GetPinnedMessageInfo_Form">
+                        <input type="hidden" name="Id" value="@ChatInfo.Id" />
+                        <input type="hidden" name="SkipCount" id="GCPMI_SkipCount_Val" value="1" />
+                        <button type="submit" class="btn btn-standard btn-sm">Next <i class="fa-solid fa-angle-right"></i> </button>
+                    </form>
+                </div>
+                <small class="card-text fw-500 pt-1"> <i class="fa-solid fa-thumbtack fa-rotate-by text-primary me-1" style="--fa-rotate-angle: 45deg;"></i> Pinned Message, <span id="PinnedMessagesCurrentNumber_Span">1</span> of <span id="PinnedMessagesCount_Span">@ViewBag.PinnedMessagesCount</span></small>
+                <div class="box-container" id="CurrentPinnedMessageInfo_Box">
+                    <small class="card-text text-muted text-truncate message-label discussion-alternative-options" id="CurrentPinnedMessagesText_Lbl">No Currently Pinned Message</small>
+                </div>
+            </div>
+        }
     </div>
     <div class="box-container p-2 pt-1 mt-1 discussion-box" id="Prealoded_Container-Box">
         <div class="box-container" id="Messages_Box">
@@ -564,8 +599,9 @@
         <div class="box-container">
             <div class="d-none">
                 <input type="hidden" class="got-msg-id-value" id="CurrentGotChatMsg_Id_Val" value="0" />
+                <div class="d-none" id="CurrentChatMsg_FullText_Val"></div>
             </div>
-            <button type="button" class="btn btn-standard btn-sm copy-to-clipboard float-end" id="ChatOptionMessageText_Lbl-CopyToTheClipboard"> <i class="fa-regular fa-copy text-primary"></i> Copy</button>
+            <button type="button" class="btn btn-standard btn-sm copy-to-clipboard float-end" id="CurrentChatMsg_FullText_Val-CopyToTheClipboard"> <i class="fa-regular fa-copy text-primary"></i> Copy</button>
             <div class="float-end ms-1" id="PinTheMessage_Box">
                 <form method="post" asp-controller="ChatMessage" asp-action="Pin" id="PinTheChatMessage_Form">
                     <input type="hidden" name="Id" id="PCM_Id_Val" value="0" />
@@ -774,6 +810,27 @@
         });
     });
 
+    document.getElementById("PinTheChatMessage_Form").addEventListener("submit", function () {
+        event.preventDefault();
+        const messageId = parseInt($("#PCM_Id_Val").val());
+        const userId = parseInt($("#SM_UserId_Val").val());
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        const chatId = parseInt($("#SM_ChatId_Val").val());
+        hubConnection.invoke("PinTheMessage", messageId, userId, receiverId, chatId).catch(function (err) {
+            console.log(err.toString());
+        });
+    });
+    document.getElementById("UnpinTheChatMessage_Form").addEventListener("submit", function () {
+        event.preventDefault();
+        const messageId = parseInt($("#UCM_Id_Val").val());
+        const userId = parseInt($("#SM_UserId_Val").val());
+        const receiverId = $("#SM_ReceiverId_Val").val();
+        const chatId = parseInt($("#SM_ChatId_Val").val());
+        hubConnection.invoke("UnpinTheMessage", messageId, userId, receiverId, chatId).catch(function (err) {
+            console.log(err.toString());
+        });
+    });
+
     document.getElementById("SendMessage_SbmtBtn").addEventListener("click", function () {
         const message = $("#SendMessage_Text_Val").val();
         const senderId = parseInt($("#SM_UserId_Val").val());
@@ -831,11 +888,11 @@
         event.preventDefault();
         const toChatId = parseInt($("#Forward_ToChatId_Val").val());
         const fromChatId = parseInt($("#Forward_FromChatId_Val").val());
-        const messageId = parseInt($("#Forward_MsgId_Val").val());
+        const messageId = parseInt($("#CurrentGotChatMsg_Id_Val").val());
         const userId = parseInt($("#SM_UserId_Val").val());
         const currentChatMessageId = parseInt($("#SM_CurrentChatMessageId_Val").val());
         const captionText = $("#Forward_Caption_Val").val();
-        let forwardingText = $("#ForwardingMsgText_Lbl").html();
+        let forwardingText = textUncoder($("#ForwardingMsgText_Lbl").html());
         forwardingText = textUncoder(forwardingText);
 
         //MessageId, int ToChatId, int FromChatId, string? Caption, string? ForwardingText, int UserId
@@ -1062,13 +1119,10 @@
             }, 1500);
 
             let sentMessagesCount = parseInt(document.getElementById("SentMessagesCount_Val").value);
-            if (sentMessagesCount > 0) {
-                document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
-            }
-            else {
+            if (sentMessagesCount <= 0) {
                 slideToLeft("NoSentMessages_Box");
+                $("#NoSentMessages_Box").fadeOut(300);
                 document.getElementById("HaveSentMessage_Box").style.display = "block";
-                document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
             }
             sentMessagesCount++;
             document.getElementById("SentMessagesCount_Val").value = sentMessagesCount;
@@ -1140,14 +1194,13 @@
             messageNotMainBox.appendChild(statsBox);
             messageMainBox.appendChild(messageNotMainBox);
 
+            document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
             let sentMessagesCount = parseInt(document.getElementById("SentMessagesCount_Val").value);
-            if (parseInt(document.getElementById("SentMessagesCount_Val").value) > 0) {
-                document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
-            }
-            else {
+            if (sentMessagesCount <= 0) {
                 slideToLeft("NoSentMessages_Box");
                 slideToRight("HaveSentMessages_Box");
-                document.getElementById("HaveSentMessage_Box").appendChild(messageMainBox);
+                $("#HaveSentMessages_Box").fadeIn(250);
+                $("#NoSentMessages_Box").fadeOut(250);
             }
             sentMessagesCount++;
             document.getElementById("SentMessagesCount_Val").value = sentMessagesCount;
@@ -1416,46 +1469,123 @@
         sentMessagesCount--;
         slideToLeft(id + "-ChatMsgBox");
         if (sentMessagesCount <= 0) {
-            let div = $("<div class='box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto' id='NoSentMessages_Box'></div>");
-            let icon = $("<h1 class='h1'> <i class='fa-regular fa-comments text-primary'></i> </h1>");
-            let title = $("<h3 class='h3 style-font'>No Sent Messages</h3>");
-            let description = $("<small class='card-text text-muted'>send your first message in this chat</small>");
-            div.append(icon);
-            div.append(title);
-            div.append(description);
-
+            slideToLeft("HaveSentMessage_Box");
             setTimeout(function () {
-                $("#" + id + "-ChatMsgBox").remove();
-                $("#HaveSentMessage_Box").empty();
-                $("#Messages_Box").append(div);
-            }, 400);
+                slideToRight("NoSentMessages_Box");
+            }, 700);
         }
         $("#SentMessagesCount_Val").val(sentMessagesCount);
         insideBoxClose(true, null);
     });
 
     hubConnection.on("DeleteMessage", function (id, chatId) {
-        let currentChatId=$("#CurrentChatId_Val").val();
+        let currentChatId = $("#CurrentChatId_Val").val();
         if(currentChatId == chatId) {
             let sentMessagesCount = parseInt($("#SentMessagesCount_Val").val());
             sentMessagesCount--;
             slideToLeft(id + "-ChatMsgBox");
             if (sentMessagesCount <= 0) {
-                let div = $("<div class='box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto' id='NoSentMessages_Box'></div>");
-                let icon = $("<h1 class='h1'> <i class='fa-regular fa-comments text-primary'></i> </h1>");
-                let title = $("<h3 class='h3 style-font'>No Sent Messages</h3>");
-                let description = $("<small class='card-text text-muted'>send your first message in this chat</small>");
-                div.append(icon);
-                div.append(title);
-                div.append(description);
-
+                slideToLeft("HaveSentMessage_Box");
                 setTimeout(function () {
-                    $("#" + id + "-ChatMsgBox").remove();
-                    $("#HaveSentMessage_Box").empty();
-                    $("#Messages_Box").append(div);
-                }, 400);
+                    slideToRight("NoSentMessages_Box");
+                }, 700);
             }
             $("#SentMessagesCount_Val").val(sentMessagesCount);
+        }
+    });
+
+    hubConnection.on("Caller_PinTheMessage", function (id) {
+        let text = $("#" + id + "-ChatOptionMsgText_Lbl").text();
+        let pinnedMessagesCount = parseInt($("#PinnedMessagesCount_Span").text());
+        pinnedMessagesCount++;
+        textDecoder($("#" + id + "-ChatOptionMsgText_Lbl").html(), "CurrentPinnedMessagesText_Lbl");
+        if (pinnedMessagesCount == 1) {
+            $("#PinnedMessages_Box").slideDown(250);
+        }
+        $("#PinnedMessagesCurrentNumber_Span").text("1");
+        $("#PinnedMessagesCount_Span").text(pinnedMessagesCount);
+        let chatAlertDiv = $("<div class='grouping-box mx-auto text-center'></div>");
+        let chatAlertText = $("<small class='card-text text-muted'></small>");
+        chatAlertText.html(text.length > 50 ? text.substring(0, 50) + "..." : text + " message has been pinned");
+        chatAlertDiv.append(chatAlertText);
+        $("#HaveSentMessage_Box").append(chatAlertDiv);
+
+        insideBoxClose(true, null);
+    });
+
+    hubConnection.on("PinTheMessage", function (id, chatId) {
+        let currentChatId = $("#CurrentChatId_Val").val();
+        if (currentChatId == chatId) {
+            let text = $("#" + id + "-ChatOptionMsgText_Lbl").text();
+            let pinnedMessagesCount = parseInt($("#PinnedMessagesCount_Span").text());
+            pinnedMessagesCount++;
+            textDecoder($("#" + id + "-ChatOptionMsgText_Lbl").html(), "CurrentPinnedMessagesText_Lbl");
+            if (pinnedMessagesCount == 1) {
+                $("#PinnedMessages_Box").slideDown(250);
+            }
+            $("#PinnedMessagesCurrentNumber_Span").text("1");
+            $("#PinnedMessagesCount_Span").text(pinnedMessagesCount);
+            let chatAlertDiv = $("<div class='grouping-box mx-auto text-center'></div>");
+            let chatAlertText = $("<small class='card-text text-muted'></small>");
+            chatAlertText.html(text.length > 50 ? text.substring(0, 50) + "..." : text + " message has been pinned");
+            chatAlertDiv.append(chatAlertText);
+            $("#HaveSentMessage_Box").append(chatAlertDiv);
+        }
+    });
+
+    hubConnection.on("Caller_UnpinTheMessage", function (id, prevMessage) {
+        console.log(id, prevMessage);
+        let oldText = $("#" + prevMessage + "-ChatOptionMsgText_Lbl").text();
+        let newText = $("#" + id + "-ChatOptionMsgText_Lbl").text();
+        let pinnedMessagesCount = parseInt($("#PinnedMessagesCount_Span").text());
+        pinnedMessagesCount--;
+
+        if (id > 0) {
+            textDecoder($("#" + id + "-ChatOptionMsgText_Lbl").html(), "CurrentPinnedMessagesText_Lbl");
+        }
+        if (pinnedMessagesCount <= 0) {
+            $("#PinnedMessages_Box").slideUp(250); 
+            setTimeout(function () {
+                $("#CurrentPinnedMessagesText_Lbl").empty();
+            }, 400);
+        }
+        $("#PinnedMessagesCurrentNumber_Span").text("1");
+        $("#PinnedMessagesCount_Span").text(pinnedMessagesCount);
+
+        let chatAlertDiv = $("<div class='grouping-box mx-auto text-center'></div>");
+        let chatAlertText = $("<small class='card-text text-muted'></small>");
+        chatAlertText.html(oldText.length > 50 ? oldText.substring(0, 50) + "..." : oldText + " message has been unpinned");
+        chatAlertDiv.append(chatAlertText);
+        $("#HaveSentMessage_Box").append(chatAlertDiv);
+
+        insideBoxClose(true, null);
+    });
+
+    hubConnection.on("UnpinTheMessage", function (id, prevId, chatId) {
+        let currentChatId = $("#CurrentChatId_Val").val();
+        if (currentChatId == chatId) {
+            let oldText = $("#" + prevId + "-ChatOptionMsgText_Lbl").text();
+            let newText = $("#" + id + "-ChatOptionMsgText_Lbl").text();
+            let pinnedMessagesCount = parseInt($("#PinnedMessagesCount_Span").text());
+            pinnedMessagesCount--;
+
+            if (id > 0) {
+                textDecoder($("#" + id + "-ChatOptionMsgText_Lbl").html(), "CurrentPinnedMessagesText_Lbl");
+            }
+            if (pinnedMessagesCount <= 0) {
+                $("#PinnedMessages_Box").slideUp(250);
+                setTimeout(function () {
+                    $("#CurrentPinnedMessagesText_Lbl").empty();
+                }, 400);
+            }
+            $("#PinnedMessagesCurrentNumber_Span").text("1");
+            $("#PinnedMessagesCount_Span").text(pinnedMessagesCount);
+
+            let chatAlertDiv = $("<div class='grouping-box mx-auto text-center'></div>");
+            let chatAlertText = $("<small class='card-text text-muted'></small>");
+            chatAlertText.html(oldText.length > 50 ? oldText.substring(0, 50) + "..." : oldText + " message has been unpinned");
+            chatAlertDiv.append(chatAlertText);
+            $("#HaveSentMessage_Box").append(chatAlertDiv);
         }
     });
 

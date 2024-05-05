@@ -28,6 +28,9 @@
             <input type="hidden" name="Id" id="GMI_Id_Val" value="0" />           
             <input type="hidden" name="UserId" value="@UserInfo.Id" />           
         </form>
+        <form method="get" asp-controller="DiscussionMessage" asp-action="IsMessagePinned" id="IsDiscussionMessagePinned_Form">
+            <input type="hidden" name="Id" id="DMP_Id_Val" value="0" />
+        </form>
         <form method="post" asp-controller="DiscussionMessage" asp-action="MarkasRead" id="MarkasReadDiscussionMessage_Form">
             <input type="hidden" name="Id" id="MAR_Id_Val" value="0" />
             <input type="hidden" name="UserId" value="@UserInfo.Id" />
@@ -516,41 +519,41 @@
         {
             <small class="card-text text-muted ms-1 btn-set-status" id="DiscussionStatusBar_Lbl"><span class="card-text text-muted" id="IsMutedHeader_Span" style="display: none;"></span><span class="status-slider" id="StatusBar_Lbl-0">@ViewBag.MembersCount.ToString("N0") member(s)</span><span class="status-slider" id="StatusBar_Lbl-1" style="display: none;">@MessagesCount messages</span><span class="status-slider" id="StatusBar_Lbl-2" style="display: none;">@DiscussionInfo.Status</span></small>
         }
-        <div class="box-container ps-1 pe-1" id="TextEditorIndicators_Box">
+        @if (FirstPinnedMessageInfo != null)
+        {
+            <div class="box-container ps-1 pe-1 mt-1" id="PinnedMessages_Box">
+                <div class="float-end ms-1">
+                    <form method="get" asp-controller="DiscussionMessage" asp-action="GetPinnedMessageInfo" id="GetPinnedMessageInfo_Form">
+                        <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                        <input type="hidden" name="SkipCount" id="GPMI_SkipCount_Val" value="1" />
+                        <button type="submit" class="btn btn-standard btn-sm">Next <i class="fa-solid fa-angle-right"></i> </button>
+                    </form>
+                </div>
+                <small class="card-text fw-500 pt-1"> <i class="fa-solid fa-thumbtack fa-rotate-by text-primary me-1" style="--fa-rotate-angle: 45deg;"></i> Pinned Message, <span id="PinnedMessagesCurrentNumber_Span">1</span> of <span id="PinnedMessagesCount_Span">@ViewBag.PinnedMessagesCount</span></small>
+                <div class="box-container" id="CurrentPinnedMessageInfo_Box">
+                    <small class="card-text text-muted text-truncate message-label discussion-alternative-options" id="CurrentPinnedMessagesText_Lbl" data-bs-html="@FirstPinnedMessageInfo.Id">@FirstPinnedMessageInfo.Text</small>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="box-container ps-1 pe-1 mt-1" style="display: none;" id="PinnedMessages_Box">
+                <div class="float-end ms-1">
+                    <form method="get" asp-controller="DiscussionMessage" asp-action="GetPinnedMessageInfo" id="GetPinnedMessageInfo_Form">
+                        <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
+                        <input type="hidden" name="SkipCount" id="GPMI_SkipCount_Val" value="1" />
+                        <button type="submit" class="btn btn-standard btn-sm">Next <i class="fa-solid fa-angle-right"></i> </button>
+                    </form>
+                </div>
+                <small class="card-text fw-500 pt-1"> <i class="fa-solid fa-thumbtack fa-rotate-by text-primary me-1" style="--fa-rotate-angle: 45deg;"></i> Pinned Message <span id="PinnedMessagesCurrentNumber_Span">0</span> of <span id="PinnedMessagesCount_Span">0</span></small>
+                <div class="box-container" id="CurrentPinnedMessageInfo_Box">
+                    <small class="card-text text-muted text-truncate discussion-alternative-options" id="CurrentPinnedMessagesText_Lbl">Pinned message text...</small>
+                </div>
+            </div>
+        }
+        <div class="box-container ps-1 pe-1 mt-1" id="TextEditorIndicators_Box">
         </div>
     </div>
-    @if (FirstPinnedMessageInfo != null)
-    {
-        <div class="postheader-container p-2 bg-light" id="Preloaded_Container_PostHeader">
-            <div class="float-end ms-1">
-                <form method="get" asp-controller="DiscussionMessage" asp-action="GetPinnedMessageInfo" id="GetPinnedMessageInfo_Form">
-                    <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
-                    <input type="hidden" name="SkipCount" id="GPMI_SkipCount_Val" value="1" />
-                    <button type="submit" class="btn btn-standard btn-sm">Next <i class="fa-solid fa-angle-right"></i> </button>
-                </form>
-            </div>
-            <small class="card-text fw-500 pt-1"> <i class="fa-solid fa-thumbtack fa-rotate-by text-primary me-1" style="--fa-rotate-angle: 45deg;"></i> Pinned Message, <span id="PinnedMessagesCurrentNumber_Span">1</span> of <span id="PinnedMessagesCount_Span">@ViewBag.PinnedMessagesCount</span></small>
-            <div class="box-container" id="CurrentPinnedMessageInfo_Box">
-                <small class="card-text text-muted text-truncate message-label discussion-alternative-options" id="CurrentPinnedMessagesText_Lbl" data-bs-html="@FirstPinnedMessageInfo.Id">@FirstPinnedMessageInfo.Text</small>
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="postheader-container p-2 bg-light" id="Preloaded_Container_PostHeader" style="display: none; margin-left: -2500px;">
-            <div class="float-end ms-1">
-                <form method="get" asp-controller="DiscussionMessage" asp-action="GetPinnedMessageInfo" id="GetPinnedMessageInfo_Form">
-                    <input type="hidden" name="Id" value="@DiscussionInfo.Id" />
-                    <input type="hidden" name="SkipCount" id="GPMI_SkipCount_Val" value="1" />
-                    <button type="submit" class="btn btn-standard btn-sm">Next <i class="fa-solid fa-angle-right"></i> </button>
-                </form>
-            </div>
-            <small class="card-text fw-500 pt-1"> <i class="fa-solid fa-thumbtack fa-rotate-by text-primary me-1" style="--fa-rotate-angle: 45deg;"></i> Pinned Message <span id="PinnedMessagesCurrentNumber_Span">0</span> of <span id="PinnedMessagesCount_Span">0</span></small>
-            <div class="box-container" id="CurrentPinnedMessageInfo_Box">
-                <small class="card-text text-muted text-truncate discussion-alternative-options" id="CurrentPinnedMessagesText_Lbl">Pinned message text...</small>
-            </div>
-        </div>
-    }
     <div class="box-container p-2 pt-1 mt-1 discussion-box" id="Preloaded_Container-Box">
         <div class="box-container" id="Messages_Container_Box">
             <div class="box-container p-3 pt-4 pb-4 bg-light mt-2 mb-2 text-center mx-auto my-auto" style="display: none;" id="NoSentMessages_Box">
@@ -677,11 +680,13 @@
                 <div class="box-container">
                     <div class="d-none">
                         <input type="hidden" class="got-msg-id-value" id="CurrentGotDiscussionMsg_Id_Val" value="0" />
+                        <div class="d-none" id="CurrentGotDiscussionMsg_FullText_Val"></div>
                     </div>
-                    <button type="button" class="btn btn-standard btn-sm copy-to-clipboard float-end" id="DiscussionOptionMessageText_Lbl-CopyToTheClipboard"> <i class="fa-regular fa-copy text-primary"></i> Copy</button>
+                    <button type="button" class="btn btn-standard btn-sm copy-to-clipboard float-end" id="CurrentGotDiscussionMsg_FullText_Val-CopyToTheClipboard"> <i class="fa-regular fa-copy text-primary"></i> Copy</button>
                     <div class="float-end ms-1" id="PinTheMessage_Box">
                         <form method="post" asp-controller="DiscussionMessage" asp-action="Pin" id="PinTheDiscussionMessage_Form">
                             <input type="hidden" name="Id" id="PDM_Id_Val" value="0" />
+                            <input type="hidden" name="DiscussionOrChatId" value="@DiscussionInfo.Id" />
                             <input type="hidden" name="UserId" value="@UserInfo.Id" />
                             <button type="submit" class="btn btn-standard btn-sm float-end me-1"> <i class="fa-solid fa-thumbtack text-primary"></i> Pin</button>
                         </form>
@@ -713,7 +718,6 @@
                                 <form method="get" asp-controller="Answer" asp-action="GetDiscussionMessageAnswers" id="GetDiscussionMessageAnswers_Form">
                                     <div class="d-none">
                                         <input type="hidden" name="Id" id="GDMA_Id_Val" value="0" />
-                                        <input type="hidden" name="UserId" id="GDMA_UserId_Val" value="0" />
                                         <input type="hidden" name="SkipCount" id="GDMA_SkipCount_Val" value="0" />
                                         <input type="hidden" name="MessageText" id="GDMA_MsgText_Val" />
                                     </div>
