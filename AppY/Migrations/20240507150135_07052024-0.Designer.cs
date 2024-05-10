@@ -4,6 +4,7 @@ using AppY.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppY.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20240507150135_07052024-0")]
+    partial class _070520240
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -550,6 +553,27 @@ namespace AppY.Migrations
                     b.ToTable("Reactions");
                 });
 
+            modelBuilder.Entity("AppY.Models.SavedMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SavedMessages");
+                });
+
             modelBuilder.Entity("AppY.Models.SavedMessageContent", b =>
                 {
                     b.Property<int>("Id")
@@ -558,13 +582,9 @@ namespace AppY.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Addition")
-                        .HasMaxLength(600)
-                        .HasColumnType("nvarchar(600)");
-
                     b.Property<string>("Badge")
-                        .HasMaxLength(28)
-                        .HasColumnType("nvarchar(28)");
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
 
                     b.Property<int?>("ChatMessageId")
                         .HasColumnType("int");
@@ -581,15 +601,15 @@ namespace AppY.Migrations
                     b.Property<bool>("IsPinned")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("Note")
+                        .HasMaxLength(900)
+                        .HasColumnType("nvarchar(900)");
 
-                    b.Property<string>("Text")
-                        .HasMaxLength(3000)
-                        .HasColumnType("nvarchar(3000)");
-
-                    b.Property<int>("UserId")
+                    b.Property<int>("SavedMessageId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -597,7 +617,7 @@ namespace AppY.Migrations
 
                     b.HasIndex("DiscussionMessageId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("SavedMessageId");
 
                     b.ToTable("SavedMessagesContent");
                 });
@@ -780,6 +800,9 @@ namespace AppY.Migrations
                         .HasMaxLength(6)
                         .HasColumnType("nvarchar(6)");
 
+                    b.Property<int?>("SavedMessageId")
+                        .HasColumnType("int");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -803,6 +826,8 @@ namespace AppY.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("SavedMessageId");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -1155,6 +1180,17 @@ namespace AppY.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("AppY.Models.SavedMessage", b =>
+                {
+                    b.HasOne("AppY.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AppY.Models.SavedMessageContent", b =>
                 {
                     b.HasOne("AppY.Models.ChatMessage", "ChatMessage")
@@ -1165,9 +1201,9 @@ namespace AppY.Migrations
                         .WithMany()
                         .HasForeignKey("DiscussionMessageId");
 
-                    b.HasOne("AppY.Models.User", "User")
+                    b.HasOne("AppY.Models.SavedMessage", "SavedMessage")
                         .WithMany("SavedMessageContents")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("SavedMessageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1175,7 +1211,7 @@ namespace AppY.Migrations
 
                     b.Navigation("DiscussionMessage");
 
-                    b.Navigation("User");
+                    b.Navigation("SavedMessage");
                 });
 
             modelBuilder.Entity("AppY.Models.ScheduledMessage", b =>
@@ -1206,6 +1242,15 @@ namespace AppY.Migrations
                     b.Navigation("SecretChat");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AppY.Models.User", b =>
+                {
+                    b.HasOne("AppY.Models.SavedMessage", "SavedMessage")
+                        .WithMany()
+                        .HasForeignKey("SavedMessageId");
+
+                    b.Navigation("SavedMessage");
                 });
 
             modelBuilder.Entity("ChatUser", b =>
@@ -1342,6 +1387,11 @@ namespace AppY.Migrations
                     b.Navigation("DiscussionMessageReactions");
                 });
 
+            modelBuilder.Entity("AppY.Models.SavedMessage", b =>
+                {
+                    b.Navigation("SavedMessageContents");
+                });
+
             modelBuilder.Entity("AppY.Models.User", b =>
                 {
                     b.Navigation("ChatUsers");
@@ -1353,8 +1403,6 @@ namespace AppY.Migrations
                     b.Navigation("LinkedAccounts");
 
                     b.Navigation("Notifications");
-
-                    b.Navigation("SavedMessageContents");
 
                     b.Navigation("ScheduledMessages");
 

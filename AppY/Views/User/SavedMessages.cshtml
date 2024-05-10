@@ -1,0 +1,431 @@
+﻿@model SavedMessageContent
+@{
+    ViewData["Title"] = "Saved Messages";
+
+    int MessagesCount = ViewBag.MessagesCount;
+}
+
+<div class="main-sidebar" id="Main_SideBar">
+    <div class="d-none">
+        <input type="hidden" id="SM_UserId_Val" value="@ViewBag.UserId" />
+        <form method="get" asp-controller="SavedMessage" asp-action="IsPinned" id="IsSavedMessagePinned_Form">
+            <input type="hidden" id="ISMP_Id_Val" value="0" />
+        </form>
+    </div>
+
+    <div class="smallside-box-container shadow-standard overflow-hidden" id="StarTheMessage_Container">
+        <div class="header-container p-2 text-center" id="StarTheMessage_Container-Header">
+            <div class="box-container float-start me-1">
+                <form method="post" asp-controller="SavedMessage" asp-action="Unstar" id="UnstarSavedMessage_Form">
+                    <input type="hidden" name="Id" id="USM_Id_Val" value="0" />
+                    <button type="submit" class="btn btn-standard-asset btn-light text-primary btn-sm"> <i class="fa-regular fa-star-half"></i> Unstar</button>
+                </form>
+            </div>
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="StarTheMessage_Container-Close"></button>
+            <span class="h5 text-truncate" id="StarTheMessage_Container-Header"> <i class="fa-regular fa-star text-primary"></i> Mark Your Message</span>
+            <div></div>
+            <small class="card-text text-muted">mark your messages with a short badge</small>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="StarTheMessage_Container-Box">
+            <div class="box-container bg-light p-2">
+                <div class="message-box">
+                    <div class="cur-user-msg-box">
+                        <div class="cur-user-styled-msg-box p-2">
+                            <span class="badge bg-light text-primary p-1 rounded-pill fw-normal"> <i class="fa-regular fa-star"></i> Urgent!</span>
+                            <p class="card-text white-space-on">This message is marked. Just have a look on it</p>
+                        </div>
+                        <div class="float-end me-1">
+                            <small class="card-text text-muted">recently</small>
+                            <small class="card-text text-primary"> <i class="fa-solid fa-check-double"></i> </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="message-box">
+                    <div class="cur-user-msg-box">
+                        <div class="cur-user-styled-msg-box p-2">
+                            <p class="card-text white-space-on">While this message is not marked. See the difference</p>
+                        </div>
+                        <div class="float-end me-1">
+                            <small class="card-text text-muted">recently</small>
+                            <small class="card-text text-primary"> <i class="fa-solid fa-check-double"></i> </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-container p-2">
+                    <div class="message-box">
+                        <div class="cur-user-msg-box">
+                            <div class="cur-user-styled-msg-box p-2">
+                                <span class="badge bg-light text-primary p-1 rounded-pill fw-normal" id="StarringTextBadge_Span"> <i class="fa-regular fa-star"></i> Starred</span>
+                                <p class="card-text white-space-on" id="StarringTextSample_Lbl">Text sample...</p>
+                            </div>
+                            <div class="float-end me-1">
+                                <small class="card-text text-muted">your text'll look like this</small>
+                                <small class="card-text text-primary"> <i class="fa-solid fa-check-double"></i> </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="box-container mt-2">
+                <div class="box-container mt-2">
+                    <form method="post" asp-controller="SavedMessage" asp-action="Star" id="StarSavedMessage_Form">
+                        <input type="hidden" name="Id" id="SSM_Id_Val" value="0" />
+                        <div class="form-floating">
+                            <input type="Text" name="Text" class="form-control" id="SSM_Text_Val" placeholder="Enter marking text here..." maxlength="12" value="Starred" />
+                            <label class="form-label fw-500" for="SSM_Text_Val">Marking Text</label>
+                        </div>
+                        <div class="mt-2">
+                            <button type="submit" class="btn btn-primary btn-standard-asset w-100">Set</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="smallside-box-container shadow-standard" id="Chats_Container">
+        <div class="header-container p-2 pb-0 text-center" id="Chats_Container-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Chats_Container-Close"></button>
+            <span class="h5 text-truncate p-1" id="Chats_Container_Header">Chats</span>
+            <div></div>
+            <small class="card-text text-muted" id="ChatsCount_Lbl"><span id="ChatsCount_Span">0</span> chat(s)</small>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="Chats_Container-Box">
+        </div>
+
+        <div class="box-container p-2 pt-1 w-100" id="MessageForwarding_Box" style="display: none;">
+            <div class="box-container bg-light">
+                <div class="w-100 p-2">
+                    <div class="other-user-reply-container mb-1">
+                        <small class="card-text fw-500"> <i class="fa-solid fa-reply"></i> Replied to</small>
+                        <p class="card-text white-space-on message-label" id="ForwardingMsgText_Lbl">Forwarding Message...</p>
+                    </div>
+                    <p class="card-text white-space-on message-label" id="ForwardingMsgCaption_Lbl" style="display: none;">Additional Caption</p>
+                </div>
+            </div>
+            <div class="ms-1">
+                <small class="card-text text-muted">choose any chat from list to forward</small>
+            </div>
+        </div>
+        <div class="box-container bottom-0 p-2">
+            <div class="d-none">
+                <input type="hidden" name="FromChatId" id="Forward_FromChatId_Val" value="0" />
+                <input type="hidden" name="ToChatId" id="Forward_ToChatId_Val" value="0" />
+            </div>
+            <div class="hstack gap-3">
+                <button type="button" class="btn btn-standard btn-sm" disabled> <i class="fa-solid fa-align-left"></i> </button>
+                <textarea class="form-control rounded-pill shadow-none" placeholder="Add a caption here..." rows="1" maxlength="3400" name="Caption" id="Forward_Caption_Val"></textarea>
+                <button type="submit" class="btn btn-standard-asset btn-primary btn-sm rounded-pill" id="ForwardAMessageSbmt_Btn" disabled>Forward</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-container mh-max shadow-standard" id="Preloaded_Container">
+    <div class="box-container p-2" style="display: none; margin-left: -1200px;" id="Preloaded_Container_ShowBox">
+        <button type="button" class="btn btn-light btn-standard-asset btn-sm float-start me-1 discussion-header-return" id="Preloaded_Container_ShowBox-Return">Back</button>
+        <button type="button" class="btn btn-standard-asset btn-sm float-end ms-1 btn-light" id="AboutSecretChats_Collapse-Trigger" data-bs-toggle="collapse" data-bs-target="#AboutSecretChats_Collapse" aria-expanded="false" aria-controls="AboutSavedMessages_Collapse">About</button>
+        <div class="box-container text-center">
+            <div class="image-picture-none-container text-center bg-light mx-auto" id="UnpicturedAvatar_Box">
+                <div class="unpictured-container-label text-primary" id="UnpicturedAvatar_Lbl"> <i class="far fa-bookmark"></i> </div>
+            </div>
+            <span class="h3 text-truncate">Saved Messages</span>
+            <div></div>
+            <small class="card-text text-muted"><span id="SavedMessagesCount_Span">@MessagesCount</span> saved messages, without password protection</small>
+        </div>
+            <div class="box-container mt-4">
+                <div class="row">
+                    <div class="col">
+                        <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-solid fa-magnifying-glass text-primary"></i> <br />Search</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-solid fa-shield-halved text-primary"></i> <br />Protect</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-solid fa-broom text-primary"></i> <br />Clear</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard-asset btn-light w-100"> <i class="fa-solid fa-circle-info text-primary"></i> <br />Messages</button>
+                    </div>
+                </div>
+            </div>
+    </div>
+    <div class="header-container special-container-header bg-light p-2" id="Preloaded_Container-Header">
+        <span class="h5 text-truncate p-1 discussion-header w-75" id="Preloaded_Container_ShowBox-Open">Saved Messages</span>
+        <div></div>
+        @if(MessagesCount <= 0)
+        {
+            <small class="card-text text-muted ms-1" id="SavedMessagesCount_Lbl">no saved messages</small>
+        }
+        else
+        {
+            <small class="card-text text-muted ms-1" id="SavedMessagesCount_Lbl">@MessagesCount saved messages</small>
+        }
+    </div>
+    <div class="box-container p-2 pt-1 mt-1 discussion-box" id="Preloaded_Container-Box">
+        @if (MessagesCount <= 0)
+        {
+            <div class="box-container" id="HaveSavedMessages_Box" style="display: none">
+            </div>
+            <div class="box-container shadow-sm mx-auto text-center bg-transparent blur-filter p-2" id="NoSavedMessages_Box">
+                <h1 class="h1 text-primary"> <i class="far fa-folder-open"></i> </h1>
+                <h4 class="h4">Nothing Here</h4>
+                <small class="card-text text-muted">You haven't got any saved message for now</small>
+                <div class="box-container bg-light mt-3 p-2">
+                    <h6 class="h6"> <span class="badge bg-primary text-light p-1 ps-2 pe-2 rounded-pill fw-normal"> <i class="far fa-bookmark"></i> Saved</span> What for is this designed</h6>
+                    <small class="card-text">Forward to this chat any import messages</small>
+                    <br />
+                    <small class="card-text">Write your own notes here. There'll be completely safe</small>
+                    <br />
+                    <small class="card-text">Use it for backing up. Forward any message from here</small>
+                    <br />
+                    <small class="card-text">Write and test any commands here</small>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="box-container" id="HaveSavedMessages_Box">
+                @foreach(SavedMessageContent message in ViewBag.Messages)
+                {
+                    <div class="message-box" id="@message.Id-SavedMsg_Box">
+                        <div class="cur-user-msg-box" id="@message.Id-SavedMsgNotMain_Box">
+                            <div class="cur-user-styled-msg-box p-2">
+                                @if(message.Badge != null)
+                                {
+                                    <span class="badge bg-light text-primary fw-normal rounded-pill mb-1" id="@message.Id-SaveMsgStarBadge_Span"> <i class="fa-regular fa-star"></i> @message.Badge</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-primary fw-normal rounded-pill mb-1" id="@message.Id-SaveMsgStarBadge_Span" style="display: none;"></span>
+                                }
+                                <p class="card-text white-space-on message-label saved-message-options" id="@message.Id-SavedMsgText_Lbl">@message.Text</p>
+                            </div>
+                            <div class="float-end me-1">
+                                <input type="hidden" id="@message.Id-SavedMsgFullDate_Val" value="@message.SentAt.ToString("dd/MM, HH:mm")" />
+                                <small class="card-text text-muted">@message.SentAt.ToShortTimeString()</small>
+                                @if (message.IsEdited)
+                                {
+                                    <small class="card-text text-muted" id="@message.Id-SavedMsgIsEdited_Lbl">edited</small>
+                                }
+                                else
+                                {
+                                    <small class="card-text text-muted" style="display: none;" id="@message.Id-SavedMsgIsEdited_Lbl">edited</small>
+                                }
+                                <small class="card-text text-primary" id="@message.Id-SavedMsgIsChecked_Lbl"> <i class="fa-solid fa-check-double"></i> </small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="box-container shadow-sm mx-auto text-center bg-transparent blur-filter p-2" id="NoSavedMessages_Box" style="display: none;">
+                <h1 class="h1 text-primary"> <i class="far fa-folder-open"></i> </h1>
+                <h4 class="h4">Nothing Here</h4>
+                <small class="card-text text-muted">You haven't got any saved message for now</small>
+                <div class="box-container bg-light mt-3 p-2">
+                    <h6 class="h6"> <span class="badge bg-primary text-light p-1 ps-2 pe-2 rounded-pill fw-normal"> <i class="far fa-bookmark"></i> Saved</span> What for is this designed</h6>
+                    <small class="card-text">Forward to this chat any import messages</small>
+                    <br />
+                    <small class="card-text">Write your own notes here. There'll be completely safe</small>
+                    <br />
+                    <small class="card-text">Use it for backing up. Forward any message from here</small>
+                    <br />
+                    <small class="card-text">Write and test any commands here</small>
+                </div>
+            </div>
+        }
+
+
+        <div class="messages-container bordered-container overflow-hidden p-2 shadow-sm" style="display: none; margin-bottom: -1200px; background-color: transparent;" id="SavedMessageOptions_Box">
+            <div class="box-container">
+                <div class="d-none">
+                    <input type="hidden" class="got-msg-id-value" id="CurrentGotSavedMsg_Id_Val" value="0" />
+                </div>
+                <button type="button" class="btn btn-standard btn-sm copy-to-clipboard float-end" id="SavedOptionMessageText_Lbl-CopyToTheClipboard"> <i class="fa-regular fa-copy text-primary"></i> Copy</button>
+                <small class="card-text text-muted got-msg-datetime" id="SavedMsgOptionAdditionalInfo_Lbl">sent date, time, is checked and edited</small>
+                <div class="mt-1">
+                    <button type="button" class="btn btn-standard-asset btn-light btn-sm delete-message-options" id="SavedMessageOptions_Box-Close"> <i class="fa-solid fa-xmark text-primary"></i> Cancel</button>
+                    <small class="card-text got-msg-text" id="SavedOptionMessageText_Lbl">Message Text</small>
+                </div>
+            </div>
+            <div class="box-container mt-3">
+                <div class="row">
+                    <div class="col">
+                        <button type="button" class="btn btn-standard btn-sm w-100" id="EditSavedMessage_Btn"> <i class="fa-regular fa-pen-to-square text-primary"></i> Edit</button>
+                    </div>
+                    <div class="col">
+                        <form method="get" asp-controller="Chat" asp-action="GetChatsShortly" id="GetChatsShortly_Form">
+                            <input type="hidden" name="ChatId" value="0" />
+                            <input type="hidden" name="IsForForwarding" value="true" />
+                            <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-share text-primary"></i> Forward</button>
+                        </form>
+                    </div>
+                    <div class="col">
+                        <div id="PinTheMessage_Box">
+                            <form method="post" asp-controller="SavedMessage" asp-action="Pin" id="PinTheSavedMessage_Form">
+                                <input type="hidden" name="Id" id="PTSM_Id_Val" value="0" />
+                                <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fas fa-thumbtack text-primary"></i> Pin</button>
+                            </form>
+                        </div>
+                        <div id="UnpinTheMessage_Box" style="display: none;">
+                            <form method="post" asp-controller="SavedMessage" asp-action="Unpin" id="UnpinTheSavedMessage_Form">
+                                <input type="hidden" name="Id" id="UTSM_Id_Val" value="0" />
+                                <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fas fa-thumbtack text-primary"></i> Pin</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col">
+                        <button type="button" class="btn btn-standard btn-sm w-100" id="StarTheSavedMessage_Btn"> <i class="fa-solid fa-star-half-stroke text-primary"></i> Star</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-standard btn-sm w-100"> <i class="fa-regular fa-note-sticky text-primary"></i> Note</button>
+                    </div>
+                    <div class="col">
+                        <form method="post" asp-controller="SavedMessage" asp-action="Delete" id="DeleteSavedMessage_Form">
+                            <input type="hidden" name="Id" id="DSM_Id_Val" value="0" />
+                            <button type="submit" class="btn btn-standard btn-sm text-danger w-100" id="DeleteSavedMessageSbmt_Btn"> <i class="fa-regular fa-trash-can"></i> Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="messages-container bg-light box-container overflow-hidden p-2 shadow-sm" style="display: none; margin-bottom: -1200px;" id="MainTextEditor_Box">
+            <div class="box-container">
+                <div class="box-container d-inline-block w-100">
+                    <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1 fw-bold" id="0-TextEditorStyle" data-bs-paste-to="SendMessage_Text_Val"> B </button>
+                    <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1 fst-italic" id="1-TextEditorStyle" data-bs-paste-to="SendMessage_Text_Val"> It </button>
+                    <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1 text-decoration-underline" id="2-TextEditorStyle" data-bs-paste-to="SendMessage_Text_Val"> U </button>
+                    <button type="button" class="btn btn-sm btn-standard text-editor me-1 mt-1 style-font" id="3-TextEditorStyle" data-bs-paste-to="SendMessage_Text_Val"> AF </button>
+                    <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="4-SetStyle"> <i class="fa-solid fa-palette set-style" id="4-SetStyleX"></i> </button>
+                    <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="5-SetStyle"> <i class="fa-solid fa-link set-style" id="5-SetStyleX"></i> </button>
+                    <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="6-SetStyle"> <i class="fa-regular fa-message set-style" id="6-SetStyleX"></i> </button>
+                    <button type="button" class="btn btn-sm btn-standard me-1 mt-1 set-style" id="7-SetStyle"> <i class="fa-regular fa-note-sticky set-style" id="7-SetStyleX"></i> </button>
+                    <button type="button" class="btn btn-sm btn-standard me-1 mt-1"> <i class="fa-regular fa-copy"></i> </button>
+                </div>
+                <div class="box-container mt-2">
+                    <button class="btn btn-standard ps-1 pe-1 btn-sm" type="button" disabled> <span class="text-muted"><i class="fa-regular fa-circle-xmark"></i></span> Auto-Deletable Messages: <span class="text-muted" id="AutoDeleteDelay-Icon">unavailable</span></button>
+                    <div></div>
+                    <small class="card-text text-muted ms-1">Auto-deletable messages are not available in secret chats. See more by <a asp-controller="Home" asp-action="AboutSC" class="text-decoration-none text-primary">this link</a></small>
+                </div>
+                <div class="box-container inside-box-container mt-2 bg-white p-2" id="MessagePreview_Box" style="display: none;">
+                </div>
+                <div class="bordered-container inside-box-container p-2 mt-2" id="TextEditorSettings-Box" style="display: none;">
+                    <div class="box-container w-auto">
+                        <button type="button" class="btn btn-standard-asset bg-white btn-sm" id="AddTextToTheTextEditor_Btn"> <i class="fa-regular fa-rectangle-list"></i> Type: <span class="text-primary" id="TES_Type_Span"></span></button>
+                        <div class="mt-1"></div>
+                        <small class="card-text text-muted ms-1">Tap on <span class="text-primary">type</span> shower to insert sample to your message</small>
+                    </div>
+                    <div class="mt-2">
+                        <div class="form-floating">
+                            <div class="d-none">
+                                <input type="hidden" id="TextType_Val" value="0" />
+                                <input type="hidden" id="PasteTo_Val" value="SendMessage_Text_Val" />
+                                <input type="hidden" id="WidgetId_Val" value="Preloaded_Container" />
+                            </div>
+                            <input type="text" id="PreparedText1_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
+                            <label for="PreparedText1_Val" class="fw-500" id="PreparedText1_Lbl">Prepared Text, 1</label>
+                        </div>
+                        <div class="form-floating mt-2">
+                            <input type="text" id="PreparedText2_Val" autocomplete="off" class="form-control shadow-none" placeholder="Enter your text here" />
+                            <label for="PreparedText2_Val" class="fw-500" id="PreparedText2_Lbl">Prepared Text, 2</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-container text-center mt-2">
+                    <button type="button" class="btn btn-standard btn-close-inside-box btn-sm w-100" id="MainTextEditor_Box-Close"> <i class="fa-solid fa-xmark"></i> Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="fixed-bottom bot-navbar shadow-sm p-2" id="Preloaded_BotOffNavbar">
+    <div class="box-container" id="SendMessage_FirstInside_Box">
+        <div class="box-container">
+            <div class="border-bottom pb-1" id="EditingOrReplying_Box" style="display: none;">
+                <div class="box-container text-start">
+                    <button type="button" class="btn btn-standard-asset text-primary float-end ms-1 btn-sm" id="CancelSavedMessageSettings_Btn"> <i class="fa-solid fa-xmark"></i> </button>
+                    <span class="card-text fs-6 text-primary" id="EditingOrReplyingMsgIcon_Lbl"> <i class="fa-regular fa-pen-to-square"></i> </span>
+                    <span class="card-text fs-6 fw-500 text-primary" id="EditingOrReplyingMsgStatus_Lbl">Edit Message</span>
+                </div>
+                <div class="box-container mt-2 pb-1 text-start">
+                    <small class="card-text me-auto" id="EditingOrReplyingMsgText_Lbl">Message Text...</small>
+                </div>
+            </div>
+            <div>
+                <form method="post" asp-controller="SavedMessage" asp-action="SendMessage" id="SendSavedMessage_Form">
+                    <div class="d-none">
+                        <input type="hidden" name="IsReplying" id="RM_IsReplying_Val" value="false" />
+                        <input type="hidden" name="MessageId" id="EM_Id_Val" value="0" />
+                        <input type="hidden" name="ReplyText" id="RM_ReplyText_Val" />
+                        <input type="file" class="send-message-files" id="SendMessage_Images_Val" name="Images" accept=".png, .jpg, .jpeg" multiple max="6" />
+                    </div>
+
+                    <div class="hstack gap-2" id="TextSendingBox">
+                        <button type="button" class="btn btn-standard btn-sm" id="ReturnMainBotNavbar_Btn"> <i class="fa-solid fa-chevron-down"></i> </button>
+                        <textarea name="Text" id="SendMessage_Text_Val" class="send-message-form-control message-form-control me-auto form-control-check-input w-100 overflow-hidden" rows="1" placeholder="Your message..." maxlength="3000" data-bs-min-length="1" data-bs-html="SendMessage_SbmtBtn"></textarea>
+                        <button type="button" class="btn btn-message-example btn-sm open-animated-collapse btn-open-inside-box" id="MainTextEditor_Box-Open"> <i class="fa-solid fa-plus btn-open-inside-box" id="MainTextEditor_Box-OpenY"></i> </button>
+                        <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="SendAFileInMessage_Btn" data-bs-html="SendMessage_Images_Val"> <i class="fa-regular fa-file-image"></i> </button>
+                        <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="PreviewTheMessage_Btn" style="display: none;"> <i class="fa-solid fa-align-left"></i> </button>
+                        <button type="submit" class="btn rounded-pill btn-sm btn-submit-msg-sending bg-primary text-light" id="SendMessage_SbmtBtn" disabled>Send</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <button type="button" class="btn btn-light text-primary btn-slide-to-bottom btn-slide-to-bottom-style shadow-sm" id="Preloaded_Container-SlideToBottom" style="bottom: -75px;"> <i class="fa-solid fa-angle-down btn-slide-to-bottom" id="Preloaded_Container-SlideToBottomX"></i> </button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+<script>
+    const hubConnection = new signalR.HubConnectionBuilder().withUrl("/chat").build();
+
+    document.getElementById("ForwardAMessageSbmt_Btn").addEventListener("click", function (event) {
+        event.preventDefault();
+        const caption = $("#Forward_Caption_Val").val();
+        const forwardingMsg = $("#ForwardingMsgText_Lbl").html();
+        const forwardTo = parseInt($("#Forward_ToChatId_Val").val());
+        const senderId = parseInt($("#SM_UserId_Val").val());
+        const selectedChatName = $("#ForwardingChatName_Lbl").html();
+
+        hubConnection.invoke("SendOrForward", caption, forwardingMsg, forwardTo, senderId, selectedChatName).catch(function (err) {
+            console.log(err.toString());
+        });
+    });
+
+        hubConnection.on("Forward_Success", function () {
+            animatedClose(false, "Chats_Container", true, true);
+            alert('<i class="fa-regular fa-circle-check fa-spin text-primary" style="--fa-animation-duration: 1.2s; --fa-animation-iteration-count: 3;"></i>', "Selected message has been successfully forwarded", "Close", null, 0, null, null, null, 3.5);
+            setTimeout(function () {
+                $(".forward-chat-msg").removeClass("border-primary");
+                $(".forward-chat-msg").html(' <i class="fa-solid fa-share text-primary"></i> Choose');
+                $("#Forward_Caption_Val").val(null);
+                $("#ForwardingChatName_Lbl").html("unknown chat");
+                $("#Forward_ToChatId_Val").val(0);
+                $("#Forward_MessageId_Val").val(0);
+                $("#MessageForwarding_Box").fadeOut(300);
+            }, 500);
+        });
+
+    async function start() {
+        try {
+            await hubConnection.start();
+        }
+        catch (err) {
+            console.log(err.toString());
+            setTimeout(function () {
+                start();
+            }, 1500);
+        }
+    }
+
+    hubConnection.onclose(async function() {
+        await start();
+    });
+
+    start();
+</script>
+

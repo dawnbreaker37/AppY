@@ -20,10 +20,12 @@ namespace AppY.Controllers
         private readonly IDiscussion _discussion;
         private readonly IMemoryCache _memoryCache;
         private readonly IChat _chat;
+        private readonly ISavedMessage _savedMessage;
 
-        public UserController(Context context, UserManager<User> userManager, IChat chat, IUser user, INotification notification, IDiscussion discussion, IMemoryCache memoryCache)
+        public UserController(Context context, UserManager<User> userManager, ISavedMessage savedMessage, IChat chat, IUser user, INotification notification, IDiscussion discussion, IMemoryCache memoryCache)
         {
             _context = context;
+            _savedMessage = savedMessage;
             _userManager = userManager;
             _user = user;
             _chat = chat;
@@ -164,6 +166,35 @@ namespace AppY.Controllers
             else return RedirectToAction("Create", "Account");
         }
 
+        public async Task<IActionResult> SavedMessages()
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                string? UserId_Str = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (UserId_Str != null)
+                {
+                    bool TryParse = Int32.TryParse(UserId_Str, out int UserId);
+                    if (TryParse)
+                    {
+                        List<SavedMessageContent>? Messages = null;
+                        int SavedMessagesCount = await _savedMessage.GetSavedMessagesCountAsync(UserId);
+                        if (SavedMessagesCount > 0)
+                        {
+                            IQueryable<SavedMessageContent>? Messages_Preview = _savedMessage.GetSavedMessages(UserId, 0, 55);
+                            if (Messages_Preview != null) Messages = await Messages_Preview.ToListAsync();
+                        }
+
+                        ViewBag.UserId = UserId;
+                        ViewBag.MessagesCount = SavedMessagesCount;
+                        ViewBag.Messages = Messages;
+
+                        return View();
+                    }
+                }
+            }
+            return RedirectToAction("Create", "Account");
+        }
+        
         [HttpPost]
         public async Task<IActionResult> Edit(EditUserInfo_ViewModel Model)
         {

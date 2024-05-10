@@ -26,5 +26,6 @@ namespace AppY.Data
         public DbSet<LinkedAccount> LinkedAccounts { get; set; }
         public DbSet<SecretChat> SecretChats { get; set; }
         public DbSet<SecretChatUsers> SecretChatUsers { get; set; }
+        public DbSet<SavedMessageContent> SavedMessagesContent { get; set; }
     }
 }

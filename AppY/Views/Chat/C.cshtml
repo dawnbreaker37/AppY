@@ -56,25 +56,29 @@
         <div class="box-container p-2 pt-1 mt-1" id="Chats_Container-Box">
         </div>
 
-        <div class="box-container p-2 pt-1 mt-1" id="MessageForwarding_Box" style="display: none;">
-            <div class="box-container bg-light p-2">
-                <span class="card-text"> <i class="fa-solid fa-share"></i>  </span>
-                <span class="card-text white-space-on" id="ForwardingMsgText_Lbl">Message...</span>
-                <div class="border-top mt-1 pt-1"></div>
-                <span class="card-text">Forwarding to <span class="fw-500" id="ForwardingChatName_Lbl">unknown chat</span></span>
-                <div></div>
-                <small class="card-text text-muted">choose your desired chat to forward</small>
+        <div class="box-container p-2 pt-1 w-100" id="MessageForwarding_Box" style="display: none;">
+            <div class="box-container bg-light">
+                <div class="w-100 p-2">
+                    <div class="other-user-reply-container mb-1">
+                        <small class="card-text fw-500"> <i class="fa-solid fa-reply"></i> Replied to</small>
+                        <p class="card-text white-space-on message-label" id="ForwardingMsgText_Lbl">Forwarding Message...</p>
+                    </div>
+                    <p class="card-text white-space-on message-label" id="ForwardingMsgCaption_Lbl" style="display: none;">Additional Caption</p>
+                </div>
             </div>
-            <div class="box-container mt-2 bottom-0">
-                <div class="d-none">
-                    <input type="hidden" name="FromChatId" id="Forward_FromChatId_Val" value="@ChatInfo.Id" />
-                    <input type="hidden" name="ToChatId" id="Forward_ToChatId_Val" value="0" />
-                </div>
-                <div class="hstack gap-3">
-                    <button type="button" class="btn btn-standard btn-sm"> <i class="fa-solid fa-align-left"></i> </button>
-                    <textarea class="form-control rounded-pill shadow-none" placeholder="Add a caption here..." rows="1" maxlength="3400" name="Caption" id="Forward_Caption_Val"></textarea>
-                    <button type="submit" class="btn btn-standard-asset btn-primary btn-sm rounded-pill" id="ForwardAMessageSbmt_Btn" disabled>Forward</button>
-                </div>
+            <div class="ms-1">
+                <small class="card-text text-muted">choose any chat from list to forward</small>
+            </div>
+        </div>
+        <div class="box-container bottom-0 p-2">
+            <div class="d-none">
+                <input type="hidden" name="FromChatId" id="Forward_FromChatId_Val" value="@ChatInfo.Id" />
+                <input type="hidden" name="ToChatId" id="Forward_ToChatId_Val" value="0" />
+            </div>
+            <div class="hstack gap-3">
+                <button type="button" class="btn btn-standard btn-sm" disabled> <i class="fa-solid fa-align-left"></i> </button>
+                <textarea class="form-control rounded-pill shadow-none" placeholder="Add a caption here..." rows="1" maxlength="3400" name="Caption" id="Forward_Caption_Val"></textarea>
+                <button type="submit" class="btn btn-standard-asset btn-primary btn-sm rounded-pill" id="ForwardAMessageSbmt_Btn" disabled>Forward</button>
             </div>
         </div>
     </div>
@@ -459,11 +463,11 @@
                                         <div class="float-end me-1" id="@message.Id-ChatMsgStatsBox">
                                             @if (message.IsChecked)
                                             {
-                                                <small class="card-text text-primary" id="@message.Id-ChatMsgIsChecked_Lbl"> <i class="fa-solid fa-check-double"></i> </small>
+                                                <small class="card-text msg-checked-icon" id="@message.Id-ChatMsgIsChecked_Lbl"> <i class="fa-solid fa-check-double text-primary"></i> </small>
                                             }
                                             else
                                             {
-                                                <small class="card-text text-muted discussion-options" id="@message.Id-ChatMsgIsChecked_Lbl" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-check"></i> </small>
+                                                <small class="card-text msg-checked-icon" id="@message.Id-ChatMsgIsChecked_Lbl" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-check text-muted"></i> </small>
                                             }
                                             <input type="hidden" id="@message.Id-ChatMsgFullDate_Val" value="@message.SentAt.ToString("dd/MM, HH:mm")" />
                                             <small class="card-text text-muted">@message.SentAt.ToShortTimeString()</small>
@@ -602,21 +606,6 @@
                 <div class="d-none" id="CurrentChatMsg_FullText_Val"></div>
             </div>
             <button type="button" class="btn btn-standard btn-sm copy-to-clipboard float-end" id="CurrentChatMsg_FullText_Val-CopyToTheClipboard"> <i class="fa-regular fa-copy text-primary"></i> Copy</button>
-            <div class="float-end ms-1" id="PinTheMessage_Box">
-                <form method="post" asp-controller="ChatMessage" asp-action="Pin" id="PinTheChatMessage_Form">
-                    <input type="hidden" name="Id" id="PCM_Id_Val" value="0" />
-                    <input type="hidden" name="UserId" value="@UserInfo.Id" />
-                    <button type="submit" class="btn btn-standard btn-sm float-end me-1"> <i class="fa-solid fa-thumbtack text-primary"></i> Pin</button>
-                </form>
-            </div>
-            <div class="float-end ms-1" id="UnpinTheMessage_Box" style="display: none;">
-                <form method="post" asp-controller="ChatMessage" asp-action="Unpin" id="UnpinTheChatMessage_Form">
-                    <input type="hidden" name="Id" id="UCM_Id_Val" value="0" />
-                    <input type="hidden" name="DiscussionOrChatId" value="@ChatInfo.Id" />
-                    <input type="hidden" name="UserId" value="@UserInfo.Id" />
-                    <button type="submit" class="btn btn-standard btn-sm float-end me-1"> <i class="fa-solid fa-link-slash text-primary"></i> Unpin</button>
-                </form>
-            </div>
             <small class="card-text text-muted got-msg-datetime" id="ChatMsgOptionAdditionalInfo_Lbl">sent date, time, is checked and edited</small>
             <div class="mt-1">
                 <button type="button" class="btn btn-standard-asset btn-light btn-sm delete-message-options" id="ChatMessageOptions_Box-Close"> <i class="fa-solid fa-xmark text-primary"></i> Cancel</button>
@@ -636,6 +625,30 @@
                         <input type="hidden" name="ChatId" value="@ChatInfo.Id" />
                         <input type="hidden" name="IsForForwarding" value="true" />
                         <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-share text-primary"></i> Forward</button>
+                    </form>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col" id="PinTheMessage_Box">
+                    <form method="post" asp-controller="ChatMessage" asp-action="Pin" id="PinTheChatMessage_Form">
+                        <input type="hidden" name="Id" id="PCM_Id_Val" value="0" />
+                        <input type="hidden" name="UserId" value="@UserInfo.Id" />
+                        <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-thumbtack text-primary"></i> Pin</button>
+                    </form>
+                </div>
+                <div class="col" id="UnpinTheMessage_Box" style="display: none;">
+                    <form method="post" asp-controller="ChatMessage" asp-action="Unpin" id="UnpinTheChatMessage_Form">
+                        <input type="hidden" name="Id" id="UCM_Id_Val" value="0" />
+                        <input type="hidden" name="DiscussionOrChatId" value="@ChatInfo.Id" />
+                        <input type="hidden" name="UserId" value="@UserInfo.Id" />
+                        <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-link-slash text-primary"></i> Unpin</button>
+                    </form>
+                </div>
+                <div class="col">
+                    <form method="post" asp-controller="SavedMessage" asp-action="SaveChatMessage" id="SaveChatMessage_Form">
+                        <input type="hidden" name="Id" id="STM_Id_Val" value="0" />
+                        <input type="hidden" name="ChatId" id="STM_ChatId_Val" value="@ChatInfo.Id" />
+                        <button type="submit" class="btn btn-standard btn-sm w-100" id="SaveTheMessageSbmt_Btn"> <i class="fa-regular fa-bookmark text-primary"></i> Save</button>
                     </form>
                 </div>
                 <div class="col" id="DeleteChatMsg_Col">
@@ -758,10 +771,24 @@
     }
     window.onfocus = function () {
         const receiverId = $("#SM_ReceiverId_Val").val();
+        const chatId = parseInt($("#SM_ChatId_Val").val());
+        const senderId = parseInt($("#SM_UserId_Val").val());
+
         hubConnection.invoke("OpenedTheChat", receiverId).catch(function (err) {
             console.log(err.toString());
         });
+
+        hubConnection.invoke("MarkAllAsRead", chatId, senderId, receiverId).catch(function (err) {
+            console.log(err.toString());
+        });
     }
+
+    hubConnection.on("MarkAllAsRead", function (chatId) {
+        let currentChatId = $("#SM_ChatId_Val").val();
+        if (currentChatId == chatId) {
+            $(".msg-checked-icon").html(' <i class="fa-solid fa-check-double text-primary"></i> ');
+        }
+    });
 
     document.getElementById("EditChat_Form").addEventListener("submit", function (event) {
         event.preventDefault();
@@ -850,8 +877,9 @@
                 });
             }
             else {
+                const chatName = $("#ChatName_Span").html();
                 const replyText = $("#RM_ReplyText_Val").val();
-                hubConnection.invoke("Reply", replyId, replyText, senderId, chatId, updatedMessage, isAutodeletable, receiverId, currentChatMessageId).catch(function (err) {
+                hubConnection.invoke("Reply", replyId, replyText, senderId, chatId, updatedMessage, isAutodeletable, receiverId, currentChatMessageId, chatName).catch(function (err) {
                     console.log(err.toString());
                 });
             }
@@ -892,11 +920,11 @@
         const userId = parseInt($("#SM_UserId_Val").val());
         const currentChatMessageId = parseInt($("#SM_CurrentChatMessageId_Val").val());
         const captionText = $("#Forward_Caption_Val").val();
+        const chatName = $("#ForwardingChatName_Lbl").text();
         let forwardingText = textUncoder($("#ForwardingMsgText_Lbl").html());
         forwardingText = textUncoder(forwardingText);
 
-        //MessageId, int ToChatId, int FromChatId, string? Caption, string? ForwardingText, int UserId
-        hubConnection.invoke("Forward", messageId, toChatId, fromChatId, captionText, forwardingText, userId, currentChatMessageId).catch(function (err) {
+        hubConnection.invoke("Forward", messageId, toChatId, fromChatId, captionText, forwardingText, userId, currentChatMessageId, chatName).catch(function (err) {
             console.log(err.toString());
         });
     })
@@ -1071,6 +1099,7 @@
             statsBox.classList.add("float-end");
             statsBox.classList.add("me-1");
             isChecked.classList.add("card-text");
+            isChecked.classList.add("msg-checked-icon");
             dateAndTime.classList.add("card-text");
             dateAndTime.classList.add("text-muted");
             isEdited.classList.add("card-text");
@@ -1258,6 +1287,7 @@
         statsBox.classList.add("float-end");
         statsBox.classList.add("me-1");
         isChecked.classList.add("card-text");
+        isChecked.classList.add("msg-checked-icon");
         dateAndTime.classList.add("card-text");
         dateAndTime.classList.add("text-muted");
         isEdited.classList.add("card-text");
@@ -1328,7 +1358,7 @@
         $("#RM_ReplyText_Val").val("");
     });
 
-    hubConnection.on("ReplyReceive", function (id, text, replyText, messageId, chatId) {
+    hubConnection.on("ReplyReceive", function (id, text, replyText, messageId, chatId, senderId, chatName, isMuted) {
         let currentChatId = $("#CurrentChatId_Val").val();
         if (currentChatId == chatId) {
             let messageMainBox = document.createElement("div");
@@ -1428,15 +1458,30 @@
             sentMessagesCount++;
             $("#SentMessagesCount_Val").val(sentMessagesCount);
         }
+        else {
+            if (!isMuted) {
+                $("#ReplyingMsg_ChatId_Val").val(chatId);
+                $("#ReplyingMsg_ReceiverId_Val").val(senderId);
+                $("#MessageFrom_Lbl").html(chatName);
+                $("#MessageText_Lbl").html(text == "" ? "Replied Message" : text);
+
+                topBarOpen("MessageAlert_Container");
+                messageAlertTimeout = setTimeout(function () {
+                    topBarClose("MessageAlert_Container");
+                }, 6000);
+            }
+        }
     });
 
     hubConnection.on("Forward_Success", function () {
         animatedClose(false, "Chats_Container", true, true);
         alert('<i class="fa-regular fa-circle-check fa-spin text-primary" style="--fa-animation-duration: 1.2s; --fa-animation-iteration-count: 3;"></i>', "Selected message has been successfully forwarded", "Close", null, 0, null, null, null, 3.5);
         setTimeout(function () {
+            $(".forward-chat-msg").removeClass("border-primary");
+            $(".forward-chat-msg").html(' <i class="fa-solid fa-share text-primary"></i> Choose');
             $("#Forward_Caption_Val").val(null);
+            $("#ForwardingChatName_Lbl").html("unknown chat");
             $("#Forward_ToChatId_Val").val(0);
-            $("#Forward_FromChatId_Val").val(0);
             $("#Forward_MessageId_Val").val(0);
             $("#MessageForwarding_Box").fadeOut(300);
         }, 500);

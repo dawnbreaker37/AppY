@@ -38,6 +38,7 @@ namespace AppY.Models
         public List<ChatUsers>? ChatUsers { get; set; }
         public List<SecretChat>? SecretChats { get; set; }
         public List<SecretChatUsers>? SecretChatUsers { get; set; }
+        public List<SavedMessageContent>? SavedMessageContents { get; set; }
         [NotMapped]
         public string? UnpicturedAvatarInfo { get; set; }
         [NotMapped]

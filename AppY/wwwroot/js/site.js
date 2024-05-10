@@ -66,6 +66,14 @@ window.onload = function () {
             $(".btn-message-example").css("pointer-events", "none");
         }
     }
+    else if (currentUrl.toLowerCase().includes("/savedmessages")) {
+        botNavbarClose(true, null);
+        botNavbarOpen("Preloaded_BotOffNavbar");
+        replaceAllTheTextInMessages();
+        setTimeout(function () {
+            slideToTheBottom("Preloaded_Container");
+        }, 300);
+    }
     else if (currentUrl.toLowerCase().includes("/page")) {
         statusSlider("StatusBar_Lbl", 2);
         botNavbarOpen("MainBotOffNavbar", null, null);
@@ -1660,7 +1668,7 @@ $("#GetChatsShortly_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
     let data = $(this).serialize();
-    //GetChatMessageInfo
+
     $.get(url, data, function (response) {
         if (response.success) {
             $("#ChatsCount_Span").text(response.count);
@@ -1686,6 +1694,7 @@ $("#GetChatsShortly_Form").on("submit", function (event) {
                     div.append(h6);
                     div.append(separatorZero);
                     div.append(status);
+
                     if (response.isForForwarding) {
                         h6.attr("id", response.result[index].chatId + "-ForwardingChatName_Lbl");
                         forwardBtn.attr("id", response.result[index].chatId + "-ForwardToChat_Btn");
@@ -1874,6 +1883,11 @@ $("#SendChatPasswordViaEmail_Form").on("submit", function (event) {
 $(document).on("click", ".forward-chat-msg", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != "") {
+        $(".forward-chat-msg").removeClass("border-primary");
+        $(".forward-chat-msg").html(' <i class="fa-solid fa-share text-primary"></i> Choose');
+        $(this).addClass("border-primary");
+        $(this).html(' <i class="fa-solid fa-check text-primary"></i> Chosen');
+
         $("#ForwardAMessageSbmt_Btn").attr("disabled", false);
         $("#ForwardingChatName_Lbl").html($("#" + trueId + "-ForwardingChatName_Lbl").text());
         $("#Forward_ToChatId_Val").val(trueId);
@@ -3230,6 +3244,16 @@ $("#PreviewTheMessage_Btn").on("click", function () {
         insideBoxOpen("MainTextEditor_Box");
     }
 });
+$("#Forward_Caption_Val").on("keyup", function () {
+    let mainText = $("#Forward_Caption_Val").val();
+    if (mainText.length > 0) {
+        $("#ForwardingMsgCaption_Lbl").slideDown(250);
+        textDecoder(mainText, "ForwardingMsgCaption_Lbl");
+    }
+    else {
+        $("#ForwardingMsgCaption_Lbl").slideUp(250);
+    }
+});
 
 $("#GetDiscussionsOlderMessages_Form").on("submit", function (event) {
     event.preventDefault();
@@ -4291,7 +4315,7 @@ $("#EditDiscussionMessage_Btn").on("click", function () {
         let text = $("#" + trueId + "-DiscussionOptionMsgText_Lbl").html();
         let uncodedText = textUncoder($("#" + trueId + "-DiscussionOptionMsgText_Lbl").html());
         insideBoxClose(false, "DiscussionOptions_Box");
-        //GetPinnedMessageInfo
+
         $("#EM_Id_Val").val(trueId);
         $("#SendMessage_Images_Val").val(null);
         $("#EditingOrReplyingMsgStatus_Lbl").text("Edit Message");
@@ -4325,7 +4349,6 @@ $("#ReplyDiscussionMessage_Btn").on("click", function () {
         insideBoxClose(false, "DiscussionOptions_Box");
         insideBoxClose(false, "ReactionsOptions_Container");
 
-        //$("#SendMessage_Images_Val").val(null);
         $("#RM_ReplyId_Val").val(trueId);
         $("#EditingOrReplyingMsgStatus_Lbl").text("Reply to");
         $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-solid fa-reply"></i> ');
@@ -4436,6 +4459,310 @@ $("#DI_LoadAdditionalInfo_Btn").on("click", function () {
     slideToRight("DiscussionAdditionalInfo_Container");
 });
 
+//Saved Messages//
+$("#IsSavedMessagePinned_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            $("#UnpinTheMessage_Box").fadeIn(250);
+            $("#PinTheMessage_Box").fadeOut(250);
+        }
+        else {
+            $("#UnpinTheMessage_Box").fadeOut(250);
+            $("#PinTheMessage_Box").fadeIn(250);
+        }
+    });
+});
+
+$("#SaveChatMessage_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-regular fa-bookmark text-primary"></i>', response.alert, "Done", null, 0, null, null, null, 3.75);
+            insideBoxClose(false, "ChatMessageOptions_Box");
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+        }
+    });
+});
+
+$("#SaveDiscussionMessage_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            alert('<i class="fa-regular fa-bookmark text-primary"></i>', response.alert, "Done", null, 0, null, null, null, 3.75);
+            insideBoxClose(false, "DiscussionOptions_Box");
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.45s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+        }
+    });
+});
+
+$("#SendSavedMessage_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            if (!response.isEdited) {
+                $("#SendMessage_SbmtBtn").attr("disabled", true);
+                let currentMessagesCount = parseInt($("#SavedMessagesCount_Span").text());
+
+                let messageMainBox = $("<div class='message-box'></div>");
+                let messageNotMainBox = $("<div class='cur-user-msg-box'></div>");
+                let styleBox = $("<div class='cur-user-styled-msg-box p-2'></div>");
+                let mainText = $("<p class='card-text white-space-on message-label saved-message-options'></p>");
+                let statsBox = $("<div class='float-end me-1'></div>");
+                let isChecked = $("<small class='card-text text-primary'></small>");
+                let dateAndTimeFullValue = $("<input type='hidden' />");
+                let dateAndTime = $("<small class='card-text text-muted'></small>");
+                let isEdited = $("<small class='card-text text-muted' style='display: none;'> edited</small>");
+                let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+                let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
+                let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
+
+                let date = new Date();
+                let pureMonth = parseInt(date.getMonth()) + 1;
+                let hour = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
+                let mins = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+                let day = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+                let month = pureMonth < 10 ? "0" + pureMonth : pureMonth;
+
+                if (response.result.text != null) mainText.html(textDecoder(response.result.text, null));
+                dateAndTime.html(dateAndTimeTranslator(date));
+                dateAndTimeFullValue.html(getDaysCountFromDate(day + "." + month + ", " + hour + ":" + mins));
+                isChecked.html(' <i class="fa-solid fa-check-double text-primary"></i> ');
+
+                mainText.attr("id", response.id + "-SavedMsgText_Lbl");
+                isChecked.attr("id", response.id + "-SavedMsgIsChecked_Span");
+                isEdited.attr("id", response.id + "-SavedMsgIsEdited_Lbl");
+                dateAndTime.attr("id", response.id + "-SavedMsgDateAndTime_Lbl");
+                dateAndTimeFullValue.attr("id", response.id + "-SavedMsgFullDate_Val");
+
+                messageMainBox.attr("id", response.id + "-SavedMsgMain_Box");
+                messageNotMainBox.attr("id", response.id + "-SavedMsgNotMain_Box");
+
+                styleBox.append(mainText);
+                statsBox.append(dateAndTime);
+                statsBox.append(isEdited);
+                statsBox.append(isChecked);
+                messageNotMainBox.append(styleBox);
+                messageNotMainBox.append(statsBox);
+                messageMainBox.append(messageNotMainBox);
+
+                if (currentMessagesCount <= 0) {
+                    slideToLeft("NoSavedMessages_Box");
+                    setTimeout(function () {
+                        $("#HaveSavedMessages_Box").fadeIn(250);
+                        $("#HaveSavedMessages_Box").append(messageMainBox);
+                    }, 800);
+                }
+                else {
+                    $("#HaveSavedMessages_Box").append(messageMainBox);
+                }
+                currentMessagesCount++;
+
+                $("#SavedMessagesCount_Span").text(currentMessagesCount);
+                $("#SavedMessagesCount_Lbl").html(currentMessagesCount + " saved messages");
+                $("#SendMessage_Text_Val").val(null);
+                setTimeout(function () {
+                    $("#SendMessage_SbmtBtn").attr("disabled", false);
+                }, 1000);
+            }
+            else {
+                $("#" + response.id + "-SavedMsgText_Lbl").html(textDecoder(response.text, null));
+                $("#" + response.id + "-SavedMsgIsEdited_Lbl").slideDown(250);
+            }
+
+            $("#EM_Id_Val").val(0);
+            $("#EditingOrReplying_Box").slideUp(250);
+            setTimeout(function () {
+                insideBoxClose(true, null);
+            }, 400);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+        }
+    });
+});
+
+$("#DeleteSavedMessage_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let currentSentMsgsCount = parseInt($("#SavedMessagesCount_Span").text());
+            currentSentMsgsCount--;
+
+            if (currentSentMsgsCount <= 0) {
+                slideToLeft(response.id + "-SavedMsg_Box");
+                setTimeout(function () {
+                    slideToRight("NoSavedMessages_Box");
+                    $("#HaveSavedMessages_Box").fadeOut(250);
+                    $("#NoSavedMessages_Box").fadeIn(250);
+                }, 600);
+                $("#SavedMessagesCount_Lbl").text("no saved messages");
+            }
+            else {
+                slideToLeft(response.id + "-SavedMsg_Box");
+                $("#SavedMessagesCount_Lbl").text(currentSentMsgsCount + " saved messages");
+            }
+            $("#SavedMessagesCount_Span").text(currentSentMsgsCount);
+            $("#DSM_Id_Val").val(0);
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+    });
+});
+
+$("#StarSavedMessage_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            animatedClose(false, "StarTheMessage_Container", true, true);
+            closeSidebar();
+            setTimeout(function () {
+                $("#" + response.id + "-SaveMsgStarBadge_Span").html(' <i class="fa-regular fa-star"></i> ' + response.result);
+                $("#" + response.id + "-SaveMsgStarBadge_Span").slideDown(250);
+            }, 450);
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+    });
+});
+
+$("#UnstarSavedMessage_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            animatedClose(false, "StarTheMessage_Container", true, true);
+            closeSidebar();
+            setTimeout(function () {
+                $("#" + response.id + "-SaveMsgStarBadge_Span").slideUp(250);
+                $("#" + response.id + "-SaveMsgStarBadge_Span").html(null);
+            }, 450);
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+        }
+    });
+});
+
+$(document).on("click", ".saved-message-options", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        $("#ForwardingMsgPreview_Box").empty();
+        $("#ForwardingMsgPreview_Box").slideUp(250);
+
+        let msgText = $("#" + trueId + "-SavedMsgText_Lbl").html();
+        let msgTextSubstringed = msgText.length > 400 ? msgText.substring(0, 400) + "..." : msgText;
+        let msgDate = $("#" + trueId + "-SavedMsgFullDate_Val").val();
+        $("#CurrentGotSavedMsg_Id_Val").val(trueId);
+        $("#ISMP_Id_Val").val(trueId);
+        $("#DSM_Id_Val").val(trueId);
+        $("#IsSavedMessagePinned_Form").submit();
+
+        textDecoder(msgTextSubstringed, "SavedOptionMessageText_Lbl");
+        textDecoder(msgTextSubstringed, "ForwardingMsgText_Lbl");
+        textDecoder(msgTextSubstringed, "EditingOrReplyingMsgText_Lbl");
+        if ($("#" + trueId + "-SavedMsgIsEdited_Lbl").css("display") != "none") {
+            $("#SavedMsgOptionAdditionalInfo_Lbl").html("sent " + msgDate + ", edited <i class='fa-solid fa-check-double text-primary'></i>");
+        }
+        else {
+            $("#SavedMsgOptionAdditionalInfo_Lbl").html("sent " + msgDate + " <i class='fa-solid fa-check-double text-primary'></i>");
+        }
+
+        if (parseInt($("#SavedMessageOptions_Box").css("margin-bottom")) > 0) {
+            insideBoxClose(false, "SavedMessageOptions_Box");
+            setTimeout(function () {
+                insideBoxOpen("SavedMessageOptions_Box");
+            }, 350);
+        }
+        else {
+            insideBoxOpen("SavedMessageOptions_Box");
+        }
+    }
+});
+
+$("#EditSavedMessage_Btn").on("click", function () {
+    let messageId = parseInt($("#CurrentGotSavedMsg_Id_Val").val());
+    if (messageId > 0) {
+        let uncodedText = textUncoder($("#" + messageId + "-SavedMsgText_Lbl").html());
+
+        $("#EM_Id_Val").val(messageId);
+        $("#SendMessage_Text_Val").val(uncodedText);
+        $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-regular fa-pen-to-square"></i> ');
+        $("#EditingOrReplyingMsgStatus_Lbl").text("Edit Message");
+        insideBoxClose(true, null);
+        setTimeout(function () {
+            $("#EditingOrReplying_Box").slideDown(250);
+        }, 450);
+    }
+    else {
+        $("#EM_Id_Val").val(0);
+        $("#EditingOrReplying_Box").slideUp(250);
+    }
+});
+
+$("#StarTheSavedMessage_Btn").on("click", function () {
+    let messageId = parseInt($("#CurrentGotSavedMsg_Id_Val").val());
+    if (messageId > 0) { 
+        $("#SSM_Id_Val").val(messageId);
+        $("#USM_Id_Val").val(messageId);
+        textDecoder($("#" + messageId + "-SavedMsgText_Lbl").html(), "StarringTextSample_Lbl");       
+        openSidebar();
+
+        if (parseInt($("#StarTheMessage_Container").css("bottom")) >= 0) {
+            animatedClose(false, "StarTheMessage_Container", true, true);
+            setTimeout(function () {
+                animatedOpen(false, "StarTheMessage_Container", true, false, false);
+            }, 600);
+        }
+        else {
+            animatedOpen(false, "StarTheMessage_Container", true, false, false);
+        }
+    }
+});
+
+$("#CancelSavedMessageSettings_Btn").on("click", function () {
+    $("#EM_Id_Val").val(0);
+    $("#SSM_Id_Val").val(0);
+    $("#USM_Id_Val").val(0);
+    $("#DSM_Id_Val").val(0);
+    $("#EditingOrReplying_Box").slideUp(250);
+    $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-regular fa-pen-to-square"></i> ');
+    $("#EditingOrReplyingMsgStatus_Lbl").text("Edit Message");
+});
+
+$("#SSM_Text_Val").on("keyup", function () {
+    let textLength = $(this).val().length;
+    if (textLength > 0 && textLength <= 12) {
+        $("#StarringTextBadge_Span").html(' <i class="fa-regular fa-star"></i> ' + $(this).val());
+    }
+    else {
+        $("#StarringTextBadge_Span").html(' <i class="fa-regular fa-star"></i> Starred');
+    }
+});
+
+//Saved Messages//
 //Chat Messages//
 //$("#GetChatMessageInfo_Form").on("submit", function (event) {
 //    event.preventDefault();
@@ -4535,6 +4862,7 @@ $("#CancelChatMessageSettings_Btn").on("click", function () {
     $("#IMP_Id_Val").val(0);
     $("#RM_Id_Val").val(0);
     $("#DDM_Id_Val").val(0);
+    $("#STM_Id_Val").val(0);
     $("#Forward_MsgId_Val").val(0);
     $("#CurrentGotChatMsg_Id_Val").val(0);
     $("#SendMessage_Text_Val").val("");
@@ -4551,6 +4879,7 @@ $("#EditChatMessage_Btn").on("click", function () {
         $("#EM_Id_Val").val(trueId);
         $("#RM_ReplyId_Val").val(0);
         $("#DDM_Id_Val").val(0);
+        $("#STM_Id_Val").val(0);
         $("#Forward_MsgId_Val").val(0);
         $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-regular fa-pen-to-square"></i> ');
         $("#EditingOrReplyingMsgStatus_Lbl").text("Edit Message");
@@ -4566,6 +4895,7 @@ $("#EditChatMessage_Btn").on("click", function () {
     else {
         $("#EM_Id_Val").val(0);
         $("#DDM_Id_Val").val(0);
+        $("#STM_Id_Val").val(0);
         $("#Forward_MsgId_Val").val(0);
         $("#CurrentGotChatMsg_Id_Val").val(0);
         $("#ForwardAMessageSbmt_Btn").attr("disabled", false);
@@ -4584,6 +4914,7 @@ $("#ReplyChatMessage_Btn").on("click", function () {
             $("#RM_ReplyId_Val").val(trueId);
             $("#DDM_Id_Val").val(0);
             $("#EM_Id_Val").val(0);
+            $("#STM_Id_Val").val(0);
             $("#Forward_MsgId_Val").val(0);
             $("#RM_ReplyText_Val").val(messageText);
             $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fas fa-reply"></i> ');
@@ -4603,6 +4934,7 @@ $("#ReplyChatMessage_Btn").on("click", function () {
     else {
         $("#RM_ReplyId_Val").val(0);
         $("#DDM_Id_Val").val(0);
+        $("#STM_Id_Val").val(0);
         $("#Forward_MsgId_Val").val(0);
         $("#RM_ReplyText_Val").val("");
         $("#ForwardAMessageSbmt_Btn").attr("disabled", false);
@@ -4618,43 +4950,6 @@ $(document).on("click", ".btn-get-discussion-info", function (event) {
         $("#GetDiscussionShortInfo_Form").submit();
     }
     else $("#GSI_Id_Val").val(0);
-});
-
-$(document).on("click", ".reply-to-discussion-message", function (event) {
-    let trueId = getTrueId(event.target.id);
-    if ($("#" + event.target.id).hasClass("reply-element")) {
-        trueId = parseInt($("#" + event.target.id).attr("data-bs-msg-id"));
-    }
-
-    $("#SendMessage_Images_Val").val(null);
-    $("#EditingOrReplying_Box").slideUp(300);
-    if (trueId != null && trueId > 0) {
-        $("#EditDiscussionMsg_Col").fadeOut(300);
-        $("#DeleteDiscussionMsg_Col").fadeOut(300);
-        $("#DiscussionOptionAdditionalInfo_Lbl").fadeOut(100);
-        $("#RM_ReplyId_Val").val(trueId);
-        $("#SDMA_MessageId_Val").val(trueId);
-        $("#SDMR_Id_Val").val(trueId);
-        $("#GDMR_Id_Val").val(trueId);
-        $("#GDMA_Id_Val").val(trueId);
-        $("#CurrentGotDiscussionMsg_Id_Val").val(trueId);
-        $("#GDMA_MsgText_Val").val($("#" + trueId + "-DiscussionOptionMsgText_Lbl").text().substring(0, 40));
-
-        setTimeout(function () {
-            $("#DiscussionOptionMessageText_Lbl").html($("#" + trueId + "-DiscussionOptionMsgText_Lbl").text());
-            $("#RM_ReplyText_Val").val($("#" + trueId + "-DiscussionOptionMsgText_Lbl").html().substring(0, 40));
-            $("#EditingOrReplyingMsgText_Lbl").text($("#" + trueId + "-DiscussionOptionMsgText_Lbl").text().substring(0, 40));
-
-            textDecoder($("#DiscussionOptionMessageText_Lbl").html(), "DiscussionOptionMessageText_Lbl");
-            textDecoder($("#DiscussionOptionMessageText_Lbl").html(), "EditingOrReplyingMsgText_Lbl");
-
-            insideBoxOpen("DiscussionOptions_Box");
-        }, 225);
-    }
-    else {
-        $("#RM_ReplyId_Val").val(0);
-        $("#RM_ReplyText_Val").val(null);
-    }
 });
 
 $(document).on("click", ".btn-block-the-user-out-from-the-discussion", function (event) {
@@ -4744,7 +5039,7 @@ $(document).on("click", ".discussion-options", function (event) {
 
     if (trueId != null && trueId > 0) {
         let trueId = getTrueId(event.target.id);
-        if (trueId != null) {//Answer
+        if (trueId != null) {
             let translatedDateAndTime = $("#" + trueId + "-DiscussionMsgFullDate_Val").val();
             let daysPassed = getDaysCountFromDate(translatedDateAndTime);
             let messageText = $("#" + trueId + "-DiscussionOptionMsgText_Lbl").html();
@@ -4752,31 +5047,39 @@ $(document).on("click", ".discussion-options", function (event) {
             $("#CurrentGotDiscussionMsg_Id_Val").val(trueId);
             $("#DMP_Id_Val").val(trueId);
             $("#GDMA_Id_Val").val(trueId);
+            $("#SDM_Id_Val").val(trueId);
             $("#SDMA_MessageId_Val").val(trueId);
             $("#IsDiscussionMessagePinned_Form").submit();
 
-            $("#CurrentGotDiscussionMsg_FullText_Val").html(messageText);
-            $("#GDMA_MsgText_Val").val(messageText);
-            $("#DiscussionOptionMessageText_Lbl").html(textDecoder(messageText.length > 400 ? messageText.substring(0, 400) + "..." : messageText, null));
-            if ($("#" + trueId + "-DiscussionMsgNmBox").hasClass("cur-user-msg-box")) {
-                $("#DDM_Id_Val").val(trueId);
-                $("#EditDiscussionMsg_Col").fadeIn(250);
-                $("#DeleteDiscussionsMsg_Col").fadeIn(250);
-                if (daysPassed > 4) $("#EditDiscussionMessage_Btn").attr("disabled", true);
-                else $("#EditDiscussionMessage_Btn").attr("disabled", false);
-                if ($("#" + trueId + "-DiscussionMessageIsEdited_Lbl").css("display") != "none") {
-                    $("#DiscussionOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime + ", edited " + $("#" + trueId + "-DiscussionMsgIsChecked_Lbl").html() + " ");
+            setTimeout(function () {
+                $("#CurrentGotDiscussionMsg_FullText_Val").html(messageText);
+                $("#GDMA_MsgText_Val").val(messageText);
+                $("#DiscussionOptionMessageText_Lbl").html(textDecoder(messageText.length > 400 ? messageText.substring(0, 400) + "..." : messageText, null));
+                if ($("#" + trueId + "-DiscussionMsgNmBox").hasClass("cur-user-msg-box")) {
+                    $("#DDM_Id_Val").val(trueId);
+                    $("#EditDiscussionMsg_Col").fadeIn(250);
+                    $("#DeleteDiscussionsMsg_Col").fadeIn(250);
+                    if (daysPassed > 4) $("#EditDiscussionMessage_Btn").attr("disabled", true);
+                    else $("#EditDiscussionMessage_Btn").attr("disabled", false);
+                    if ($("#" + trueId + "-DiscussionMessageIsEdited_Lbl").css("display") != "none") {
+                        $("#DiscussionOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime + ", edited " + $("#" + trueId + "-DiscussionMsgIsChecked_Lbl").html() + " ");
+                    }
+                    else {
+                        $("#DiscussionOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime + " " + $("#" + trueId + "-DiscussionMsgIsChecked_Lbl").html() + " ");
+                    }
                 }
                 else {
-                    $("#DiscussionOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime + " " + $("#" + trueId + "-DiscussionMsgIsChecked_Lbl").html() + " ");
+                    $("#DDM_Id_Val").val(0);
+                    $("#EditDiscussionMsg_Col").fadeOut(250);
+                    $("#DeleteDiscussionsMsg_Col").fadeOut(250);
+                    if ($("#" + trueId + "-DiscussionMessageIsEdited_Lbl").css("display") != "none") {
+                        $("#DiscussionOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime + ", edited");
+                    }
+                    else {
+                        $("#DiscussionOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime);
+                    }
                 }
-            }
-            else {
-                $("#DDM_Id_Val").val(0);
-                $("#EditDiscussionMsg_Col").fadeOut(250);
-                $("#DeleteDiscussionsMsg_Col").fadeOut(250);
-                $("#DiscussionOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime + " " + $("#" + trueId + "-DiscussionMsgIsChecked_Lbl").html() + " ");
-            }
+            }, 425);
 
             if (parseInt($("#DiscussionOptions_Box").css("margin-bottom")) > 0) {
                 insideBoxClose(true, null);
@@ -4902,36 +5205,40 @@ $(document).on("click", ".chat-options", function (event) {
 
         $("#CurrentGotChatMsg_Id_Val").val(trueId);
         $("#IMP_Id_Val").val(trueId);
+        $("#STM_Id_Val").val(trueId);
         $("#IsChatMessagePinned_Form").submit();
-        $("#CurrentChatMsg_FullText_Val").text(messageText);
-        messageHtml = textDecoder(messageHtml, null);
-        $("#ForwardingMsgText_Lbl").html(messageHtml);
-        $("#ChatOptionMessageText_Lbl").html(messageHtml.length > 450 ? messageHtml.substring(0, 450) : messageHtml);
-        if ($("#" + trueId + "-ChatMsgNmBox").hasClass("cur-user-msg-box")) {
-            $("#DDM_Id_Val").val(trueId);
-            $("#EditChatMsg_Col").fadeIn(250);
-            $("#DeleteChatMsg_Col").fadeIn(250);
-            if (daysPassed > 3) $("#EditChatMessage_Btn").attr("disabled", true);
-            else $("#EditChatMessage_Btn").attr("disabled", false);
+        setTimeout(function () {
+            $("#CurrentChatMsg_FullText_Val").text(messageText);
+            messageHtml = textDecoder(messageHtml, null);
+            $("#ForwardingMsgText_Lbl").html(messageHtml);
+            $("#ChatOptionMessageText_Lbl").html(messageHtml.length > 450 ? messageHtml.substring(0, 450) : messageHtml);
 
-            if ($("#" + trueId + "-ChatMsgIsEdited_Lbl").css("display") != "none") {
-                $("#ChatMsgOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime + ", edited " + $("#" + trueId + "-ChatMsgIsChecked_Lbl").html() + " ");
+            if ($("#" + trueId + "-ChatMsgNmBox").hasClass("cur-user-msg-box")) {
+                $("#DDM_Id_Val").val(trueId);
+                $("#EditChatMsg_Col").fadeIn(250);
+                $("#DeleteChatMsg_Col").fadeIn(250);
+                if (daysPassed > 3) $("#EditChatMessage_Btn").attr("disabled", true);
+                else $("#EditChatMessage_Btn").attr("disabled", false);
+
+                if ($("#" + trueId + "-ChatMsgIsEdited_Lbl").css("display") != "none") {
+                    $("#ChatMsgOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime + ", edited " + $("#" + trueId + "-ChatMsgIsChecked_Lbl").html() + " ");
+                }
+                else {
+                    $("#ChatMsgOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime + " " + $("#" + trueId + "-ChatMsgIsChecked_Lbl").html() + " ");
+                }
             }
             else {
-                $("#ChatMsgOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime + " " + $("#" + trueId + "-ChatMsgIsChecked_Lbl").html() + " ");
+                $("#DDM_Id_Val").val(0);
+                $("#EditChatMsg_Col").fadeOut(250);
+                $("#DeleteChatMsg_Col").fadeOut(250);
+                if ($("#" + trueId + "-ChatMsgIsEdited_Lbl").css("display") != "none") {
+                    $("#ChatMsgOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime + ", edited");
+                }
+                else {
+                    $("#ChatMsgOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime);
+                }
             }
-        }
-        else {
-            $("#DDM_Id_Val").val(0);
-            $("#EditChatMsg_Col").fadeOut(250);
-            $("#DeleteChatMsg_Col").fadeOut(250);
-            if ($("#" + trueId + "-ChatMsgIsEdited_Lbl").css("display") != "none") {
-                $("#ChatMsgOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime + ", edited");
-            }
-            else {
-                $("#ChatMsgOptionAdditionalInfo_Lbl").html("sent at " + translatedDateAndTime);
-            }
-        }
+        }, 250);
 
         if (parseInt($("#ChatMessageOptions_Box").css("margin-bottom")) > 0) {
             insideBoxClose(true, null);
@@ -5273,17 +5580,6 @@ $(document).on("click", ".set-style", function (event) {
                 break;
         }
         $("#TextEditorSettings-Box").slideDown(450);
-        //if (parseInt($("#MainTextEditor_Box").css("margin-bottom")) >= 0) {
-        //    insideBoxClose(false, "MainTextEditor_Box");
-        //    setTimeout(function () {
-        //        $("#TextEditorSettings-Box").fadeIn(150);
-        //        insideBoxOpen("MainTextEditor_Box");
-        //    }, 700);
-        //}
-        //else {
-        //    $("#TextEditorSettings-Box").fadeIn(150);
-        //    insideBoxOpen("MainTextEditor_Box");
-        //}text-editor
     }
 });
 

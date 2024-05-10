@@ -33,26 +33,29 @@
         <div class="box-container p-2 pt-1 mt-1" id="Chats_Container-Box">
         </div>
 
-        <div class="box-container p-2 pt-1 mt-1" id="MessageForwarding_Box" style="display: none;">
-            <div class="box-container bg-light p-2">
-                <span class="card-text"> <i class="fa-solid fa-share"></i>  </span>
-                <span class="card-text white-space-on" id="ForwardingMsgText_Lbl">Message...</span>
-                <div class="border-top mt-1 pt-1"></div>
-                <span class="card-text">Forwarding to <span class="fw-500" id="ForwardingChatName_Lbl">unknown chat</span></span>
-                <div></div>
-                <small class="card-text text-muted">choose your desired chat to forward</small>
+        <div class="box-container p-2 pt-1 w-100" id="MessageForwarding_Box" style="display: none;">
+            <div class="box-container bg-light">
+                <div class="w-100 p-2">
+                    <div class="other-user-reply-container mb-1">
+                        <small class="card-text fw-500"> <i class="fa-solid fa-reply"></i> Replied to</small>
+                        <p class="card-text white-space-on message-label" id="ForwardingMsgText_Lbl">Forwarding Message...</p>
+                    </div>
+                    <p class="card-text white-space-on message-label" id="ForwardingMsgCaption_Lbl" style="display: none;">Additional Caption</p>
+                </div>
             </div>
-            <div class="box-container mt-2 bottom-0">
-                <div class="d-none">
-                    <input type="hidden" name="FromChatId" id="Forward_FromChatId_Val" value="@ChatInfo.Id" />
-                    <input type="hidden" name="ToChatId" id="Forward_ToChatId_Val" value="0" />
-                    <input type="hidden" name="MessageId" id="Forward_MsgId_Val" value="0" />
-                </div>
-                <div class="hstack gap-3">
-                    <button type="button" class="btn btn-standard btn-sm"> <i class="fa-solid fa-align-left"></i> </button>
-                    <textarea class="form-control rounded-pill shadow-none" placeholder="Add a caption here..." rows="1" maxlength="3400" name="Caption" id="Forward_Caption_Val"></textarea>
-                    <button type="submit" class="btn btn-standard-asset btn-primary btn-sm rounded-pill" id="ForwardAMessageSbmt_Btn" disabled>Forward</button>
-                </div>
+            <div class="ms-1">
+                <small class="card-text text-muted">choose any chat from list to forward</small>
+            </div>
+        </div>
+        <div class="box-container bottom-0 p-2">
+            <div class="d-none">
+                <input type="hidden" name="FromChatId" id="Forward_FromChatId_Val" value="0" />
+                <input type="hidden" name="ToChatId" id="Forward_ToChatId_Val" value="0" />
+            </div>
+            <div class="hstack gap-3">
+                <button type="button" class="btn btn-standard btn-sm" disabled> <i class="fa-solid fa-align-left"></i> </button>
+                <textarea class="form-control rounded-pill shadow-none" placeholder="Add a caption here..." rows="1" maxlength="3400" name="Caption" id="Forward_Caption_Val"></textarea>
+                <button type="submit" class="btn btn-standard-asset btn-primary btn-sm rounded-pill" id="ForwardAMessageSbmt_Btn" disabled>Forward</button>
             </div>
         </div>
     </div>

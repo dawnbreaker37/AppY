@@ -78,6 +78,10 @@ body {
     transition: all ease 0.3s;
 }
 
+.blur-filter {
+    backdrop-filter: blur(9px);
+}
+
 .form-pulsation {
     animation: pulsation 0.95s linear infinite normal;
 }

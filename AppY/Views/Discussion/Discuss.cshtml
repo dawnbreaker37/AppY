@@ -603,9 +603,9 @@
                                             }
                                             @if (message.RepliedMessageId != null)
                                             {
-                                                <div class="cur-user-reply-container mb-1 discussion-options reply-element" id="@message.Id-DiscussionMsgReplyBox" data-bs-msg-id="@message.Id">
-                                                    <small class="card-text fw-500 discussion-options reply-element" id="@message.RepliedMessageId-DiscussionMsgReplyIcon" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-reply"></i> Replied to</small>
-                                                    <p class="card-text white-space-on message-label discussion-options reply-element" id="@message.RepliedMessageId-DiscussionMsgReplyText" data-bs-msg-id="@message.Id">@message.RepliesMsgShortText</p>
+                                                <div class="cur-user-reply-container mb-1 reply-element" id="@message.Id-DiscussionMsgReplyBox" data-bs-msg-id="@message.Id">
+                                                    <small class="card-text fw-500 reply-element" id="@message.RepliedMessageId-DiscussionMsgReplyIcon" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-reply"></i> Replied to</small>
+                                                    <p class="card-text white-space-on message-label reply-element" id="@message.RepliedMessageId-DiscussionMsgReplyText" data-bs-msg-id="@message.Id">@message.RepliesMsgShortText</p>
                                                 </div>
                                             }
                                             <p class="card-text white-space-on message-label discussion-options" id="@message.Id-DiscussionOptionMsgText_Lbl">@message.Text</p>
@@ -617,7 +617,7 @@
                                             }
                                             else
                                             {
-                                                <small class="card-text discussion-options" id="@message.Id-DiscussionMsgIsChecked_Lbl" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-check text-muted"></i> </small>
+                                                <small class="card-text" id="@message.Id-DiscussionMsgIsChecked_Lbl" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-check text-muted"></i> </small>
                                             }
                                             <input type="hidden" id="@message.Id-DiscussionMsgFullDate_Val" value="@message.SentAt.ToString("dd/MM, HH:mm")" />
                                             <small class="card-text text-muted">@message.SentAt.ToShortTimeString()</small>
@@ -658,7 +658,7 @@
                                                     <p class="card-text reply-to-discussion-message message-label white-space-on reply-element" id="@message.Id-DiscussionMsgReplyText" data-bs-msg-id="@message.Id">@message.RepliesMsgShortText</p>
                                                 </div>
                                             }
-                                            <p class="card-text white-space-on message-label reply-to-discussion-message" id="@message.Id-DiscussionOptionMsgText_Lbl">@message.Text</p>
+                                            <p class="card-text white-space-on message-label discussion-options" id="@message.Id-DiscussionOptionMsgText_Lbl">@message.Text</p>
                                         </div>
                                         <div class="ms-1">
                                             <input type="hidden" id="@message.Id-DiscussionMsgFullDate_Val" value="@message.SentAt.ToString("dd/MM, HH:mm")" />
@@ -714,6 +714,15 @@
                             <button type="button" class="btn btn-standard btn-sm w-100" id="ReplyDiscussionMessage_Btn"> <i class="fa-solid fa-reply text-primary"></i> Reply</button>
                         </div>
                         <div class="col">
+                            <form method="get" asp-controller="Chat" asp-action="GetChatsShortly" id="GetChatsShortly_Form">
+                                <input type="hidden" name="ChatId" value="0" />
+                                <input type="hidden" name="IsForForwarding" value="true" />
+                                <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-share text-primary"></i> Forward</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col">
                             <div>
                                 <form method="get" asp-controller="Answer" asp-action="GetDiscussionMessageAnswers" id="GetDiscussionMessageAnswers_Form">
                                     <div class="d-none">
@@ -725,12 +734,21 @@
                                 </form>
                             </div>
                         </div>
-                        <div class="col" id="DeleteDiscussionMsg_Col">
-                            <form method="post" asp-controller="DiscussionMessage" asp-action="Delete" id="DeleteDiscussionMessage_Form">
-                                <input type="hidden" name="Id" id="DDM_Id_Val" value="0" />
+                        <div class="col">
+                            <form method="post" asp-controller="SavedMessage" asp-action="SaveDiscussionMessage" id="SaveDiscussionMessage_Form">
+                                <input type="hidden" name="Id" id="SDM_Id_Val" value="0" />
                                 <input type="hidden" name="DiscussionId" value="@DiscussionInfo.Id" />
-                                <button type="submit" class="btn btn-standard btn-sm text-danger w-100" id="DeleteDiscussionMessageSbmt_Btn"> <i class="fa-regular fa-trash-can"></i> Delete</button>
+                                <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-regular fa-bookmark text-primary"></i> Save</button>
                             </form>
+                        </div>
+                        <div class="col">
+                            <div class="col" id="DeleteDiscussionMsg_Col">
+                                <form method="post" asp-controller="DiscussionMessage" asp-action="Delete" id="DeleteDiscussionMessage_Form">
+                                    <input type="hidden" name="Id" id="DDM_Id_Val" value="0" />
+                                    <input type="hidden" name="DiscussionId" value="@DiscussionInfo.Id" />
+                                    <button type="submit" class="btn btn-standard btn-sm text-danger w-100" id="DeleteDiscussionMessageSbmt_Btn"> <i class="fa-regular fa-trash-can"></i> Delete</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -932,7 +950,7 @@
                         <input type="file" class="send-message-files" id="SendMessage_Images_Val" name="Images" accept=".png, .jpg, .jpeg" multiple max="6" />
                     </div>
                     <div class="hstack gap-2">
-                        <button type="button" class="btn btn-standard btn-sm return-main-bot-navbar"> <i class="fa-solid fa-chevron-down"></i> </button>
+                        <button type="button" class="btn btn-standard btn-sm" id="ReturnMainBotNavbar_Btn"> <i class="fa-solid fa-chevron-down"></i> </button>
                         <textarea name="Text" id="SendMessage_Text_Val" class="send-message-form-control message-form-control me-auto form-control-check-input w-100 overflow-hidden" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendMessage_SbmtBtn"></textarea>
                         <button type="button" class="btn btn-message-example btn-sm open-animated-collapse btn-open-inside-box" id="MainTextEditor_Box-Open"> <i class="fa-solid fa-plus btn-open-inside-box" id="MainTextEditor_Box-OpenY"></i> </button>
                         <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="SendAFileInMessage_Btn" data-bs-html="SendMessage_Images_Val"> <i class="fa-regular fa-file-image"></i> </button>
@@ -998,7 +1016,7 @@
                         <input type="file" class="send-message-files" id="SendMessage_Images_Val" name="Images" accept=".png, .jpg, .jpeg" multiple max="6" />
                     </div>
                     <div class="hstack gap-2">
-                        <button type="button" class="btn btn-standard btn-sm return-main-bot-navbar"> <i class="fa-solid fa-chevron-down"></i> </button>
+                        <button type="button" class="btn btn-standard btn-sm" id="ReturnMainBotNavbar_Btn"> <i class="fa-solid fa-chevron-down"></i> </button>
                         <textarea name="Text" id="SendMessage_Text_Val" class="send-message-form-control message-form-control me-auto form-control-check-input w-100 overflow-hidden" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendMessage_SbmtBtn" disabled readonly></textarea>
                         <button type="button" class="btn btn-message-example btn-sm open-animated-collapse btn-open-inside-box" id="MainTextEditor_Box-Open"> <i class="fa-solid fa-plus btn-open-inside-box" id="MainTextEditor_Box-OpenY"></i> </button>
                         <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="SendAFileInMessage_Btn" data-bs-html="SendMessage_Images_Val"> <i class="fa-regular fa-file-image"></i> </button>

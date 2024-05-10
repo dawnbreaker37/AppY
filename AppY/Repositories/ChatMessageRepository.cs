@@ -24,7 +24,7 @@ namespace AppY.Repositories
 
         public async override Task<string?> SendMessageAsync(SendMessage Model)
         {
-            bool CheckUser = await _context.ChatUsers.AsNoTracking().AnyAsync(u => u.ChatId == Model.DiscussionId && u.UserId == Model.UserId);
+            bool CheckUser = await _context.ChatUsers.AsNoTracking().AnyAsync(u => u.ChatId == Model.ChatId && u.UserId == Model.UserId);
             if (CheckUser)
             {
                 if (!String.IsNullOrWhiteSpace(Model.Text) && Model.Text.Length <= 3400 && Model.UserId > 0 && Model.ChatId > 0)
@@ -52,12 +52,12 @@ namespace AppY.Repositories
 
         public async override Task<string?> ReplyToMessageAsync(SendReply Model)
         {
-            if (Model.UserId > 0 && Model.CurrentChatUserId > 0 && Model.ChatId > 0 && !String.IsNullOrWhiteSpace(Model.Text) && Model.Text.Length <= 3400 && !String.IsNullOrWhiteSpace(Model.ReplyText) && Model.MessageId > 0)
+            if ((Model.MessageId == -256 || Model.MessageId > 0) && Model.UserId > 0 && Model.CurrentChatUserId > 0 && Model.ChatId > 0 && !String.IsNullOrWhiteSpace(Model.Text) && Model.Text.Length <= 3400 && !String.IsNullOrWhiteSpace(Model.ReplyText))
             {
                 bool CheckUser = await _context.ChatUsers.AsNoTracking().AnyAsync(u => u.ChatId == Model.ChatId && u.UserId == Model.UserId);
                 if (CheckUser)
                 {
-                    Model.ReplyText = Model.ReplyText.Length > 40 ? Model.ReplyText.Substring(0, 37) + "..." : Model.ReplyText;
+                    Model.ReplyText = Model.ReplyText.Length > 125 ? Model.ReplyText.Substring(0, 125) + "..." : Model.ReplyText;
                     ChatMessage chatMessage = new ChatMessage
                     {
                         ChatId = Model.ChatId,
@@ -90,13 +90,19 @@ namespace AppY.Repositories
             }
             return 0;
         }
-        public override Task<int> MarkAsReadAllMessagesAsync(int DiscussionId, int UserId)
+        public override async Task<int> MarkAsReadAllMessagesAsync(int DiscussionId, int UserId)
         {
-            throw new NotImplementedException();
+            if (DiscussionId > 0 && UserId > 0) return await _context.ChatMessages.AsNoTracking().Where(c => c.UserId != UserId && !c.IsChecked).ExecuteUpdateAsync(c => c.SetProperty(c => c.IsChecked, true));
+            else return 0;
         }
-        public override Task<int> MarkAsReadAsync(int MessageId, int UserId)
+        public override async Task<int> MarkAsReadAsync(int MessageId, int UserId)
         {
-            throw new NotImplementedException();
+            if(MessageId > 0 && UserId > 0)
+            {
+                int Result = await _context.ChatMessages.AsNoTracking().Where(c => c.Id == MessageId && c.UserId != UserId && !c.IsDeleted).ExecuteUpdateAsync(c => c.SetProperty(c => c.IsChecked, true));
+                if (Result > 0) return MessageId;
+            }
+            return 0;
         }
         public async override Task<int> DeleteMessageAsync(int Id, int UserId, int ChatOrDiscussionId)
         {
@@ -163,7 +169,7 @@ namespace AppY.Repositories
 
         public async override Task<string?> Forward(ForwardMessage Model)
         {
-            if (Model.MessageId > 0 && Model.CurrentChatUserId > 0 && Model.ToChatId > 0 && Model.ToChatId != Model.FromChatId && Model.FromChatId > 0 && !String.IsNullOrWhiteSpace(Model.ForwardingText) && Model.ForwardingText.Length <= 3400)
+            if (Model.CurrentChatUserId > 0 && Model.ToChatId > 0 && Model.ToChatId != Model.FromChatId && Model.FromChatId > 0 && !String.IsNullOrWhiteSpace(Model.ForwardingText) && Model.ForwardingText.Length <= 3400)
             {
                 bool ChatForwardingAvailability = await _context.Chats.AsNoTracking().AnyAsync(c => c.Id == Model.ToChatId && !c.ForbidMessageForwarding);
                 if (ChatForwardingAvailability)
@@ -171,8 +177,7 @@ namespace AppY.Repositories
                     bool ChatAvailability = await _context.ChatUsers.AsNoTracking().AnyAsync(c => c.UserId == Model.UserId && c.ChatId == Model.ToChatId);
                     if (ChatAvailability)
                     {
-                        Model.ForwardingText = Model.ForwardingText.Length > 40 ? Model.ForwardingText.Substring(0, 37) + "..." : Model.ForwardingText;
-
+                        Model.ForwardingText = Model.ForwardingText.Length > 125 ? Model.ForwardingText.Substring(0, 125) + "..." : Model.ForwardingText;
                         ChatMessage chatMessage = new ChatMessage
                         {
                             ChatId = Model.ToChatId,

@@ -34,6 +34,7 @@ builder.Services.AddTransient<Answer, DiscussionMessageAnswersRepository>();
 builder.Services.AddTransient<ReactionAbstraction, DiscussionMessageReactionRepository>();
 builder.Services.AddTransient<Image, ImageRepository>();
 builder.Services.AddTransient<ICommandLine, CommandLineTool>();
+builder.Services.AddTransient<ISavedMessage, SavedMessageRepository>();
 
 builder.Services.AddIdentity<User, IdentityRole<int>>(Opt =>
 {
