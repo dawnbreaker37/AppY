@@ -180,6 +180,31 @@
         </div>
         <div class="box-container p-2 pt-1 mt-1" id="Chats_Container-Box">
         </div>
+        <div class="box-container p-2 pt-1 w-100" id="MessageForwarding_Box" style="display: none;">
+            <div class="box-container bg-light">
+                <div class="w-100 p-2">
+                    <div class="other-user-reply-container mb-1">
+                        <small class="card-text fw-500"> <i class="fa-solid fa-reply"></i> Replied to</small>
+                        <p class="card-text white-space-on message-label" id="ForwardingMsgText_Lbl">Forwarding Message...</p>
+                    </div>
+                    <p class="card-text white-space-on message-label" id="ForwardingMsgCaption_Lbl" style="display: none;">Additional Caption</p>
+                </div>
+            </div>
+            <div class="ms-1">
+                <small class="card-text text-muted">choose any chat from list to forward</small>
+            </div>
+        </div>
+        <div class="box-container bottom-0 p-2">
+            <div class="d-none">
+                <input type="hidden" name="FromDiscussionId" id="Forward_FromDiscussionId_Val" value="@DiscussionInfo.Id" />
+                <input type="hidden" name="ToChatId" id="Forward_ToChatId_Val" value="0" />
+            </div>
+            <div class="hstack gap-3">
+                <button type="button" class="btn btn-standard btn-sm" disabled> <i class="fa-solid fa-align-left"></i> </button>
+                <textarea class="form-control rounded-pill shadow-none" placeholder="Add a caption here..." rows="1" maxlength="3400" name="Caption" id="Forward_Caption_Val"></textarea>
+                <button type="submit" class="btn btn-standard-asset btn-primary btn-sm rounded-pill" id="ForwardAMessageSbmt_Btn" disabled>Forward</button>
+            </div>
+        </div>
     </div>
 
     <div class="smallside-bot-navbar shadow-standard" style="display: none; bottom: -300px;" id="SmallsideBotNavbar">
@@ -1047,3 +1072,57 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+<script>
+    const hubConnection = new signalR.HubConnectionBuilder().withUrl("/chat").build();
+
+    async function start() {
+        try {
+            await hubConnection.start();
+        }
+        catch (err) {
+            console.log(err.toString());
+            setTimeout(function () {
+                start();
+            }, 1500);
+        }
+    }
+
+    document.getElementById("ForwardAMessageSbmt_Btn").addEventListener("click", function (event) {
+        event.preventDefault();
+        const fromDiscussionId = parseInt($("#Forward_FromDiscussionId_Val").val());
+        const toChatId = parseInt($("#Forward_ToChatId_Val").val());
+        const userId = parseInt($("#SM_UserId_Val").val());
+        const message = $("#ForwardingMsgText_Lbl").html();
+        const caption = $("#Forward_Caption_Val").val();
+        const messageId = parseInt($("#CurrentGotDiscussionMsg_Id_Val").val());
+
+        hubConnection.invoke("DiscussionMessageForwarding", messageId, fromDiscussionId, toChatId, userId, message, caption).catch(function (err) {
+            console.log(err.toString());
+        });
+    });
+
+    hubConnection.on("Forward_Success", function () {
+        animatedClose(false, "Chats_Container", true, true);
+        alert('<i class="fa-regular fa-circle-check fa-spin text-primary" style="--fa-animation-duration: 1.2s; --fa-animation-iteration-count: 3;"></i>', "Selected message has been successfully forwarded", "Close", null, 0, null, null, null, 3.5);
+        setTimeout(function () {
+            $(".forward-chat-msg").removeClass("border-primary");
+            $(".forward-chat-msg").html(' <i class="fa-solid fa-share text-primary"></i> Choose');
+            $("#Forward_Caption_Val").val(null);
+            $("#ForwardingChatName_Lbl").html("unknown chat");
+            $("#Forward_ToChatId_Val").val(0);
+            $("#Forward_MessageId_Val").val(0);
+            $("#MessageForwarding_Box").fadeOut(300);
+        }, 500);
+    });
+
+    hubConnection.on("ForwardDeny", function () {
+        alert('<i class="fa-regular fa-circle-xmark fa-shake"></i>', "Forwarding denied due to chat security settings (selected chat has turned off the ability to get any forwarded messages)", "Close", null, 0, null, null, null, 4);
+    });
+
+    hubConnection.onclose(async function () {
+        await start();
+    });
+    start();
+</script>

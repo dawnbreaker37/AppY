@@ -60,6 +60,11 @@ namespace AppY.Repositories
             return null;
         }
 
+        public async Task<SavedMessageContent?> GetPinnedMessageInfoAsync(int Id, int SkipCount)
+        {
+            return await _context.SavedMessagesContent.AsNoTracking().Where(s => s.UserId == Id && !s.IsDeleted && s.IsPinned).OrderByDescending(s => s.PinnedAt!.Value).Skip(SkipCount).Select(s => new SavedMessageContent { Id = s.Id, Text = s.Text, Badge = s.Badge }).FirstOrDefaultAsync();
+        }
+
         public IQueryable<SavedMessageContent>? GetSavedMessages(int UserId, int SkipCount, int LoadCount)
         {
             if (UserId > 0)
@@ -82,9 +87,14 @@ namespace AppY.Repositories
 
         public async Task<int> PinAsync(int Id, int UserId)
         {
-            int Result = await _context.SavedMessagesContent.AsNoTracking().Where(s => s.Id == Id && s.UserId == UserId && !s.IsDeleted).ExecuteUpdateAsync(s => s.SetProperty(s => s.IsPinned, true));
+            int Result = await _context.SavedMessagesContent.AsNoTracking().Where(s => s.Id == Id && s.UserId == UserId && !s.IsDeleted).ExecuteUpdateAsync(s => s.SetProperty(s => s.IsPinned, true).SetProperty(s => s.PinnedAt, DateTime.Now));
             if (Result > 0) return Id;
             else return 0;
+        }
+
+        public async Task<int> PinnedMessagesCountAsync(int Id)
+        {
+            return await _context.SavedMessagesContent.AsNoTracking().CountAsync(c => c.UserId == Id && c.IsPinned);
         }
 
         public async Task<bool> SaveTheMessageAsync(int Id, int ChatOrDiscussionId, int UserId, bool IsFromChat)
@@ -105,7 +115,7 @@ namespace AppY.Repositories
                             Text = GetMessageTextIfItIsPossible,
                             UserId = UserId,
                             Badge = "Saved from Chat",
-                            DiscussionId = 0
+                            DiscussionId = 0,
                         };
                         int Result = await AddSavedMessageAsync(Model);
                         if (Result > 0) return true;
@@ -147,11 +157,13 @@ namespace AppY.Repositories
             else return null;
         }
 
-        public async Task<int> UnpinAsync(int Id, int UserId)
+        public async Task<string?> UnpinAsync(int Id, int UserId)
         {
-            int Result = await _context.SavedMessagesContent.AsNoTracking().Where(s => s.Id == Id && s.UserId == UserId && !s.IsDeleted).ExecuteUpdateAsync(s => s.SetProperty(s => s.IsPinned, false));
-            if (Result > 0) return Id;
-            else return 0;
+            DateTime? NullDate = null;
+
+            int Result = await _context.SavedMessagesContent.AsNoTracking().Where(s => s.Id == Id && s.UserId == UserId && !s.IsDeleted).ExecuteUpdateAsync(s => s.SetProperty(s => s.IsPinned, false).SetProperty(s => s.PinnedAt, NullDate));
+            if (Result > 0) return await _context.SavedMessagesContent.AsNoTracking().Where(s => s.UserId == UserId && s.IsPinned).Select(s => s.Text).FirstOrDefaultAsync();
+            else return null;
         }
 
         public async Task<bool> UnstarSavedMessageAsync(int Id)

@@ -176,15 +176,21 @@ namespace AppY.Controllers
                     bool TryParse = Int32.TryParse(UserId_Str, out int UserId);
                     if (TryParse)
                     {
+                        SavedMessageContent? FirstPinnedSavedMessage = null;
                         List<SavedMessageContent>? Messages = null;
                         int SavedMessagesCount = await _savedMessage.GetSavedMessagesCountAsync(UserId);
+                        int PinnedMessagesCount = 0;
                         if (SavedMessagesCount > 0)
                         {
+                            PinnedMessagesCount = await _savedMessage.PinnedMessagesCountAsync(UserId);
+                            if (PinnedMessagesCount > 0) FirstPinnedSavedMessage = await _savedMessage.GetPinnedMessageInfoAsync(UserId, 0);
                             IQueryable<SavedMessageContent>? Messages_Preview = _savedMessage.GetSavedMessages(UserId, 0, 55);
                             if (Messages_Preview != null) Messages = await Messages_Preview.ToListAsync();
                         }
 
                         ViewBag.UserId = UserId;
+                        ViewBag.PinnedMessagesCount = PinnedMessagesCount;
+                        ViewBag.FirstPinnedMessage = FirstPinnedSavedMessage;
                         ViewBag.MessagesCount = SavedMessagesCount;
                         ViewBag.Messages = Messages;
 

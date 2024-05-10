@@ -7,6 +7,7 @@ using AppY.ViewModels;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using Microsoft.EntityFrameworkCore;
+using MimeKit;
 using NuGet.Protocol.Plugins;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -105,7 +106,7 @@ namespace AppY.ChatHub
             {
                 bool IsChatMuted = await _chat.IsChatMutedAsync(ChatId, ReceiverId);
 
-                await this.Clients.User(ReceiverId.ToString()).SendAsync("Receive", Text, Result, ChatId, Chatname, SenderId, IsChatMuted);
+                if(!IsChatMuted) await this.Clients.User(ReceiverId.ToString()).SendAsync("Receive", Text, Result, ChatId, Chatname, SenderId, IsChatMuted);
                 await this.Clients.Caller.SendAsync("CallerReceive", Text, Result, ChatId);
             }
             else await this.Clients.All.SendAsync("Error", "Can't send this message now");
@@ -121,7 +122,8 @@ namespace AppY.ChatHub
                 ToChatId = ToChatId,
                 MessageId = MessageId,
                 CurrentChatUserId = CurrentChatUserId,
-                UserId = UserId
+                UserId = UserId,
+                IsFromDiscussion = false
             };
             string? Result = await _message.Forward(forwardMessage);
             if(Result != null)
@@ -129,13 +131,70 @@ namespace AppY.ChatHub
                 int ReceiverId = await _chat.ChatSecondUserIdAsync(ToChatId, UserId);
                 bool IsChatMuted = await _chat.IsChatMutedAsync(ToChatId, ReceiverId);
 
-                await this.Clients.User(ReceiverId.ToString()).SendAsync("ReplyReceive", Result, Caption, ForwardingText, MessageId, ToChatId, UserId, !String.IsNullOrWhiteSpace(ChatName) ? ChatName : "From your chats", IsChatMuted);
+                if(!IsChatMuted) await this.Clients.User(ReceiverId.ToString()).SendAsync("ReplyReceive", Result, Caption, ForwardingText, MessageId, ToChatId, UserId, !String.IsNullOrWhiteSpace(ChatName) ? ChatName : "From your chats", IsChatMuted);
                 await this.Clients.Caller.SendAsync("Forward_Success");
             }
             else
             {
                 await this.Clients.Caller.SendAsync("ForwardDeny");
             }
+        }
+
+        public async Task DiscussionMessageForwarding(int MessageId, int FromDiscussionId, int ToChatId, int UserId, string? ForwardingMessage, string? Caption)
+        {
+            int CurrentChatUserId = await _context.ChatUsers.AsNoTracking().Where(c => c.UserId == UserId && c.ChatId == ToChatId).Select(c => c.Id).FirstOrDefaultAsync();
+            if(CurrentChatUserId > 0)
+            {
+                string? Result = null;
+                if (!String.IsNullOrWhiteSpace(Caption))
+                {
+                    ForwardMessage Model = new ForwardMessage
+                    {
+                        Caption = String.IsNullOrEmpty(Caption) ? ForwardingMessage : Caption,
+                        ForwardingText = ForwardingMessage,
+                        ToChatId = ToChatId,
+                        FromChatId = FromDiscussionId,
+                        UserId = UserId,
+                        CurrentChatUserId = CurrentChatUserId,
+                        MessageId = MessageId,
+                        IsFromDiscussion = true
+                    };
+                    Result = await _message.Forward(Model);
+
+                    if (Result != null)
+                    {
+                        int ReceiverId = await _chat.GetChatSecondUserInfoAsync(ToChatId, UserId);
+                        bool IsChatMuted = await _chat.IsChatMutedAsync(ToChatId, ReceiverId);
+
+                        await this.Clients.Caller.SendAsync("Forward_Success");
+                        if (!IsChatMuted) await this.Clients.User(ReceiverId.ToString()).SendAsync("ReplyReceive", Result, Caption, ForwardingMessage, MessageId, ToChatId, UserId, "From your discussions", IsChatMuted);
+                    }
+                }
+                else
+                {
+                    SendMessage Model = new SendMessage
+                    {
+                        Text = ForwardingMessage,
+                        ChatId = ToChatId,
+                        IsAutoDeletable = 0,
+                        SentAt = DateTime.Now,
+                        UserId = UserId,
+                        CurrentChatUserId = CurrentChatUserId,
+                        DiscussionId = 0
+                    };
+                    Result = await _message.SendMessageAsync(Model);
+
+                    if (Result != null)
+                    {
+                        int ReceiverId = await _chat.GetChatSecondUserInfoAsync(ToChatId, UserId);
+                        bool IsChatMuted = await _chat.IsChatMutedAsync(ToChatId, ReceiverId);
+
+                        await this.Clients.Caller.SendAsync("Forward_Success");
+                        if (!IsChatMuted) await this.Clients.User(ReceiverId.ToString()).SendAsync("Receive", ForwardingMessage, Result, ToChatId, "From your discussions", UserId, IsChatMuted);
+                    }
+                }
+            }
+            await this.Clients.Caller.SendAsync("ForwardDeny");
         }
 
         public async Task SendOrForward(string? Caption, string ForwardingMessage, int ToChatId, int SenderId, string? ChatName)
@@ -183,7 +242,7 @@ namespace AppY.ChatHub
                     {
                         bool IsMuted = await _chat.IsChatMutedAsync(ToChatId, ReceiverId);
 
-                        await this.Clients.User(ReceiverId.ToString()).SendAsync("ReplyReceive", Result, Caption, ForwardingMessage, 0, ToChatId, SenderId, !String.IsNullOrWhiteSpace(ChatName) ? ChatName : "From your chats", IsMuted);
+                        if (!IsMuted) await this.Clients.User(ReceiverId.ToString()).SendAsync("ReplyReceive", Result, Caption, ForwardingMessage, 0, ToChatId, SenderId, !String.IsNullOrWhiteSpace(ChatName) ? ChatName : "From your chats", IsMuted);
                         await this.Clients.Caller.SendAsync("Forward_Success");
                     }
                 }
@@ -208,7 +267,7 @@ namespace AppY.ChatHub
             {
                 bool IsMuted = await _chat.IsChatMutedAsync(ChatId, ReceiverId);
 
-                await this.Clients.User(ReceiverId.ToString()).SendAsync("ReplyReceive", Result, Text, ReplyText, MessageId, ChatId, UserId, ChatName, IsMuted);
+                if(!IsMuted) await this.Clients.User(ReceiverId.ToString()).SendAsync("ReplyReceive", Result, Text, ReplyText, MessageId, ChatId, UserId, ChatName, IsMuted);
                 await this.Clients.Caller.SendAsync("Caller_ReplyReceive", Result, Text, ReplyText, MessageId);
             }
         }

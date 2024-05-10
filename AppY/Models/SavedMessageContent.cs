@@ -18,6 +18,7 @@ namespace AppY.Models
         public int? DiscussionMessageId { get; set; }
         [ForeignKey("User")]
         public int UserId { get; set; }
+        public DateTime? PinnedAt { get; set; }
         public bool IsEdited { get; set; }
         public bool IsPinned { get; set; }
         public ChatMessage? ChatMessage { get; set; }

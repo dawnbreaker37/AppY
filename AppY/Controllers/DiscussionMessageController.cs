@@ -65,7 +65,7 @@ namespace AppY.Controllers
                 else return Json(new { success = false, alert = "This reply can't be sent" });
             }
             return Json(new { success = false, alert = "We're sorry, but you haven't got access to send a reply" });
-        }  
+        } 
 
         [HttpGet]
         public async Task<IActionResult> GetMessageInfo(int Id, int UserId)

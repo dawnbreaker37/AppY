@@ -7,7 +7,9 @@ namespace AppY.Interfaces
     public interface ISavedMessage : IBase<SavedMessageContent>
     {
         public Task<int> PinAsync(int Id, int UserId);
-        public Task<int> UnpinAsync(int Id, int UserId);
+        public Task<string?> UnpinAsync(int Id, int UserId);
+        public Task<int> PinnedMessagesCountAsync(int Id);
+        public Task<SavedMessageContent?> GetPinnedMessageInfoAsync(int Id, int SkipCount);
         public Task<bool> SaveTheMessageAsync(int Id, int ChatOrDiscussionId, int UserId, bool IsFromChat);
         public Task<int> GetSavedMessagesCountAsync(int Id);
         public Task<bool> IsSavedMessagePinnedAsync(int Id, int UserId);

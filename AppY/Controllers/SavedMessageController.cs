@@ -1,9 +1,8 @@
 ﻿using AppY.Data;
 using AppY.Interfaces;
+using AppY.Models;
 using AppY.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace AppY.Controllers
 {
@@ -22,7 +21,47 @@ namespace AppY.Controllers
         public async Task<IActionResult> IsPinned(int Id, int UserId)
         {
             bool Result = await _savedMessage.IsSavedMessagePinnedAsync(Id, UserId);
-            return Json(new { success = Result });
+            return Json(new { success = Result, id = Id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Pin(int Id)
+        {
+            if(Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId = Request.Cookies["CurrentUserId"];
+                bool TryParse = Int32.TryParse(CurrentUserId, out int UserId);
+                if(TryParse)
+                {
+                    int Result = await _savedMessage.PinAsync(Id, UserId);
+                    if (Result > 0) return Json(new { success = true, id = Result });
+                }
+            }
+            return Json(new { success = false, alert = "This message cannot be pinned" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Unpin(int Id)
+        {
+            if (Request.Cookies.ContainsKey("CurrentUserId"))
+            {
+                string? CurrentUserId = Request.Cookies["CurrentUserId"];
+                bool TryParse = Int32.TryParse(CurrentUserId, out int UserId);
+                if (TryParse)
+                {
+                    string? Result = await _savedMessage.UnpinAsync(Id, UserId);
+                    return Json(new { success = true, result = Result });
+                }
+            }
+            return Json(new { success = false, alert = "This message cannot be unpinned by you" });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPinnedMessageInfo(int Id, int SkipCount)
+        {
+            SavedMessageContent? Result = await _savedMessage.GetPinnedMessageInfoAsync(Id, SkipCount);
+            if (Result != null) return Json(new { success = true, result = Result });
+            else return Json(new { success = false, alert = "No information about next pinned message" });
         }
 
         [HttpPost]
@@ -59,7 +98,7 @@ namespace AppY.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveDiscussionMessage(int Id, int DiscussionId, string? Text)
+        public async Task<IActionResult> SaveDiscussionMessage(int Id, int DiscussionId)
         {
             if (Request.Cookies.ContainsKey("CurrentUserId"))
             {

@@ -3,13 +3,14 @@
     ViewData["Title"] = "Saved Messages";
 
     int MessagesCount = ViewBag.MessagesCount;
+    SavedMessageContent? FirstPinnedMessage = ViewBag.FirstPinnedMessage;
 }
 
 <div class="main-sidebar" id="Main_SideBar">
     <div class="d-none">
-        <input type="hidden" id="SM_UserId_Val" value="@ViewBag.UserId" />
         <form method="get" asp-controller="SavedMessage" asp-action="IsPinned" id="IsSavedMessagePinned_Form">
-            <input type="hidden" id="ISMP_Id_Val" value="0" />
+            <input type="hidden" id="ISMP_Id_Val" name="Id" value="0" />
+            <input type="hidden" id="SM_UserId_Val" name="UserId" value="@ViewBag.UserId" />
         </form>
     </div>
 
@@ -161,6 +162,38 @@
         {
             <small class="card-text text-muted ms-1" id="SavedMessagesCount_Lbl">@MessagesCount saved messages</small>
         }
+        @if (FirstPinnedMessage != null)
+        {
+            <div class="box-container ps-1 pe-1 mt-1" id="PinnedMessages_Box">
+                <div class="float-end ms-1">
+                    <form method="get" asp-controller="SavedMessage" asp-action="GetPinnedMessageInfo" id="GetPinnedSavedMessageInfo_Form">
+                        <input type="hidden" name="Id" value="@ViewBag.UserId" />
+                        <input type="hidden" name="SkipCount" id="GSMPMI_SkipCount_Val" value="1" />
+                        <button type="submit" class="btn btn-standard btn-sm">Next <i class="fa-solid fa-angle-right"></i> </button>
+                    </form>
+                </div>
+                <small class="card-text fw-500 pt-1"> <i class="fa-solid fa-thumbtack fa-rotate-by text-primary me-1" style="--fa-rotate-angle: 45deg;"></i> Pinned Message, <span id="PinnedMessagesCurrentNumber_Span">1</span> of <span id="PinnedMessagesCount_Span">@ViewBag.PinnedMessagesCount</span></small>
+                <div class="box-container" id="CurrentPinnedMessageInfo_Box">
+                    <small class="card-text text-muted text-truncate message-label" id="CurrentPinnedMessagesText_Lbl" data-bs-msg-id="@FirstPinnedMessage.Id">@FirstPinnedMessage.Text</small>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="box-container ps-1 pe-1 mt-1" id="PinnedMessages_Box" style="display: none;">
+                <div class="float-end ms-1">
+                    <form method="get" asp-controller="SavedMessage" asp-action="GetPinnedMessageInfo" id="GetPinnedSavedMessageInfo_Form">
+                        <input type="hidden" name="Id" value="@ViewBag.UserId" />
+                        <input type="hidden" name="SkipCount" id="GSMPMI_SkipCount_Val" value="1" />
+                        <button type="submit" class="btn btn-standard btn-sm">Next <i class="fa-solid fa-angle-right"></i> </button>
+                    </form>
+                </div>
+                <small class="card-text fw-500 pt-1"> <i class="fa-solid fa-thumbtack fa-rotate-by text-primary me-1" style="--fa-rotate-angle: 45deg;"></i> Pinned Message, <span id="PinnedMessagesCurrentNumber_Span">1</span> of <span id="PinnedMessagesCount_Span">@ViewBag.PinnedMessagesCount</span></small>
+                <div class="box-container" id="CurrentPinnedMessageInfo_Box">
+                    <small class="card-text text-muted text-truncate message-label" id="CurrentPinnedMessagesText_Lbl">No Currently Pinned Message</small>
+                </div>
+            </div>
+        }
     </div>
     <div class="box-container p-2 pt-1 mt-1 discussion-box" id="Preloaded_Container-Box">
         @if (MessagesCount <= 0)
@@ -270,7 +303,7 @@
                         <div id="UnpinTheMessage_Box" style="display: none;">
                             <form method="post" asp-controller="SavedMessage" asp-action="Unpin" id="UnpinTheSavedMessage_Form">
                                 <input type="hidden" name="Id" id="UTSM_Id_Val" value="0" />
-                                <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fas fa-thumbtack text-primary"></i> Pin</button>
+                                <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-link-slash text-primary"></i> Unpin</button>
                             </form>
                         </div>
                     </div>
@@ -278,9 +311,6 @@
                 <div class="row mt-2">
                     <div class="col">
                         <button type="button" class="btn btn-standard btn-sm w-100" id="StarTheSavedMessage_Btn"> <i class="fa-solid fa-star-half-stroke text-primary"></i> Star</button>
-                    </div>
-                    <div class="col">
-                        <button type="button" class="btn btn-standard btn-sm w-100"> <i class="fa-regular fa-note-sticky text-primary"></i> Note</button>
                     </div>
                     <div class="col">
                         <form method="post" asp-controller="SavedMessage" asp-action="Delete" id="DeleteSavedMessage_Form">

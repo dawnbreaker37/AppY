@@ -4460,6 +4460,7 @@ $("#DI_LoadAdditionalInfo_Btn").on("click", function () {
 });
 
 //Saved Messages//
+//GetChatsShortly
 $("#IsSavedMessagePinned_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -4467,13 +4468,103 @@ $("#IsSavedMessagePinned_Form").on("submit", function (event) {
 
     $.get(url, data, function (response) {
         if (response.success) {
-            $("#UnpinTheMessage_Box").fadeIn(250);
-            $("#PinTheMessage_Box").fadeOut(250);
+            $("#PTSM_Id_Val").val(0);
+            $("#UTSM_Id_Val").val(response.id);
+            setTimeout(function () {
+                $("#UnpinTheMessage_Box").fadeIn(0);
+                $("#PinTheMessage_Box").fadeOut(0);
+            }, 375);
         }
         else {
-            $("#UnpinTheMessage_Box").fadeOut(250);
-            $("#PinTheMessage_Box").fadeIn(250);
+            $("#PTSM_Id_Val").val(response.id);
+            $("#UTSM_Id_Val").val(0);
+            setTimeout(function () {
+                $("#UnpinTheMessage_Box").fadeOut(0);
+                $("#PinTheMessage_Box").fadeIn(0);
+            }, 375);
         }
+    });
+});
+
+$("#PinTheSavedMessage_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let messageText = $("#" + response.id + "-SavedMsgText_Lbl").html();
+            let pinnedMessagesCount = parseInt($("#PinnedMessagesCount_Span").text());
+            pinnedMessagesCount++;
+            $("#PinnedMessages_Box").slideDown(300);
+            $("#GSMPMI_SkipCount_Val").val(1);
+            $("#PinnedMessagesCurrentNumber_Span").text(1);
+            $("#CurrentPinnedMessagesText_Lbl").html(textDecoder(messageText, null));
+            $("#PinnedMessagesCount_Span").text(pinnedMessagesCount);
+
+            insideBoxClose(false, "SavedMessageOptions_Box");
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+        }
+    });
+});
+$("#UnpinTheSavedMessage_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.post(url, data, function (response) {
+        if (response.success) {
+            let pinnedMessagesCount = parseInt($("#PinnedMessagesCount_Span").text());
+            pinnedMessagesCount--;
+
+            if (pinnedMessagesCount > 0) {
+                $("#GSMPMI_SkipCount_Val").val(1);
+                $("#PinnedMessagesCurrentNumber_Span").text(1);
+                $("#CurrentPinnedMessagesText_Lbl").html(textDecoder(response.result, null));
+                $("#PinnedMessagesCount_Span").text(pinnedMessagesCount);
+            }
+            else {
+                $("#GSMPMI_SkipCount_Val").val(0);
+                $("#PinnedMessages_Box").slideUp(300);
+                setTimeout(function () {
+                    $("#PinnedMessagesCount_Span").text(0);
+                    $("#PinnedMessagesCurrentNumber_Span").text(1);
+                    $("#CurrentPinnedMessagesText_Lbl").html("No Currently Pinned Messages");
+                }, 300);
+            }
+
+            insideBoxClose(false, "SavedMessageOptions_Box");
+        }
+        else {
+            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+        }
+    });
+});
+
+$("#GetPinnedSavedMessageInfo_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            let currentPinnedMessageValue = parseInt($("#GSMPMI_SkipCount_Val").val());
+            let maxPinnedMessageValue = parseInt($("#PinnedMessagesCount_Span").text());
+
+            $("#CurrentPinnedMessagesText_Lbl").html(textDecoder(response.result.text, null));
+            currentPinnedMessageValue++;
+
+            $("#PinnedMessagesCurrentNumber_Span").text(currentPinnedMessageValue);
+            if (currentPinnedMessageValue >= maxPinnedMessageValue) {
+                $("#GSMPMI_SkipCount_Val").val(0);
+            }
+            else {
+                $("#GSMPMI_SkipCount_Val").val(currentPinnedMessageValue);
+            }
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
     });
 });
 
@@ -4694,7 +4785,7 @@ $(document).on("click", ".saved-message-options", function (event) {
             insideBoxClose(false, "SavedMessageOptions_Box");
             setTimeout(function () {
                 insideBoxOpen("SavedMessageOptions_Box");
-            }, 350);
+            }, 700);
         }
         else {
             insideBoxOpen("SavedMessageOptions_Box");
@@ -5054,6 +5145,8 @@ $(document).on("click", ".discussion-options", function (event) {
             setTimeout(function () {
                 $("#CurrentGotDiscussionMsg_FullText_Val").html(messageText);
                 $("#GDMA_MsgText_Val").val(messageText);
+                $("#ForwardingMsg_Text_Val").val(messageText);
+                $("#ForwardingMsgText_Lbl").html(textDecoder(messageText, null));
                 $("#DiscussionOptionMessageText_Lbl").html(textDecoder(messageText.length > 400 ? messageText.substring(0, 400) + "..." : messageText, null));
                 if ($("#" + trueId + "-DiscussionMsgNmBox").hasClass("cur-user-msg-box")) {
                     $("#DDM_Id_Val").val(trueId);

@@ -18,5 +18,6 @@ namespace AppY.ViewModels
         [Required]
         public int UserId { get; set; }
         public int CurrentChatUserId { get; set; }
+        public bool IsFromDiscussion { get; set; }
     }
 }
