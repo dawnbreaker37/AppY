@@ -1,0 +1,139 @@
+﻿@model Post_ViewModel
+@{
+    ViewData["Title"] = "Add Post";
+}
+
+<div class="main-container mh-max shadow-standard p-2" id="PostAdded_Container">
+    <div class="box-container bg-light p-3 text-center">
+        <h1 class="h1"> <i class="fa-solid fa-check-to-slot"></i> </h1>
+        <h3 class="h3">Post Added</h3>
+        <small class="card-text text-muted">Your recent post has been successfully added. Go to your page to see the actual post itself</small>
+    </div>
+    <div class="box-container mt-2 p-2 text-center">
+        <div class="row">
+            <div class="col">
+                <a asp-controller="User" asp-action="Account" class="btn btn-primary btn-standard-asset w-100">Go to Account Page</a>
+            </div>
+            <div class="col">
+                <button type="button" class="btn btn-standard-asset btn-light btn-open-container w-100" id="Preloaded_Container-Open">Add Another Post</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-container mh-max shadow-standard p-2" id="Preloaded_Container">
+    <div class="box-container bg-light p-3 text-center">
+        <h1 class="h1"> <i class="fa-solid fa-umbrella-beach"></i> </h1>
+        <h3 class="h3">Time to Post</h3>
+        <small class="card-text text-muted">Feel free to chat and post on this page. Anyone who visits can interact with you (may be he/she finds your posts interesting)</small>
+    </div>
+    <div class="card-group bg-transparent mt-3">
+        <div class="card bg-transparent border-0 mt-1 me-1">
+            <div class="box-container">
+                <form method="post" asp-controller="Post" asp-action="Add" id="AddPost_Form">
+                    <div class="form-floating">
+                        <textarea name="Text" class="form-control mh-230 shadow-none" rows="4" placeholder="Leave your text here..." id="PostText_Val" style="height: 125px;"></textarea>
+                        <label class="fw-500" for="PostText_Val">Your Comments</label>
+                    </div>
+                    <div class="box-container mt-2">
+                        <input type="file" asp-for="File" class="send-message-files d-none" id="SelectaFile_Val" accept=".png, .jpg, .jpeg" />
+                        <div class="hstack gap-3">
+                            <button type="button" class="btn btn-standard-asset btn-light shadow-none w-100" id="SendAFileInMessage_Btn" data-bs-html="SelectaFile_Val"> <i class="fa-solid fa-paperclip"></i> Select</button>
+                            <div class="box-container bg-light text-muted text-truncate p-2 w-100" id="SelectedFileInfo_Lbl">Select an image to link with</div>
+                            <button type="button" class="btn btn-standard-asset btn-light text-primary shadow-none w-100" id="CancelSelectedFilesInMessage_Btn" disabled>Cancel</button>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mt-3">
+                        <input asp-for="CanBeForwarded" class="form-check-input" type="checkbox" role="switch" value="true" checked />
+                        <label class="form-check-label fw-500" asp-for="CanBeForwarded">Can be Forwarded</label>
+                    </div>
+                    <div class="ms-1">
+                        <small class="card-text text-muted">Other users'll be able to forward your post into their chats and copy the link of it</small>
+                    </div>
+                    <div class="form-check form-switch mt-3">
+                        <input asp-for="IsPinned" class="form-check-input" type="checkbox" role="switch" value="false" />
+                        <label class="form-check-label fw-500" asp-for="IsPinned">Pin this Post</label>
+                    </div>
+                    <div class="ms-1">
+                        <small class="card-text text-muted">This post will be pinned to your page immediately after posting</small>
+                    </div>
+                    <div class="box-container mt-3">
+                        <input type="hidden" asp-for="AvailableTill" id="AvailableTill_Val" value="0" />
+                        <span class="h6">Auto-destuction <span class="style-font text-muted" id="AreMessagesAutoDeletable-Span">disabled</span></span>
+                        <div></div>
+                        <small class="card-text text-muted">The post'll be automatically deleted from your page after a specific time period has passed</small>
+                        <div class="box-container text-center mt-2">
+                            <button type="button" class="btn btn-light btn-standard-asset btn-sm set-autodelete-duration mt-1 bg-primary text-light w-100" id="0-MinsSet_Btn">Turned Off</button>
+                            <div class="row">
+                                <div class="col">
+                                    <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1 w-100" id="1-MinsSet_Btn">1 minute</button>
+                                </div>
+                                <div class="col">
+                                    <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1 w-100" id="5-MinsSet_Btn">5 minutes</button>
+                                </div>
+                                <div class="col">
+                                    <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1 w-100" id="15-MinsSet_Btn">15 minutes</button>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col">
+                                    <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1 w-100" id="30-MinsSet_Btn">30 minutes</button>
+                                </div>
+                                <div class="col">
+                                    <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1 w-100" id="60-MinsSet_Btn">1 hour</button>
+                                </div>
+                                <div class="col">
+                                    <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1 w-100" id="360-MinsSet_Btn">6 hours</button>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col">
+                                    <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1 w-100" id="720-MinsSet_Btn">12 hours</button>
+                                </div>
+                                <div class="col">
+                                    <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1 w-100" id="1440-MinsSet_Btn">1 day</button>
+                                </div>
+                                <div class="col">
+                                    <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1 w-100" id="10080-MinsSet_Btn">1 week</button>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col">
+                                    <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1 w-100" id="20160-MinsSet_Btn">2 weeks</button>
+                                </div>
+                                <div class="col">
+                                    <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1 w-100" id="43200-MinsSet_Btn">1 month</button>
+                                </div>
+                                <div class="col">
+                                    <button type="button" class="btn btn-light bg-white btn-standard-asset btn-sm set-autodelete-duration mt-1 w-100" id="86400-MinsSet_Btn">2 months</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="box-container mt-3">
+                        <button type="submit" class="btn btn-standard-asset w-100 btn-primary">Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="card bg-transparent border-0 mt-1">
+            <div class="bordered-container p-2">
+                <span class="h5">Preview</span>
+                <div></div>
+                <small class="card-text text-muted">your post'll look like this</small>
+                <div class="box-container mt-2" id="PostExample_Box">
+                    <div class="box-container">
+                        <button type="button" class="btn btn-standard btn-sm float-end ms-1"> <i class="fa-solid fa-ellipsis"></i> </button>
+                        <small class="card-text text-muted">added recently</small>
+                    </div>
+                    <div class="msg-img-container bg-light w-100 text-center">
+                        <h1 class="h1 text-warning mt-1"> <i class="fa-solid fa-burger"></i> </h1>
+                        <small class="card-text text-muted">your linked image will appear here</small>
+                    </div>
+                    <p class="card-text mt-1" id="PostExampleText_Lbl">Your post main text (up to 2000 chars)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

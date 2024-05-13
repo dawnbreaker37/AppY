@@ -25,6 +25,7 @@
     <Folder Include="wwwroot\Avatars\" />
     <Folder Include="wwwroot\DiscussionAvatars\" />
     <Folder Include="wwwroot\DiscussionMessageImages\" />
+    <Folder Include="wwwroot\PostFiles\" />
   </ItemGroup>
 
 </Project>

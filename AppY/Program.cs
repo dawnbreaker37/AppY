@@ -28,6 +28,7 @@ builder.Services.AddTransient<INotification, Notification>();
 builder.Services.AddTransient<IDiscussion, DiscussionRepository>();
 builder.Services.AddTransient<IChat, ChatRepository>();
 builder.Services.AddTransient<IMailMessages, MailMessages>();
+builder.Services.AddTransient<IPost, PostRepository>();
 builder.Services.AddTransient<ChatMessageAbstraction, ChatMessageRepository>();
 builder.Services.AddTransient<Message, DiscussionMessageRepository>();
 builder.Services.AddTransient<Answer, DiscussionMessageAnswersRepository>();

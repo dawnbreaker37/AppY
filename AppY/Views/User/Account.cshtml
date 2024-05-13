@@ -66,6 +66,16 @@
         </form>
     </div>
 
+    <div class="smallside-box-container shadow-standard" id="PostsView-Container">
+        <div class="header-container p-2 pb-0 text-center" id="PostsView-Header">
+            <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="PostsView-Close"></button>
+            <h5 class="h5 text-truncate p-1">Posts</h5>
+            <small class="card-text text-muted" id="PostsView_Info-Lbl">no loaded posts</small>
+        </div>
+        <div class="box-container p-2 pt-1 mt-1" id="PostsView-Box">
+
+        </div>
+    </div>
     <div class="smallside-box-container shadow-standard" id="Privacy_Container">
         <div class="header-container p-2 pb-0 text-center" id="Privacy_Container-Header">
             <button type="button" class="btn btn-close btn-smallside-close btn-sm rounded-circle float-end ms-1" aria-label="close" id="Privacy_Container-Close"></button>
@@ -547,6 +557,7 @@
             <div class="btn-group-vertical w-100" role="group" aria-label="vertical btn-group">
                 <button type="button" class="btn btn-group-member w-100 btn-smallside-open-container" id="ProfilePhoto_Container-Open"> <i class="fa-solid fa-camera"></i> Change Profile Photo</button>
                 <button type="button" class="btn btn-group-member w-100 btn-smallside-open-container" id="AvatarDesign_Container-Open"> <i class="fa-solid fa-brush"></i> Change Avatar Design</button>
+                <a asp-controller="Post" asp-action="AddPost" class="btn btn-group-member w-100 btn-smallside-open-container"> <i class="fa-solid fa-circle-plus"></i> Create New Post</a>
             </div>
         </div>
         <div class="mt-3">
@@ -592,16 +603,11 @@
             <div class="btn-group-vertical w-100" role="group" aria-label="vertical btn-group">
                 <a asp-controller="User" asp-action="SavedMessages" class="btn btn-group-member w-100"> <i class="fa-regular fa-bookmark"></i> Saved Messages</a>
                 <div class="w-100">
-                    <form method="get" asp-controller="Chat" asp-action="GetChats" id="GetChats_Form">
-                        <button type="submit" class="btn btn-group-member border-radius-sharp w-100"> <i class="fa-regular fa-comments"></i> Chats</button>
-                    </form>
-                </div>
-                <div class="w-100">
                     <form method="get" asp-controller="Discussion" asp-action="GetDiscussions" id="GetDiscussions_Form">
                         <button type="submit" class="btn btn-group-member border-radius-sharp w-100"> <i class="fa-solid fa-quote-right"></i> Discussions</button>
                     </form>
                 </div>
-                @if(DeletedDiscussionsCount > 0)
+                @if (DeletedDiscussionsCount > 0)
                 {
                     <div class="w-100" id="GetDeletedDiscussions_Form_Box">
                         <form method="get" asp-controller="Discussion" asp-action="GetDeletedDiscussions" id="GetDeletedDiscussions_Form">
@@ -614,7 +620,18 @@
                         </form>
                     </div>
                 }
-                <button type="button" class="btn btn-group-member btn-bottom-rounded btn-smallside-open-container" id="Appearance_Container-Open"> <i class="fa-solid fa-fill-drip"></i> Appearance</button>
+                <div class="w-100">
+                    <form method="get" asp-controller="Chat" asp-action="GetChats" id="GetChats_Form">
+                        <button type="submit" class="btn btn-group-member border-radius-sharp w-100"> <i class="fa-regular fa-comments"></i> Chats</button>
+                    </form>
+                </div>
+                <div class="w-100">
+                    <form method="get" asp-controller="Post" asp-action="GetCurrentUserPosts" id="GetCurrentUserPosts_Form">
+                        <input type="hidden" name="SkipCount" id="GCUP_SkipCount_Val" value="0" />
+                        <button type="submit" class="btn btn-group-member btn-top-rounded w-100"> <i class="fa-regular fa-folder-open"></i> Posts</button>
+                    </form>
+                </div>
+@*                 <button type="button" class="btn btn-group-member btn-bottom-rounded btn-smallside-open-container" id="Appearance_Container-Open"> <i class="fa-solid fa-fill-drip"></i> Appearance</button> *@
             </div>
         </div>
         <div class="mt-3">

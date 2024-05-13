@@ -28,6 +28,7 @@ namespace AppY.Models
         public DateTime? PasswordChanged { get; set; }
         public DateTime LastSeen { get; set; }
         public bool IsDisabled { get; set; }
+        public List<Post>? Posts { get; set; }
         public List<NotificationModel>? Notifications { get; set; }
         public List<Discussion>? Discussions { get; set; }
         public List<Chat>? Chats { get; set; }

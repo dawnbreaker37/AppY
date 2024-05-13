@@ -59,15 +59,15 @@
         <div class="box-container p-2 pt-1 w-100" id="MessageForwarding_Box" style="display: none;">
             <div class="box-container bg-light">
                 <div class="w-100 p-2">
-                    <div class="other-user-reply-container mb-1">
-                        <small class="card-text fw-500"> <i class="fa-solid fa-reply"></i> Replied to</small>
+                    <div id="ForwardingMsgExample_Box">
+                        <small class="card-text fw-500" id="ForwardingMsgExampleReplyTxt_Lbl" style="display: none;"> <i class="fa-solid fa-share"></i> Forwarded Message</small>
                         <p class="card-text white-space-on message-label" id="ForwardingMsgText_Lbl">Forwarding Message...</p>
                     </div>
                     <p class="card-text white-space-on message-label" id="ForwardingMsgCaption_Lbl" style="display: none;">Additional Caption</p>
                 </div>
             </div>
             <div class="ms-1">
-                <small class="card-text text-muted">choose any chat from list to forward</small>
+                <small class="card-text text-muted">your message will look like this</small>
             </div>
         </div>
         <div class="box-container bottom-0 p-2">
@@ -451,10 +451,17 @@
                                                     <img class="msg-img-container" id="@message.Id-ChatMsg_Img" src="~/ChatMessageImages/@message.MainImgUrl" alt="Cannot display this message" />
                                                 </div>
                                             }
-                                            @if (message.RepliedMessageId != 0)
+                                            @if (message.RepliedMessageId > 0)
                                             {
                                                 <div class="cur-user-reply-container mb-1 reply-element" id="@message.Id-RepliedMsgBox" data-bs-msg-id="@message.Id">
                                                     <small class="card-text fw-500 reply-element" id="@message.RepliedMessageId-RepliedMsgIcon" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-reply"></i> Replied to</small>
+                                                    <p class="card-text white-space-on message-label chat-options reply-element" id="@message.RepliedMessageId-RepliedMsgText" data-bs-msg-id="@message.Id">@message.RepliesMsgShortText</p>
+                                                </div>
+                                            }
+                                            else if(message.RepliedMessageId == -256)
+                                            {
+                                                <div class="cur-user-reply-container mb-1 reply-element" id="@message.Id-RepliedMsgBox" data-bs-msg-id="@message.Id">
+                                                    <small class="card-text fw-500 reply-element" id="@message.RepliedMessageId-RepliedMsgIcon" data-bs-msg-id="@message.Id"> <i class="fa-solid fa-share"></i> Forwarded Message</small>
                                                     <p class="card-text white-space-on message-label chat-options reply-element" id="@message.RepliedMessageId-RepliedMsgText" data-bs-msg-id="@message.Id">@message.RepliesMsgShortText</p>
                                                 </div>
                                             }
@@ -1358,7 +1365,7 @@
         $("#RM_ReplyText_Val").val("");
     });
 
-    hubConnection.on("ReplyReceive", function (id, text, replyText, messageId, chatId, senderId, chatName, isMuted) {
+    hubConnection.on("ReplyReceive", function (id, text, replyText, messageId, chatId, senderId, chatName, isMuted, isReplied) {
         let currentChatId = $("#CurrentChatId_Val").val();
         if (currentChatId == chatId) {
             let messageMainBox = document.createElement("div");
@@ -1395,8 +1402,7 @@
             mainText.classList.add("white-space-on");
             mainText.classList.add("message-label");
             mainText.classList.add("chat-options");
-            statsBox.classList.add("float-end");
-            statsBox.classList.add("me-1");
+            statsBox.classList.add("ms-1");
             dateAndTime.classList.add("card-text");
             dateAndTime.classList.add("text-muted");
             isEdited.classList.add("card-text");
@@ -1414,7 +1420,8 @@
             dateAndTimeFullValue.value = day + "." + month + ", " + hrs + ":" + mins;
             let newMessage = textDecoder(text, null);
             let newRepliedText = textDecoder(replyText, null);
-            repliedTo.innerHTML = " <i class='fa-solid fa-reply'></i> Replied to";
+            if(isReplied) repliedTo.innerHTML = " <i class='fa-solid fa-reply'></i> Replied to";
+            else repliedTo.innerHTML = " <i class='fa-solid fa-share'></i> Forwarded Message";
             mainText.innerHTML = newMessage;
             repliedText.innerHTML = newRepliedText;
             dateAndTime.innerHTML = dateAndTimeTranslator(currentDate);

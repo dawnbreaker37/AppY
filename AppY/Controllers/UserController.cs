@@ -102,7 +102,7 @@ namespace AppY.Controllers
                 if (TryToParse) UserInfo = await _user.GetAverageUserInfoAsync(IntegerUserId);
                 else UserInfo = await _user.GetAverageUserInfoAsync(Id);
 
-                if(UserInfo != null)
+                if (UserInfo != null)
                 {
                     int CurrentUserId = 0;
                     if (Request.Cookies.ContainsKey("CurrentUserId"))
@@ -121,7 +121,6 @@ namespace AppY.Controllers
                         ViewBag.UserInfo = UserInfo;
                         ViewBag.CurrentUserId = CurrentUserId;
                         ViewBag.ChatId = ChatId;
-                        ViewBag.DiscussionsCount = await _discussion.GetDiscussionsCountAsync(UserInfo.Id);
                         ViewBag.DiscussionsCount = DiscussionsCount;
 
                         return View();

@@ -42,11 +42,52 @@ namespace AppY.Controllers
         [HttpPost]
         public async Task<IActionResult> Message(SendMessage Model)
         {
-            if(ModelState.IsValid && User.Identity.IsAuthenticated)
-            {              
-                string? Result = await _messages.SendMessageAsync(Model);
-                if (Result != null && Model.Images != null) return Json(new { success = true, trueId = Model.Id, result = Model, imgUrl = Result, imgsCount = Model.Images.Count });
-                else if (Result != null && Model.Images == null) return Json(new { success = true, trueId = Model.Id, result = Model, imgsCount = 0 });
+            if(ModelState.IsValid)
+            {
+                Model.UserId = GetCurrentUserIdFromCookies();
+                if(Model.Id > 0)
+                {
+                    SendEdit sendEdit = new SendEdit
+                    {
+                        DiscussionId = Model.DiscussionId,
+                        Text = Model.Text,
+                        UserId = Model.UserId,
+                        Id = Model.Id
+                    };
+                    int Result = await _messages.EditMessageAsync(sendEdit);
+                    if(Result > 0)
+                    {
+                        await _messages.EditAllRepliedMessageTextsAsync(Model.Id, Model.Text);
+                        return Json(new { success = true, status = 1, id = Result, text = Model.Text });
+                    }
+                    return Json(new { success = false, alert = "Unable to edit this message. Please, check all datas and then try to edit it again" });
+                }
+                else if(Model.MessageId > 0)
+                {
+                    SendReply sendReply = new SendReply
+                    {
+                        Images = Model.Images,
+                        DiscussionId = Model.DiscussionId,
+                        UserId = Model.UserId,
+                        IsAutoDeletable = Model.IsAutoDeletable,
+                        MessageId = Model.MessageId,
+                        ReplyText = Model.ReplyText,
+                        Text = Model.Text
+                    };
+                    string? Result = await _messages.ReplyToMessageAsync(sendReply);
+                    if (Result != null)
+                    {
+                        if (Model.Images == null) return Json(new { success = true, status = 2, trueId = Model.Id, result = Model, imgsCount = 0 });
+                        else return Json(new { success = true, status = 2, result = Model, trueId = Model.Id, imgUrl = Result, imgsCount = Model.Images.Count });
+                    }
+                    else return Json(new { success = false, alert = "This reply can't be sent" });
+                }
+                else
+                {
+                    string? Result = await _messages.SendMessageAsync(Model);
+                    if (Result != null && Model.Images != null) return Json(new { success = true, status = 0, trueId = Model.Id, result = Model, imgUrl = Result, imgsCount = Model.Images.Count });
+                    else if (Result != null && Model.Images == null) return Json(new { success = true, status = 0, trueId = Model.Id, result = Model, imgsCount = 0 });
+                }
             }
             return Json(new { success = false, alert = "We're so sorry, but an unexpected error occured. Please, try to send your message a bit later or text us to get more information about this issue" });
         }

@@ -171,28 +171,51 @@ namespace AppY.Repositories
         {
             if (Model.CurrentChatUserId > 0 && Model.ToChatId > 0 && Model.ToChatId != Model.FromChatId && Model.FromChatId > 0 && !String.IsNullOrWhiteSpace(Model.ForwardingText) && Model.ForwardingText.Length <= 3400)
             {
+                ChatMessage chatMessage;
                 bool ChatAvailability = await _context.ChatUsers.AsNoTracking().AnyAsync(c => c.UserId == Model.UserId && c.ChatId == Model.ToChatId);
                 if (ChatAvailability)
                 {
-                    Model.ForwardingText = Model.ForwardingText.Length > 125 ? Model.ForwardingText.Substring(0, 125) + "..." : Model.ForwardingText;
-                    ChatMessage chatMessage = new ChatMessage
+                    if (String.IsNullOrEmpty(Model.Caption))
                     {
-                        ChatId = Model.ToChatId,
-                        IsChecked = false,
-                        IsDeleted = false,
-                        IsPinned = false,
-                        IsEdited = false,
-                        Text = Model.Caption,
-                        IsAutodeletable = 0,
-                        ChatUserId = Model.CurrentChatUserId,
-                        RepliedMessageId = Model.IsFromDiscussion ? 0 : Model.MessageId,
-                        RepliesMessageText = Model.ForwardingText,
-                        SentAt = DateTime.Now,
-                        UserId = Model.UserId
-                    };
+                        chatMessage = new ChatMessage
+                        {
+                            ChatId = Model.ToChatId,
+                            IsChecked = false,
+                            IsDeleted = false,
+                            IsPinned = false,
+                            IsEdited = false,
+                            Text = Model.ForwardingText,
+                            IsAutodeletable = 0,
+                            ChatUserId = Model.CurrentChatUserId,
+                            RepliedMessageId = 0,
+                            RepliesMessageText = null,
+                            SentAt = DateTime.Now,
+                            UserId = Model.UserId
+                        };
+                    }
+                    else
+                    {
+                        Model.ForwardingText = Model.ForwardingText.Length > 125 ? Model.ForwardingText.Substring(0, 125) + "..." : Model.ForwardingText;
+                        chatMessage = new ChatMessage
+                        {
+                            ChatId = Model.ToChatId,
+                            IsChecked = false,
+                            IsDeleted = false,
+                            IsPinned = false,
+                            IsEdited = false,
+                            Text = Model.Caption,
+                            IsAutodeletable = 0,
+                            ChatUserId = Model.CurrentChatUserId,
+                            RepliedMessageId = -256,
+                            RepliesMessageText = Model.ForwardingText,
+                            SentAt = DateTime.Now,
+                            UserId = Model.UserId
+                        };
+                    }
 
                     await _context.AddAsync(chatMessage);
                     await _context.SaveChangesAsync();
+
                     return chatMessage.Id.ToString();
                 }
             }
