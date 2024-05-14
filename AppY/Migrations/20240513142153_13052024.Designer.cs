@@ -4,6 +4,7 @@ using AppY.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppY.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20240513142153_13052024")]
+    partial class _13052024
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -669,30 +672,6 @@ namespace AppY.Migrations
                     b.ToTable("SavedMessagesContent");
                 });
 
-            modelBuilder.Entity("AppY.Models.SavedMessageContentImage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SavedMessageId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SavedMessageId");
-
-                    b.ToTable("SavedMessagesContentImages");
-                });
-
             modelBuilder.Entity("AppY.Models.ScheduledMessage", b =>
                 {
                     b.Property<int>("Id")
@@ -1291,17 +1270,6 @@ namespace AppY.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AppY.Models.SavedMessageContentImage", b =>
-                {
-                    b.HasOne("AppY.Models.SavedMessageContent", "SavedMessageContent")
-                        .WithMany("SavedMessageContentImages")
-                        .HasForeignKey("SavedMessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SavedMessageContent");
-                });
-
             modelBuilder.Entity("AppY.Models.ScheduledMessage", b =>
                 {
                     b.HasOne("AppY.Models.User", "User")
@@ -1469,11 +1437,6 @@ namespace AppY.Migrations
             modelBuilder.Entity("AppY.Models.Reaction", b =>
                 {
                     b.Navigation("DiscussionMessageReactions");
-                });
-
-            modelBuilder.Entity("AppY.Models.SavedMessageContent", b =>
-                {
-                    b.Navigation("SavedMessageContentImages");
                 });
 
             modelBuilder.Entity("AppY.Models.User", b =>

@@ -127,7 +127,15 @@ namespace AppY.Controllers
                     if (Model.MessageId <= 0)
                     {
                         int Result = await _savedMessage.AddSavedMessageAsync(Model);
-                        if (Result > 0) return Json(new { success = true, isEdited = false, id = Result, result = Model });
+                        if (Result > 0)
+                        {
+                            if (Model.Files != null)
+                            {
+                                string? ImgResult = await _savedMessage.SendImagesWMessage(Result, Model.Files);
+                                return Json(new { success = true, isEdited = false, id = Result, result = Model, filesCount = Model.Files.Count, file = ImgResult });
+                            }
+                            else return Json(new { success = true, isEdited = false, id = Result, result = Model });
+                        }
                         else return Json(new { success = false, alert = "We're sorry, but something unexpected happened. Please, try to send your saved message a bit later" });
                     }
                     else

@@ -7,13 +7,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AppY.ChatHub
 {
-    public class ChatHub : Hub
+    public class MessagesHub : Hub
     {
         private readonly Context _context;
         private readonly IChat _chat;
         private readonly ChatMessageAbstraction _message;
 
-        public ChatHub(Context context, ChatMessageAbstraction message, IChat chat)
+        public MessagesHub(Context context, ChatMessageAbstraction message, IChat chat)
         {
             _context = context;
             _chat = chat;
@@ -80,10 +80,10 @@ namespace AppY.ChatHub
 
         public async Task SendFromAlert(string? Text, int SenderId, int ReceiverId, int ChatId, int IsAutodeletable, string? Chatname, int CurrentChatUserId)
         {
-            await Send(Text, SenderId, ReceiverId, ChatId, 0, Chatname, CurrentChatUserId);
+            await Send(Text, null, SenderId, ReceiverId, ChatId, 0, Chatname, CurrentChatUserId);
         }
 
-        public async Task Send(string? Text, int SenderId, int ReceiverId, int ChatId, int IsAutodeletable, string? Chatname, int CurrentChatUserId)
+        public async Task Send(string? Text, IFormFileCollection Files, int SenderId, int ReceiverId, int ChatId, int IsAutodeletable, string? Chatname, int CurrentChatUserId)
         {
             SendMessage Model = new SendMessage()
             {
@@ -95,13 +95,15 @@ namespace AppY.ChatHub
                 DiscussionId = ChatId,
                 CurrentChatUserId = CurrentChatUserId
             };
-            string? Result = await _message.SendMessageAsync(Model);
-            if (Result != null)
+
+            //(string?, string?) ResultWImages = (null, null);
+            string? StandardResult = await _message.SendMessageAsync(Model);
+            if (StandardResult != null)
             {
                 bool IsChatMuted = await _chat.IsChatMutedAsync(ChatId, ReceiverId);
 
-                if (!IsChatMuted) await this.Clients.User(ReceiverId.ToString()).SendAsync("Receive", Text, Result, ChatId, Chatname, SenderId, IsChatMuted);
-                await this.Clients.Caller.SendAsync("CallerReceive", Text, Result, ChatId);
+                if (!IsChatMuted) await this.Clients.User(ReceiverId.ToString()).SendAsync("Receive", Text, StandardResult, ChatId, Chatname, SenderId, IsChatMuted);
+                await this.Clients.Caller.SendAsync("CallerReceive", Text, StandardResult, ChatId);
             }
             else await this.Clients.All.SendAsync("Error", "Can't send this message now");
         }

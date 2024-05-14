@@ -1,7 +1,9 @@
 ﻿using AppY.Abstractions;
+using AppY.ChatHub;
 using AppY.Data;
 using AppY.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AppY.Controllers
 {
@@ -9,12 +11,20 @@ namespace AppY.Controllers
     {
         private readonly Context _context;
         private readonly ChatMessageAbstraction _message;
+        private readonly IHubContext<MessagesHub> _hubContext;
 
-        public ChatMessageController(Context context, ChatMessageAbstraction message)
+        public ChatMessageController(Context context, ChatMessageAbstraction message, IHubContext<MessagesHub> hubContext)
         {
             _context = context;
             _message = message;
+            _hubContext = hubContext;
         }
+
+        //[HttpPost]
+        //public async Task<IActionResult> SendMessage(string? Text, IFormFileCollection Files, int SenderId, int ReceiverId, int ChatId, int IsAutodeletable, string? Chatname, int CurrentChatUserId)
+        //{
+        //    return Ok();
+        //}
 
         [HttpGet]
         public async Task<IActionResult> IsMessagePinned(int Id)

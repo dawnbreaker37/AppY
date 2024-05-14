@@ -19,5 +19,6 @@ namespace AppY.Interfaces
         public Task<string?> StarSavedMessageAsync(int Id, string? Text);
         public Task<bool> UnstarSavedMessageAsync(int Id);
         public Task<int> DeleteSavedMessageAsync(int Id, int UserId);
+        public Task<string?> SendImagesWMessage(int Id, IFormFileCollection? Files);
     }
 }

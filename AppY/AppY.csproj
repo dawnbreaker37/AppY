@@ -26,6 +26,8 @@
     <Folder Include="wwwroot\DiscussionAvatars\" />
     <Folder Include="wwwroot\DiscussionMessageImages\" />
     <Folder Include="wwwroot\PostFiles\" />
+    <Folder Include="wwwroot\ChatMessageImages\" />
+    <Folder Include="wwwroot\SavedMessageImages\" />
   </ItemGroup>
 
 </Project>

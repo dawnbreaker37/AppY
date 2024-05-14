@@ -23,6 +23,7 @@ namespace AppY.Models
         public bool IsPinned { get; set; }
         public ChatMessage? ChatMessage { get; set; }
         public DiscussionMessage? DiscussionMessage { get; set; }
+        public List<SavedMessageContentImage>? SavedMessageContentImages { get; set; }
         public User? User { get; set; }
         [NotMapped]
         public string? ImageUrl { get; set; }
@@ -32,5 +33,9 @@ namespace AppY.Models
         public int ForwarderId { get; set; }
         [NotMapped]
         public string? ForwarderName { get; set; }
+        [NotMapped]
+        public string? MainImgUrl { get; set; }
+        [NotMapped]
+        public int SavedMessagesCount { get; set; }
     }
 }

@@ -122,6 +122,58 @@
     </div>
 </div>
 
+<div class="main-container images-container shadow-standard p-2" id="ImagesShow_Container">
+    <div class="images-background-container p-2">
+        <div class="hstack gap-3 border-bottom border-light pb-2" id="ImagesShow-Header">
+            <small class="card-text text-light me-auto" id="ImagesShowImg_Lbl">Image file name.file extension</small>
+            <small class="card-text fw-500 text-light" id="ImagesCounter_Lbl">1</small><small class="card-text fw-500 text-light"> of </small><small class="card-text fw-500 text-light" id="ImagesFullCount_Lbl">6</small>
+            <button type="button" class="btn btn-outline-light border-0 shadow-none btn-standard-asset btn-sm btn-open-container" id="Preloaded_Container-CloseAfterOpen">Close</button>
+        </div>
+        <div class="images-img-container mt-2" id="ImagesShow_Box">
+            <img class="images-img-container" src="#" id="ImageShow_Img" alt="Cannot display this image right now" />
+        </div>
+        <div class="box-container mt-2" id="ImagesShow-Footer">
+            <div class="d-none" id="ImageForms_Box">
+                <form method="get" asp-controller="Image" asp-action="GetSMCount" id="GetSavedMessageImagesCount_Form">
+                    <input type="hidden" name="Id" id="GSMC_Id_Val" value="0" />
+                </form>
+@*                 <form method="get" asp-controller="Image" asp-action="GetSMPrev" id="GetPrevSavedMessageImg_Form">
+                    <input type="hidden" name="Id" id="GPSMI_Id_Val" value="0" />
+                    <input type="hidden" name="SkipCount" id="GPSMI_SkipCount_Val" value="0" />
+                    <input type="hidden" name="FullCount" id="GPSMI_FullCount_Val" value="0" />
+                </form>
+                <form method="get" asp-controller="Image" asp-action="GetSMNext" id="GetNextSavedMessageImg_Form">
+                    <input type="hidden" name="Id" id="GNSMI_Id_Val" value="0" />
+                    <input type="hidden" name="SkipCount" id="GNSMI_SkipCount_Val" value="0" />
+                    <input type="hidden" name="FullCount" id="GNSMI_FullCount_Val" value="0" />
+                    <input type="hidden" name="StartTry" id="GPSMI_StartTry_Val" value="true" />
+                </form> *@
+            </div>
+            <div class="d-none" id="ImagesShowVals_Box">
+            </div>
+            <div class="row">
+                <div class="col">
+                    <form method="get" asp-controller="Image" asp-action="GetSMPrev" id="GetPrevSavedMessageImg_Form">
+                        <input type="hidden" name="Id" id="GPSMI_Id_Val" value="0" />
+                        <input type="hidden" name="SkipCount" id="GPSMI_SkipCount_Val" value="0" />
+                        <input type="hidden" name="FullCount" id="GPSMI_FullCount_Val" value="0" />
+                        <button type="submit" class="btn btn-outline-light border-0 w-100 btn-standard-asset btn-get-ready-message-image" id="GPSMSbmt_Btn" disabled> <i class="fa-solid fa-chevron-left"></i> Prev</button>
+                    </form>
+                </div>
+                <div class="col">
+                    <form method="get" asp-controller="Image" asp-action="GetSMNext" id="GetNextSavedMessageImg_Form">
+                        <input type="hidden" name="Id" id="GNSMI_Id_Val" value="0" />
+                        <input type="hidden" name="SkipCount" id="GNSMI_SkipCount_Val" value="0" />
+                        <input type="hidden" name="FullCount" id="GNSMI_FullCount_Val" value="0" />
+                        <input type="hidden" name="StartTry" id="GNSMI_StartTry_Val" value="true" />
+                        <button type="submit" class="btn btn-outline-light border-0 w-100 btn-standard-asset btn-get-ready-message-image" id="GNSMSbmt_Btn">Next <i class="fa-solid fa-chevron-right"></i> </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="main-container mh-max shadow-standard" id="Preloaded_Container">
     <div class="box-container p-2" style="display: none; margin-left: -1200px;" id="Preloaded_Container_ShowBox">
         <button type="button" class="btn btn-light btn-standard-asset btn-sm float-start me-1 discussion-header-return" id="Preloaded_Container_ShowBox-Return">Back</button>
@@ -231,6 +283,14 @@
                                 else
                                 {
                                     <span class="badge bg-light text-primary fw-normal rounded-pill mb-1" id="@message.Id-SaveMsgStarBadge_Span" style="display: none;"></span>
+                                }
+                                @if (message.MainImgUrl != null)
+                                {
+                                    <div></div>
+                                    <button type="button" class="btn btn-link btn-sm btn-get-saved-message-image" id="@message.Id-GetSavedMsgImgs_Btn">@message.SavedMessagesCount Images in Stack <i class="fa-solid fa-angle-right"></i> </button>
+                                    <div class="box-container mt-1 mb-1">
+                                        <img class="msg-img-container" id="@message.Id-SavedMsg_Img" src="~/SavedMessageImages/@message.MainImgUrl" alt="Cannot display this message" />
+                                    </div>
                                 }
                                 <p class="card-text white-space-on message-label saved-message-options" id="@message.Id-SavedMsgText_Lbl">@message.Text</p>
                             </div>
@@ -391,7 +451,7 @@
                         <input type="hidden" name="IsReplying" id="RM_IsReplying_Val" value="false" />
                         <input type="hidden" name="MessageId" id="EM_Id_Val" value="0" />
                         <input type="hidden" name="ReplyText" id="RM_ReplyText_Val" />
-                        <input type="file" class="send-message-files" id="SendMessage_Images_Val" name="Images" accept=".png, .jpg, .jpeg" multiple max="6" />
+                        <input type="file" class="send-message-files" id="SendMessage_Images_Val" name="Files" accept=".png, .jpg, .jpeg" multiple max="6" />
                     </div>
 
                     <div class="hstack gap-2" id="TextSendingBox">

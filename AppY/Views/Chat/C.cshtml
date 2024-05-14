@@ -672,39 +672,41 @@
 
 <div class="fixed-bottom bot-navbar shadow-sm p-2" id="Preloaded_BotOffNavbar">
     <div class="box-container" id="SendMessage_FirstInside_Box">
-        <div class="box-container">
-            <div class="border-bottom pb-1" id="EditingOrReplying_Box" style="display: none;">
-                <div class="box-container text-start">
-                    <button type="button" class="btn btn-standard-asset text-primary float-end ms-1 btn-sm" id="CancelChatMessageSettings_Btn"> <i class="fa-solid fa-xmark"></i> </button>
-                    <span class="card-text fs-6 text-primary" id="EditingOrReplyingMsgIcon_Lbl"> <i class="fa-regular fa-pen-to-square"></i> </span>
-                    <span class="card-text fs-6 fw-500 text-primary" id="EditingOrReplyingMsgStatus_Lbl">Edit Message</span>
+        <form method="post" asp-controller="ChatMessage" asp-action="SendMessage" id="SendChatMessage_Form">
+            <div class="box-container">
+                <div class="border-bottom pb-1" id="EditingOrReplying_Box" style="display: none;">
+                    <div class="box-container text-start">
+                        <button type="button" class="btn btn-standard-asset text-primary float-end ms-1 btn-sm" id="CancelChatMessageSettings_Btn"> <i class="fa-solid fa-xmark"></i> </button>
+                        <span class="card-text fs-6 text-primary" id="EditingOrReplyingMsgIcon_Lbl"> <i class="fa-regular fa-pen-to-square"></i> </span>
+                        <span class="card-text fs-6 fw-500 text-primary" id="EditingOrReplyingMsgStatus_Lbl">Edit Message</span>
+                    </div>
+                    <div class="box-container mt-2 pb-1 text-start">
+                        <small class="card-text me-auto" id="EditingOrReplyingMsgText_Lbl">Message Text...</small>
+                    </div>
                 </div>
-                <div class="box-container mt-2 pb-1 text-start">
-                    <small class="card-text me-auto" id="EditingOrReplyingMsgText_Lbl">Message Text...</small>
+                <div class="d-none">
+                    <input type="hidden" name="CurrentChatMessageId" id="SM_CurrentChatMessageId_Val" value="@ViewBag.CurrentChatUserId" />
+                    <input type="hidden" name="Id" id="EM_Id_Val" value="0" />
+                    <input type="hidden" name="MessageId" id="RM_ReplyId_Val" value="0" />
+                    <input type="hidden" name="ReplyText" id="RM_ReplyText_Val" />
+                    <input type="hidden" name="ChatId" id="SM_ChatId_Val" value="@ChatInfo.Id" />
+                    <input type="hidden" name="UserId" id="SM_UserId_Val" value="@UserInfo.Id" />
+                    <input type="hidden" name="ReceiverId" id="SM_ReceiverId_Val" value="@ViewBag.ReceiverId" />
+                    <input type="hidden" id="SendMessage_IsAutoDeletable" name="IsAutoDeletable" value="@UserInfo.AreMessagesAutoDeletable" />
+                    <input type="file" class="send-message-files" id="SendMessage_Images_Val" name="Files" accept=".png, .jpg, .jpeg" multiple max="6" />
                 </div>
-            </div>
-            <div class="d-none">
-                <input type="hidden" name="CurrentChatMessageId" id="SM_CurrentChatMessageId_Val" value="@ViewBag.CurrentChatUserId" />
-                <input type="hidden" name="Id" id="EM_Id_Val" value="0" />
-                <input type="hidden" name="MessageId" id="RM_ReplyId_Val" value="0" />
-                <input type="hidden" name="ReplyText" id="RM_ReplyText_Val" />
-                <input type="hidden" name="ChatId" id="SM_ChatId_Val" value="@ChatInfo.Id" />
-                <input type="hidden" name="UserId" id="SM_UserId_Val" value="@UserInfo.Id" />
-                <input type="hidden" name="ReceiverId" id="SM_ReceiverId_Val" value="@ViewBag.ReceiverId" />
-                <input type="hidden" id="SendMessage_IsAutoDeletable" name="IsAutoDeletable" value="@UserInfo.AreMessagesAutoDeletable" />
-                <input type="file" class="send-message-files" id="SendMessage_Images_Val" name="Images" accept=".png, .jpg, .jpeg" multiple max="6" />
-            </div>
 
-            <div class="hstack gap-2" id="TextSendingBox">
-                <button type="button" class="btn btn-standard btn-sm" id="ReturnMainBotNavbar_Btn"> <i class="fa-solid fa-chevron-down"></i> </button>
-                <textarea name="Text" id="SendMessage_Text_Val" class="send-message-form-control message-form-control me-auto form-control-check-input w-100 overflow-hidden" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendMessage_SbmtBtn"></textarea>
-                <button type="button" class="btn btn-message-example btn-sm open-animated-collapse btn-open-inside-box" id="MainTextEditor_Box-Open"> <i class="fa-solid fa-plus btn-open-inside-box" id="MainTextEditor_Box-OpenY"></i> </button>
-                <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="SendAFileInMessage_Btn" data-bs-html="SendMessage_Images_Val"> <i class="fa-regular fa-file-image"></i> </button>
-                <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="PreviewTheMessage_Btn" style="display: none;"> <i class="fa-solid fa-align-left"></i> </button>
-                <button type="submit" class="btn rounded-pill btn-sm btn-submit-msg-sending bg-primary text-light" id="SendMessage_SbmtBtn" disabled>Send</button>
-            </div>
+                <div class="hstack gap-2" id="TextSendingBox">
+                    <button type="button" class="btn btn-standard btn-sm" id="ReturnMainBotNavbar_Btn"> <i class="fa-solid fa-chevron-down"></i> </button>
+                    <textarea name="Text" id="SendMessage_Text_Val" class="send-message-form-control message-form-control me-auto form-control-check-input w-100 overflow-hidden" rows="1" placeholder="Your message..." maxlength="3400" data-bs-min-length="1" data-bs-html="SendMessage_SbmtBtn"></textarea>
+                    <button type="button" class="btn btn-message-example btn-sm open-animated-collapse btn-open-inside-box" id="MainTextEditor_Box-Open"> <i class="fa-solid fa-plus btn-open-inside-box" id="MainTextEditor_Box-OpenY"></i> </button>
+                    <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="SendAFileInMessage_Btn" data-bs-html="SendMessage_Images_Val"> <i class="fa-regular fa-file-image"></i> </button>
+                    <button type="button" class="btn btn-message-example btn-sm shadow-none me-1" id="PreviewTheMessage_Btn" style="display: none;"> <i class="fa-solid fa-align-left"></i> </button>
+                    <button type="submit" class="btn rounded-pill btn-sm btn-submit-msg-sending bg-primary text-light" id="SendMessage_SbmtBtn" disabled>Send</button>
+                </div>
 
-        </div>
+            </div>
+        </form>
     </div>
     <button type="button" class="btn btn-light text-primary btn-slide-to-bottom btn-slide-to-bottom-style shadow-sm" id="Preloaded_Container-SlideToBottom" style="bottom: -75px;"> <i class="fa-solid fa-angle-down btn-slide-to-bottom" id="Preloaded_Container-SlideToBottomX"></i> </button>
 </div>
@@ -873,13 +875,14 @@
         const messageId = parseInt($("#EM_Id_Val").val());
         const replyId = parseInt($("#RM_ReplyId_Val").val());
         const updatedMessage = deleteAllEndEmptyChars(message);
+        const files = $("#SendMessage_Images_Val").get(0).files;
         const currentChatMessageId = parseInt($("#SM_CurrentChatMessageId_Val").val());
 
         if (messageId <= 0) {
             const isAutodeletable = parseInt($("#SendMessage_IsAutoDeletable").val());
             if (replyId <= 0) {
                 const chatName = $("#ChatName_Span").html();
-                hubConnection.invoke("Send", updatedMessage, senderId, receiverId, chatId, isAutodeletable, chatName, currentChatMessageId).catch(function (err) {
+                hubConnection.invoke("Send", updatedMessage, files, senderId, receiverId, chatId, isAutodeletable, chatName, currentChatMessageId).catch(function (err) {
                     console.log(err.toString());
                 });
             }

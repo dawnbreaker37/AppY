@@ -11,11 +11,13 @@ namespace AppY.Repositories
         private readonly Context _context;
         private readonly IChat _chat;
         private readonly IDiscussion _discussion;
-        public SavedMessageRepository(Context context, IChat chat, IDiscussion discussion) : base(context)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        public SavedMessageRepository(Context context, IChat chat, IDiscussion discussion, IWebHostEnvironment webHostEnvironment) : base(context)
         {
             _context = context;
             _chat = chat;
             _discussion = discussion;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<int> AddSavedMessageAsync(SavedMessageContent_ViewModel Model)
@@ -70,7 +72,7 @@ namespace AppY.Repositories
             if (UserId > 0)
             {
                 LoadCount = LoadCount <= 0 ? 50 : LoadCount;
-                return _context.SavedMessagesContent.AsNoTracking().Where(s => s.UserId == UserId && !s.IsDeleted).OrderBy(s => s.SentAt).Skip(SkipCount).Take(LoadCount).Select(s => new SavedMessageContent { Id = s.Id, Text = s.Text, Badge = s.Badge, IsEdited = s.IsEdited, SentAt = s.SentAt, IsPinned = s.IsPinned });
+                return _context.SavedMessagesContent.AsNoTracking().Where(s => s.UserId == UserId && !s.IsDeleted).OrderBy(s => s.SentAt).Skip(SkipCount).Take(LoadCount).Select(s => new SavedMessageContent { Id = s.Id, Text = s.Text, MainImgUrl = s.SavedMessageContentImages != null ? s.SavedMessageContentImages.Select(s => s.Name).FirstOrDefault() : null, SavedMessagesCount = s.SavedMessageContentImages != null ? s.SavedMessageContentImages.Count : 0, Badge = s.Badge, IsEdited = s.IsEdited, SentAt = s.SentAt, IsPinned = s.IsPinned });
             }
             else return null;
         }
@@ -145,6 +147,38 @@ namespace AppY.Repositories
                 }
             }
             return false;
+        }
+
+        public async Task<string?> SendImagesWMessage(int Id, IFormFileCollection? Files)
+        {
+            if(Id > 0 && Files != null)
+            {
+                string? FirstFileName = null;
+                int FilesCount = Files.Count <= 6 ? Files.Count : 6;
+                for(int i = 0; i < FilesCount; i++)
+                {
+                    string? FileName = Guid.NewGuid().ToString("N").Substring(2, 14);
+                    string? Extention = Path.GetExtension(Files[i].FileName);
+
+                    using(FileStream fs = new FileStream(_webHostEnvironment.WebRootPath + "/SavedMessageImages/" + FileName + Extention, FileMode.Create))
+                    {
+                        await Files[i].CopyToAsync(fs);
+                        SavedMessageContentImage savedMessageContentImage = new SavedMessageContentImage
+                        {
+                            SavedMessageId = Id,
+                            IsDeleted = false,
+                            Name = FileName + Extention
+                        };
+
+                        if (i == 0) FirstFileName = FileName + Extention;
+                        await _context.AddAsync(savedMessageContentImage);
+                    }
+                }
+                await _context.SaveChangesAsync();
+
+                return FirstFileName;
+            }
+            return null;
         }
 
         public async Task<string?> StarSavedMessageAsync(int Id, string? Text)

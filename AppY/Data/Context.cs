@@ -23,10 +23,12 @@ namespace AppY.Data
         public DbSet<Chat> Chats { get; set; }
         public DbSet<ChatUsers> ChatUsers { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<ChatMessageImage> ChatMessageImages { get; set; }
         public DbSet<Reaction> Reactions { get; set; }
         public DbSet<LinkedAccount> LinkedAccounts { get; set; }
         public DbSet<SecretChat> SecretChats { get; set; }
         public DbSet<SecretChatUsers> SecretChatUsers { get; set; }
         public DbSet<SavedMessageContent> SavedMessagesContent { get; set; }
+        public DbSet<SavedMessageContentImage> SavedMessagesContentImages { get; set; }
     }
 }

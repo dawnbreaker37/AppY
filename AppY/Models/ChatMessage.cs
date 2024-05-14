@@ -26,7 +26,10 @@ namespace AppY.Models
         public User? User { get; set; }
         public Chat? Chat { get; set; }
         public ChatUsers? ChatUsers { get; set; }
+        public List<ChatMessageImage>? ChatMessageImages { get; set; }
         [NotMapped]
         public string? SenderPseudoname { get; set; }
+        [NotMapped]
+        public string? MainImgUrl { get; set; }
     }
 }

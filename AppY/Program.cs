@@ -34,6 +34,7 @@ builder.Services.AddTransient<Message, DiscussionMessageRepository>();
 builder.Services.AddTransient<Answer, DiscussionMessageAnswersRepository>();
 builder.Services.AddTransient<ReactionAbstraction, DiscussionMessageReactionRepository>();
 builder.Services.AddTransient<Image, ImageRepository>();
+builder.Services.AddTransient<SavedMessageImage, SavedMessageImageRepository>();
 builder.Services.AddTransient<ICommandLine, CommandLineTool>();
 builder.Services.AddTransient<ISavedMessage, SavedMessageRepository>();
 
@@ -64,7 +65,7 @@ app.UseRouting();
 
 app.UseAuthorization();
 app.UseAuthentication();
-app.MapHub<ChatHub>("/chat");
+app.MapHub<MessagesHub>("/chat");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

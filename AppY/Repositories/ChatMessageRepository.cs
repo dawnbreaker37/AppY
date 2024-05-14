@@ -11,22 +11,60 @@ namespace AppY.Repositories
     {
         private readonly Context _context;
         private readonly IChat _chat;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ChatMessageRepository(Context context, IChat chat)
+        public ChatMessageRepository(Context context, IChat chat, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _chat = chat;
+            _webHostEnvironment = webHostEnvironment;
         }
-        public override Task<string?> SendImagesAsync(int Id, IFormFileCollection? Files)
+        public override async Task<string?> SendImagesAsync(int Id, IFormFileCollection? Files)
         {
-            throw new NotImplementedException();
+            if(Files != null)
+            {
+                string? FirstFileName = null;
+                int FilesCount = Files.Count > 6 ? 6 : Files.Count;
+                for(int i = 0; i < FilesCount; i++)
+                {
+                    string? FileName = Guid.NewGuid().ToString("N").Substring(4, 14);
+                    string? Extension = Path.GetExtension(Files[i].FileName);
+                    if (i == 0) FirstFileName = FileName + Extension;
+
+                    using(FileStream fs = new FileStream(_webHostEnvironment.WebRootPath + "/ChatMessageImages/" + FileName + Extension, FileMode.Create))
+                    {
+                        await Files[i].CopyToAsync(fs);
+                        ChatMessageImage chatMessageImage = new ChatMessageImage
+                        {
+                            Name = FileName + Extension,
+                            MessageId = Id
+                        };
+                        await _context.AddAsync(chatMessageImage);
+                    }
+                }
+                await _context.SaveChangesAsync();
+
+                return FirstFileName;
+            }
+            return null;
+        }
+
+        public async override Task<(string?, string?)> SendMessageWImagesAsync(SendMessage Model)
+        {
+            string? MessageResult = await SendMessageAsync(Model);
+            if(MessageResult != null)
+            {
+                string? ImageResult = await SendImagesAsync(Int32.Parse(MessageResult), Model.Images);
+                if (ImageResult != null) return (MessageResult, ImageResult);
+            }
+            return (null, null);
         }
 
         public async override Task<string?> SendMessageAsync(SendMessage Model)
         {
             bool CheckUser = await _context.ChatUsers.AsNoTracking().AnyAsync(u => u.ChatId == Model.ChatId && u.UserId == Model.UserId);
             if (CheckUser)
-            {
+            {               
                 if (!String.IsNullOrWhiteSpace(Model.Text) && Model.Text.Length <= 3400 && Model.UserId > 0 && Model.ChatId > 0)
                 {
                     ChatMessage chatMessage = new ChatMessage()
@@ -48,6 +86,17 @@ namespace AppY.Repositories
                 }
             }
             return null;
+        }
+
+        public async override Task<(string?, string?)> ReplyWImagesAsync(SendReply Model)
+        {
+            string? Result = await ReplyToMessageAsync(Model);
+            if(Result != null)
+            {
+                string? ImagesResult = await SendImagesAsync(Int32.Parse(Result), Model.Images);
+                if (ImagesResult != null) return (Result, ImagesResult);
+            }
+            return (null, null);
         }
 
         public async override Task<string?> ReplyToMessageAsync(SendReply Model)
@@ -241,6 +290,11 @@ namespace AppY.Repositories
         public async override Task<bool> IsPinnedAsync(int Id)
         {
             return await _context.ChatMessages.AsNoTracking().AnyAsync(c => c.Id == Id && !c.IsDeleted && c.IsPinned);
+        }
+
+        public override Task<int> SendImagesAsync(IFormFileCollection Files, int MessageId, int UserId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

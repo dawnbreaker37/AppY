@@ -19,5 +19,6 @@ namespace AppY.ViewModels
         public int ChatId { get; set; }
         public int DiscussionId { get; set; }
         public int UserId { get; set; }
+        public IFormFileCollection? Files { get; set; }
     }
 }

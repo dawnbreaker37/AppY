@@ -2909,6 +2909,7 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
     finalCut = deleteAllEndEmptyChars(finalCut);
 
     let formData = new FormData();
+    //SendSavedMessage_Form
     let files = $("#SendMessage_Images_Val").get(0).files;
     formData.append("discussionid", $("#SM_DiscussionId_Val").val());
     formData.append("id", $("#EM_Id_Val").val());
@@ -2921,7 +2922,6 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
     for (let i = 0; i < files.length; i++) {
         formData.append("images", files[i]);
     }
-
     $.ajax({
         url: $(this).attr("action"),
         type: "POST",
@@ -3687,6 +3687,80 @@ $(document).on("click", ".btn-get-message-image", function (event) {
         $("#GNDMI_FullCount_Val").val(0);
         $("#GNDMI_FullCount_Val").val(true);
     }
+});
+
+$(document).on("click", ".btn-get-saved-message-image", function (event) {
+    let trueId = getTrueId(event.target.id);
+    if (trueId != "") {
+        let imgUrl = $("#" + trueId + "-SavedMsg_Img").attr("src");
+        $("#ImageShow_Img").attr("src", imgUrl);
+        $("#ImagesShowImg_Lbl").text(imgUrl.substring(imgUrl.lastIndexOf("/") + 1));
+        $("#ImagesCounter_Lbl").text(1);
+        $("#GSMC_Id_Val").val(trueId);
+        $("#GPSMI_Id_Val").val(trueId);
+        $("#GNSMI_Id_Val").val(trueId);
+        $("#GPSMI_StartTry_Val").val(true);
+        $("#GetSavedMessageImagesCount_Form").submit();
+
+        animatedOpen(false, "ImagesShow_Container", true, true, false);
+    }
+    else {
+        $("#ImageShow_Img").attr("src", null);
+        $("#ImagesShowImg_Lbl").text("Image file name.file extension");
+        $("#GSMC_Id_Val").val(0);
+        $("#GPSMI_Id_Val").val(0);
+        $("#GNSMI_Id_Val").val(0);
+        $("#GPSMI_StartTry_Val").val(true);
+    }
+});
+
+$("#GetPrevSavedMessageImg_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            $("#GNSMI_StartTry_Val").val(false);
+            $("#ImageShow_Img").attr("src", "/SavedMessageImages/" + response.result.name);
+            $("#ImagesShowImg_Lbl").text(response.result.name);
+            $("#ImagesCounter_Lbl").text(response.skipCount);
+            $("#GPSMI_SkipCount_Val").val(response.skipCount);
+            $("#GNSMI_SkipCount_Val").val(response.skipCount);
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 3;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+    });
+});
+$("#GetNextSavedMessageImg_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        if (response.success) {
+            $("#GNSMI_StartTry_Val").val(false);
+            $("#ImageShow_Img").attr("src", "/SavedMessageImages/" + response.result.name);
+            $("#ImagesShowImg_Lbl").text(response.result.name);
+            $("#ImagesCounter_Lbl").text(response.skipCount);
+            $("#GPSMI_SkipCount_Val").val(response.skipCount);
+            $("#GNSMI_SkipCount_Val").val(response.skipCount);
+            $("#GNSMI_FullCount_Val").val(response.fullCount);
+            $("#GPSMI_FullCount_Val").val(response.fullCount);
+            $("#GPSMSbmt_Btn").attr("disabled", false);
+        }
+        else alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 3;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+    });
+});
+
+$("#GetSavedMessageImagesCount_Form").on("submit", function (event) {
+    event.preventDefault();
+    let url = $(this).attr("action");
+    let data = $(this).serialize();
+
+    $.get(url, data, function (response) {
+        $("#GPSMI_FullCount_Val").val(response.result);
+        $("#ImagesFullCount_Lbl").text(response.result);
+    });
 });
 
 //Discussion Messages//
@@ -4606,86 +4680,122 @@ $("#SendSavedMessage_Form").on("submit", function (event) {
     let url = $(this).attr("action");
     let data = $(this).serialize();
 
-    $.post(url, data, function (response) {
-        if (response.success) {
-            if (!response.isEdited) {
-                $("#SendMessage_SbmtBtn").attr("disabled", true);
-                let currentMessagesCount = parseInt($("#SavedMessagesCount_Span").text());
+    let formData = new FormData();
+    let files = $("#SendMessage_Images_Val").get(0).files;
+    let filesLength = 0;
 
-                let messageMainBox = $("<div class='message-box'></div>");
-                let messageNotMainBox = $("<div class='cur-user-msg-box'></div>");
-                let styleBox = $("<div class='cur-user-styled-msg-box p-2'></div>");
-                let mainText = $("<p class='card-text white-space-on message-label saved-message-options'></p>");
-                let statsBox = $("<div class='float-end me-1'></div>");
-                let isChecked = $("<small class='card-text text-primary'></small>");
-                let dateAndTimeFullValue = $("<input type='hidden' />");
-                let dateAndTime = $("<small class='card-text text-muted'></small>");
-                let isEdited = $("<small class='card-text text-muted' style='display: none;'> edited</small>");
-                let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
-                let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
-                let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
+    formData.append("isreplying", $("#RM_IsReplying_Val").val());
+    formData.append("replytext", $("#RM_ReplyText_Val").val());
+    formData.append("messageid", $("#EM_Id_Val").val());
+    formData.append("text", $("#SendMessage_Text_Val").val());
+    if (files.length > 0) {
+        filesLength = files.length > 6 ? 6 : files.length;
+        for (let i = 0; i < filesLength; i++) {
+            formData.append("files", files[i]);
+        }
+    }
+    //btn-get-message-image
+    $.ajax({
+        url: $(this).attr("action"),
+        type: "POST",
+        processData: false,
+        data: formData,
+        contentType: false,
+        success: function (response) {
+            if (response.success) {
+                if (!response.isEdited) {
+                    $("#SendMessage_SbmtBtn").attr("disabled", true);
+                    let currentMessagesCount = parseInt($("#SavedMessagesCount_Span").text());
 
-                let date = new Date();
-                let pureMonth = parseInt(date.getMonth()) + 1;
-                let hour = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
-                let mins = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
-                let day = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
-                let month = pureMonth < 10 ? "0" + pureMonth : pureMonth;
+                    let messageMainBox = $("<div class='message-box'></div>");
+                    let messageNotMainBox = $("<div class='cur-user-msg-box'></div>");
+                    let styleBox = $("<div class='cur-user-styled-msg-box p-2'></div>");
+                    let mainText = $("<p class='card-text white-space-on message-label saved-message-options'></p>");
+                    let statsBox = $("<div class='float-end me-1'></div>");
+                    let isChecked = $("<small class='card-text text-primary'></small>");
+                    let dateAndTimeFullValue = $("<input type='hidden' />");
+                    let dateAndTime = $("<small class='card-text text-muted'></small>");
+                    let isEdited = $("<small class='card-text text-muted' style='display: none;'> edited</small>");
 
-                if (response.result.text != null) mainText.html(textDecoder(response.result.text, null));
-                dateAndTime.html(dateAndTimeTranslator(date));
-                dateAndTimeFullValue.html(getDaysCountFromDate(day + "." + month + ", " + hour + ":" + mins));
-                isChecked.html(' <i class="fa-solid fa-check-double text-primary"></i> ');
+                    let date = new Date();
+                    let pureMonth = parseInt(date.getMonth()) + 1;
+                    let hour = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
+                    let mins = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+                    let day = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+                    let month = pureMonth < 10 ? "0" + pureMonth : pureMonth;
 
-                mainText.attr("id", response.id + "-SavedMsgText_Lbl");
-                isChecked.attr("id", response.id + "-SavedMsgIsChecked_Span");
-                isEdited.attr("id", response.id + "-SavedMsgIsEdited_Lbl");
-                dateAndTime.attr("id", response.id + "-SavedMsgDateAndTime_Lbl");
-                dateAndTimeFullValue.attr("id", response.id + "-SavedMsgFullDate_Val");
+                    if (response.result.text != null) mainText.html(textDecoder(response.result.text, null));
+                    dateAndTime.html(dateAndTimeTranslator(date));
+                    dateAndTimeFullValue.html(getDaysCountFromDate(day + "." + month + ", " + hour + ":" + mins));
+                    isChecked.html(' <i class="fa-solid fa-check-double text-primary"></i> ');
 
-                messageMainBox.attr("id", response.id + "-SavedMsgMain_Box");
-                messageNotMainBox.attr("id", response.id + "-SavedMsgNotMain_Box");
+                    mainText.attr("id", response.id + "-SavedMsgText_Lbl");
+                    isChecked.attr("id", response.id + "-SavedMsgIsChecked_Span");
+                    isEdited.attr("id", response.id + "-SavedMsgIsEdited_Lbl");
+                    dateAndTime.attr("id", response.id + "-SavedMsgDateAndTime_Lbl");
+                    dateAndTimeFullValue.attr("id", response.id + "-SavedMsgFullDate_Val");
 
-                styleBox.append(mainText);
-                statsBox.append(dateAndTime);
-                statsBox.append(isEdited);
-                statsBox.append(isChecked);
-                messageNotMainBox.append(styleBox);
-                messageNotMainBox.append(statsBox);
-                messageMainBox.append(messageNotMainBox);
+                    messageMainBox.attr("id", response.id + "-SavedMsgMain_Box");
+                    messageNotMainBox.attr("id", response.id + "-SavedMsgNotMain_Box");
 
-                if (currentMessagesCount <= 0) {
-                    slideToLeft("NoSavedMessages_Box");
-                    setTimeout(function () {
-                        $("#HaveSavedMessages_Box").fadeIn(250);
+                    if (response.file != null) {
+                        let imgSeparator = $("<div></div>");
+                        let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+                        let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
+                        let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
+
+                        imgTag.attr("src", "/SavedMessageImages/" + response.file);
+                        imgTag.attr("id", response.id + "-SavedMsg_Img");
+                        imgsLinkBtn.attr("id", response.id + "-GetSavedMsgImgs_Btn");
+
+                        imgBox.append(imgTag);
+                        imgsLinkBtn.html(response.filesCount + " Images in Stack <i class='fa-solid fa-angle-right'></i>");
+
+                        styleBox.append(imgSeparator);
+                        styleBox.append(imgsLinkBtn);
+                        styleBox.append(imgBox);
+                    }
+                    styleBox.append(mainText);
+                    statsBox.append(dateAndTime);
+                    statsBox.append(isEdited);
+                    statsBox.append(isChecked);
+                    messageNotMainBox.append(styleBox);
+                    messageNotMainBox.append(statsBox);
+                    messageMainBox.append(messageNotMainBox);
+
+                    if (currentMessagesCount <= 0) {
+                        slideToLeft("NoSavedMessages_Box");
+                        setTimeout(function () {
+                            $("#HaveSavedMessages_Box").fadeIn(250);
+                            $("#HaveSavedMessages_Box").append(messageMainBox);
+                        }, 800);
+                    }
+                    else {
                         $("#HaveSavedMessages_Box").append(messageMainBox);
-                    }, 800);
+                    }
+                    currentMessagesCount++;
+
+                    $("#SavedMessagesCount_Span").text(currentMessagesCount);
+                    $("#SavedMessagesCount_Lbl").html(currentMessagesCount + " saved messages");
+                    $("#SendMessage_Text_Val").val(null);
+                    setTimeout(function () {
+                        $("#SendMessage_SbmtBtn").attr("disabled", false);
+                    }, 1000);
                 }
                 else {
-                    $("#HaveSavedMessages_Box").append(messageMainBox);
+                    $("#" + response.id + "-SavedMsgText_Lbl").html(textDecoder(response.text, null));
+                    $("#" + response.id + "-SavedMsgIsEdited_Lbl").slideDown(250);
                 }
-                currentMessagesCount++;
 
-                $("#SavedMessagesCount_Span").text(currentMessagesCount);
-                $("#SavedMessagesCount_Lbl").html(currentMessagesCount + " saved messages");
-                $("#SendMessage_Text_Val").val(null);
+                $("#EM_Id_Val").val(0);
+                $("#EditingOrReplying_Box").slideUp(250);
                 setTimeout(function () {
-                    $("#SendMessage_SbmtBtn").attr("disabled", false);
-                }, 1000);
+                    insideBoxClose(true, null);
+                }, 400);
             }
             else {
-                $("#" + response.id + "-SavedMsgText_Lbl").html(textDecoder(response.text, null));
-                $("#" + response.id + "-SavedMsgIsEdited_Lbl").slideDown(250);
+                alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
             }
-
-            $("#EM_Id_Val").val(0);
-            $("#EditingOrReplying_Box").slideUp(250);
-            setTimeout(function () {
-                insideBoxClose(true, null);
-            }, 400);
-        }
-        else {
-            alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1.75s; --fa-animation-iteration-count: 1;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
         }
     });
 });
