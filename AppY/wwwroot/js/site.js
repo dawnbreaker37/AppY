@@ -959,12 +959,12 @@ $("#AddPost_Form").on("submit", function (event) {
         else alert('<i class="fa-solid fa-xmark-circle fa-shake" style="--fa-animation-duration: 1.25s; --fa-animation-iteration-count: 2;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
     });
 });
-//EditDiscussionMessage_Btn
+
 $("#GetCurrentUserPosts_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
     let data = $(this).serialize();
-    //SendAFileInMessage_Btn
+
     $.get(url, data, function (response) {
         if (response.success) {
 
@@ -2909,7 +2909,6 @@ $(document).on("submit", "#SendDiscussionMessage_Form", function (event) {
     finalCut = deleteAllEndEmptyChars(finalCut);
 
     let formData = new FormData();
-    //SendSavedMessage_Form
     let files = $("#SendMessage_Images_Val").get(0).files;
     formData.append("discussionid", $("#SM_DiscussionId_Val").val());
     formData.append("id", $("#EM_Id_Val").val());
@@ -3693,13 +3692,15 @@ $(document).on("click", ".btn-get-saved-message-image", function (event) {
     let trueId = getTrueId(event.target.id);
     if (trueId != "") {
         let imgUrl = $("#" + trueId + "-SavedMsg_Img").attr("src");
-        $("#ImageShow_Img").attr("src", imgUrl);
+        $("#ImageShow_Img-1").attr("src", imgUrl);
         $("#ImagesShowImg_Lbl").text(imgUrl.substring(imgUrl.lastIndexOf("/") + 1));
         $("#ImagesCounter_Lbl").text(1);
         $("#GSMC_Id_Val").val(trueId);
         $("#GPSMI_Id_Val").val(trueId);
         $("#GNSMI_Id_Val").val(trueId);
         $("#GPSMI_StartTry_Val").val(true);
+        $("#GPSMI_SkipCount_Val").val(1);
+        $("#GNSMI_SkipCount_Val").val(1);
         $("#GetSavedMessageImagesCount_Form").submit();
 
         animatedOpen(false, "ImagesShow_Container", true, true, false);
@@ -3718,38 +3719,90 @@ $("#GetPrevSavedMessageImg_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
     let data = $(this).serialize();
+    let skipCount = $("#GNSMI_SkipCount_Val").val();
+    skipCount = skipCount <= 1 ? 1 : --skipCount;
 
-    $.get(url, data, function (response) {
-        if (response.success) {
-            $("#GNSMI_StartTry_Val").val(false);
-            $("#ImageShow_Img").attr("src", "/SavedMessageImages/" + response.result.name);
-            $("#ImagesShowImg_Lbl").text(response.result.name);
-            $("#ImagesCounter_Lbl").text(response.skipCount);
-            $("#GPSMI_SkipCount_Val").val(response.skipCount);
-            $("#GNSMI_SkipCount_Val").val(response.skipCount);
-        }
-        else alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 3;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
-    });
+    if ($("#ImageShow_Img-" + skipCount).hasClass("img-slide-box")) {
+        let imageName = $("#ImageShow_Img-" + skipCount).attr("src").substring($("#ImageShow_Img-" + skipCount).attr("src").lastIndexOf("/") + 1);
+        $(".img-slide-box").fadeOut(0);
+        $("#ImageShow_Img-" + skipCount).fadeIn(0);
+        $("#GPSMI_SkipCount_Val").val(skipCount);
+        $("#GNSMI_SkipCount_Val").val(skipCount);
+        $("#ImagesCounter_Lbl").text(skipCount);
+        $("#ImagesShowImg_Lbl").text(imageName);
+
+        if (skipCount <= 1) $("#GPSMSbmt_Btn").attr("disabled", true);
+        else $("#GPSMSbmt_Btn").attr("disabled", false);
+    }
+    else {
+        $.get(url, data, function (response) {
+            if (response.success) {
+                response.skipCount = response.skipCount <= 1 ? 1 : --response.skipCount;
+                $("#ImagesShowImg_Lbl").text(response.result.name);
+                $("#GPSMI_SkipCount_Val").val(response.skipCount);
+                $("#GNSMI_SkipCount_Val").val(response.skipCount);
+                $("#GNSMI_FullCount_Val").val(response.fullCount);
+                $("#GPSMI_FullCount_Val").val(response.fullCount);
+                $("#ImagesCounter_Lbl").text(response.skipCount);
+
+                let img = $("<img class='images-img-container img-slide-box' alt='Cannot display this image' />");
+                img.attr("id", "ImageShow_Img-" + response.skipCount);
+                img.attr("src", "/SavedMessageImages/" + response.result.name);
+                $("#ImagesShow_Box").append(img);
+                $(".img-slide-box").fadeOut(0);
+                $(img).fadeIn(0);
+
+                if (response.skipCount <= 1) $("#GPSMSbmt_Btn").attr("disabled", true);
+                else $("#GPSMSbmt_Btn").attr("disabled", false);
+            }
+            else alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 3;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+        });
+    }
 });
 $("#GetNextSavedMessageImg_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
     let data = $(this).serialize();
+    let skipCount = $("#GNSMI_SkipCount_Val").val();
+    let fullCount = $("#GNSMI_FullCount_Val").val();
+    skipCount = skipCount >= fullCount ? 1 : ++skipCount;
 
-    $.get(url, data, function (response) {
-        if (response.success) {
-            $("#GNSMI_StartTry_Val").val(false);
-            $("#ImageShow_Img").attr("src", "/SavedMessageImages/" + response.result.name);
-            $("#ImagesShowImg_Lbl").text(response.result.name);
-            $("#ImagesCounter_Lbl").text(response.skipCount);
-            $("#GPSMI_SkipCount_Val").val(response.skipCount);
-            $("#GNSMI_SkipCount_Val").val(response.skipCount);
-            $("#GNSMI_FullCount_Val").val(response.fullCount);
-            $("#GPSMI_FullCount_Val").val(response.fullCount);
-            $("#GPSMSbmt_Btn").attr("disabled", false);
-        }
-        else alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 3;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
-    });
+    if ($("#ImageShow_Img-" + skipCount).hasClass("img-slide-box")) {
+        let imageName = $("#ImageShow_Img-" + skipCount).attr("src").substring($("#ImageShow_Img-" + skipCount).attr("src").lastIndexOf("/") + 1);
+        $(".img-slide-box").fadeOut(0);
+        $("#ImageShow_Img-" + skipCount).fadeIn(0);
+        $("#GPSMI_SkipCount_Val").val(skipCount);
+        $("#GNSMI_SkipCount_Val").val(skipCount);
+        $("#ImagesCounter_Lbl").text(skipCount);
+        $("#ImagesShowImg_Lbl").text(imageName);
+
+        if (skipCount > 1) $("#GPSMSbmt_Btn").attr("disabled", false);
+        else $("#GPSMSbmt_Btn").attr("disabled", true);
+    }
+    else {
+        $.get(url, data, function (response) {
+            if (response.success) {
+                response.skipCount = response.skipCount >= response.fullCount ? 1 : ++response.skipCount;
+                $("#ImagesShowImg_Lbl").text(response.result.name);
+                $("#GPSMI_SkipCount_Val").val(response.skipCount);
+                $("#GNSMI_SkipCount_Val").val(response.skipCount);
+                $("#GNSMI_FullCount_Val").val(response.fullCount);
+                $("#GPSMI_FullCount_Val").val(response.fullCount);
+                $("#ImagesCounter_Lbl").text(response.skipCount);
+
+                let img = $("<img class='images-img-container img-slide-box' alt='Cannot display this image' />");
+                img.attr("id", "ImageShow_Img-" + response.skipCount);
+                img.attr("src", "/SavedMessageImages/" + response.result.name);
+                $("#ImagesShow_Box").append(img);
+                $(".img-slide-box").fadeOut(0);
+                $(img).fadeIn(0);
+
+                if (skipCount > 1) $("#GPSMSbmt_Btn").attr("disabled", false);
+                else $("#GPSMSbmt_Btn").attr("disabled", true);
+            }
+            else alert('<i class="fa-regular fa-circle-xmark fa-shake" style="--fa-animation-duration: 1s; --fa-animation-iteration-count: 3;"></i>', response.alert, "Got It", null, 0, null, null, null, 3.5);
+        });
+    }
 });
 
 $("#GetSavedMessageImagesCount_Form").on("submit", function (event) {
@@ -3758,7 +3811,9 @@ $("#GetSavedMessageImagesCount_Form").on("submit", function (event) {
     let data = $(this).serialize();
 
     $.get(url, data, function (response) {
+        $("#GNSMI_StartTry_Val").val(false);
         $("#GPSMI_FullCount_Val").val(response.result);
+        $("#GNSMI_FullCount_Val").val(response.result);
         $("#ImagesFullCount_Lbl").text(response.result);
     });
 });
@@ -4740,7 +4795,7 @@ $("#SendSavedMessage_Form").on("submit", function (event) {
 
                     if (response.file != null) {
                         let imgSeparator = $("<div></div>");
-                        let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm'></button>");
+                        let imgsLinkBtn = $("<button type='button' class='btn btn-link btn-sm btn-get-saved-message-image'></button>");
                         let imgBox = $("<div class='box-container mt-1 mb-1'></div>");
                         let imgTag = $("<img class='msg-img-container' alt='Cannot display this image' />");
 
@@ -5528,6 +5583,7 @@ $(document).on("click", ".set-autodelete-duration", function (event) {
         let trueValue = dateAndTimeTranslatorFromMins(trueId);
         $("#AreMessagesAutoDeletable-Span").text(trueValue);
         $("#AutoDeleteDelay-Icon").text(trueValue);
+
         if (trueId > 0) {
             $("#AreMessagesAutoDeletable-Span").removeClass("text-muted");
             $("#AreMessagesAutoDeletable-Span").addClass("text-primary");
@@ -5537,6 +5593,8 @@ $(document).on("click", ".set-autodelete-duration", function (event) {
             $("#AreMessagesAutoDeletable-Icon").html('<i class="fa-solid fa-clock-rotate-left"></i>');
             $("#AutoDeleteDelay-Icon").removeClass("text-muted");
             $("#AutoDeleteDelay-Icon").addClass("text-primary");
+            $("#PostExample_Expiration_Span").html(" <i class='fa-solid fa-clock-rotate-left text-primary'></i> expires in " + trueValue);
+            $("#PostExample_Expiration_Span").fadeIn(250);
         }
         else {
             $("#AreMessagesAutoDeletable-Span").addClass("text-muted");
@@ -5547,6 +5605,8 @@ $(document).on("click", ".set-autodelete-duration", function (event) {
             $("#AreMessagesAutoDeletable-Icon").html('<i class="fa-regular fa-circle-xmark"></i>');
             $("#AutoDeleteDelay-Icon").addClass("text-muted");
             $("#AutoDeleteDelay-Icon").removeClass("text-primary");
+            $("#PostExample_Expiration_Span").html(" <i class='fa-solid fa-clock-rotate-left text-primary'></i> expires in...");
+            $("#PostExample_Expiration_Span").fadeOut(250);
         }
     }
     else {
@@ -5561,6 +5621,8 @@ $(document).on("click", ".set-autodelete-duration", function (event) {
         $("#AreMessagesAutoDeletable-Icon").removeClass("text-primary open-animated-collapse");
         $("#AutoDeleteDelay-Icon").addClass("text-muted");
         $("#AutoDeleteDelay-Icon").removeClass("text-primary");
+        $("#PostExample_Expiration_Span").html(" <i class='fa-solid fa-clock-rotate-left text-primary'></i> expires in...");
+        $("#PostExample_Expiration_Span").fadeOut(250);
     }
 });
 
@@ -7422,6 +7484,29 @@ $(document).on("focusout", ".natural-form-control", function () {
         placeholder = placeholder == "" ? null : placeholder;
 
         formSleeping(trueId, placeholder);
+    }
+});
+
+$("#IsPinned").on("change", function () {
+    let value = $(this).val();
+    value = value == "false" ? false : true;
+    if (!value) $("#PostExample_IsPinned_Icon").fadeIn(250);
+    else $("#PostExample_IsPinned_Icon").fadeOut(250);
+});
+$("#CanBeForwarded").on("change", function () {
+    let value = $(this).val();
+    value = value == "false" ? false : true;
+    if (!value) $("#PostExample_ShareInChat_Btn").fadeIn(250);
+    else $("#PostExample_ShareInChat_Btn").fadeOut(250);
+});
+$(document).on("keyup", ".paste-the-text", function (event) {
+    let text = $(this).val();
+    let pasteTo = $(this).attr("data-bs-paste-to");
+    if (text != "") {
+        textDecoder(text, pasteTo);
+    }
+    else {
+        $("#" + pasteTo).text("No Text to Show");
     }
 });
 

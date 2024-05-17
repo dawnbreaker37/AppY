@@ -129,25 +129,14 @@
             <small class="card-text fw-500 text-light" id="ImagesCounter_Lbl">1</small><small class="card-text fw-500 text-light"> of </small><small class="card-text fw-500 text-light" id="ImagesFullCount_Lbl">6</small>
             <button type="button" class="btn btn-outline-light border-0 shadow-none btn-standard-asset btn-sm btn-open-container" id="Preloaded_Container-CloseAfterOpen">Close</button>
         </div>
-        <div class="images-img-container mt-2" id="ImagesShow_Box">
-            <img class="images-img-container" src="#" id="ImageShow_Img" alt="Cannot display this image right now" />
+        <div class="images-img-container box-container mt-2" id="ImagesShow_Box">
+            <img class="images-img-container img-slide-box" src="#" id="ImageShow_Img-1" alt="Cannot display this image right now" />
         </div>
         <div class="box-container mt-2" id="ImagesShow-Footer">
             <div class="d-none" id="ImageForms_Box">
                 <form method="get" asp-controller="Image" asp-action="GetSMCount" id="GetSavedMessageImagesCount_Form">
                     <input type="hidden" name="Id" id="GSMC_Id_Val" value="0" />
                 </form>
-@*                 <form method="get" asp-controller="Image" asp-action="GetSMPrev" id="GetPrevSavedMessageImg_Form">
-                    <input type="hidden" name="Id" id="GPSMI_Id_Val" value="0" />
-                    <input type="hidden" name="SkipCount" id="GPSMI_SkipCount_Val" value="0" />
-                    <input type="hidden" name="FullCount" id="GPSMI_FullCount_Val" value="0" />
-                </form>
-                <form method="get" asp-controller="Image" asp-action="GetSMNext" id="GetNextSavedMessageImg_Form">
-                    <input type="hidden" name="Id" id="GNSMI_Id_Val" value="0" />
-                    <input type="hidden" name="SkipCount" id="GNSMI_SkipCount_Val" value="0" />
-                    <input type="hidden" name="FullCount" id="GNSMI_FullCount_Val" value="0" />
-                    <input type="hidden" name="StartTry" id="GPSMI_StartTry_Val" value="true" />
-                </form> *@
             </div>
             <div class="d-none" id="ImagesShowVals_Box">
             </div>

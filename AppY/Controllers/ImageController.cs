@@ -29,7 +29,7 @@ namespace AppY.Controllers
         public async Task<IActionResult> GetSMNext(int Id, int SkipCount, int FullCount, bool StartTry)
         {
             if (FullCount <= 0) FullCount = await _savedImage.GetMessageImagesCountAsync(Id);
-            SkipCount = SkipCount >= FullCount ? 1 : ++SkipCount;
+            //SkipCount = SkipCount >= FullCount ? 1 : ++SkipCount;
             SavedMessageContentImage? Result = await _savedImage.GetNextImageAsync(Id, SkipCount, FullCount, StartTry);
 
             if(Result != null) return Json(new { success = true, result = Result, fullCount = FullCount, skipCount = SkipCount });
@@ -39,7 +39,7 @@ namespace AppY.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSMPrev(int Id, int SkipCount, int FullCount)
         {
-            SkipCount = SkipCount > 0 ? --SkipCount : --FullCount;
+/*            SkipCount = SkipCount > 1 ? --SkipCount : 1*/;
 
             SavedMessageContentImage? Result = await _savedImage.GetPrevImageAsync(Id, SkipCount);
             if (Result != null) return Json(new { success = true, result = Result, fullCount = FullCount, skipCount = SkipCount });

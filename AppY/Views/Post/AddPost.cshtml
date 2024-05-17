@@ -32,7 +32,7 @@
             <div class="box-container">
                 <form method="post" asp-controller="Post" asp-action="Add" id="AddPost_Form">
                     <div class="form-floating">
-                        <textarea name="Text" class="form-control mh-230 shadow-none" rows="4" placeholder="Leave your text here..." id="PostText_Val" style="height: 125px;"></textarea>
+                        <textarea name="Text" class="form-control paste-the-text mh-230 shadow-none" rows="4" placeholder="Leave your text here..." id="PostText_Val" style="height: 125px;" data-bs-paste-to="PostExampleText_Lbl"></textarea>
                         <label class="fw-500" for="PostText_Val">Your Comments</label>
                     </div>
                     <div class="box-container mt-2">
@@ -44,14 +44,14 @@
                         </div>
                     </div>
                     <div class="form-check form-switch mt-3">
-                        <input asp-for="CanBeForwarded" class="form-check-input" type="checkbox" role="switch" value="true" checked />
+                        <input asp-for="CanBeForwarded" class="form-check-input checkbox-select" type="checkbox" role="switch" value="true" checked />
                         <label class="form-check-label fw-500" asp-for="CanBeForwarded">Can be Forwarded</label>
                     </div>
                     <div class="ms-1">
                         <small class="card-text text-muted">Other users'll be able to forward your post into their chats and copy the link of it</small>
                     </div>
                     <div class="form-check form-switch mt-3">
-                        <input asp-for="IsPinned" class="form-check-input" type="checkbox" role="switch" value="false" />
+                        <input asp-for="IsPinned" class="form-check-input checkbox-select" type="checkbox" role="switch" value="false" />
                         <label class="form-check-label fw-500" asp-for="IsPinned">Pin this Post</label>
                     </div>
                     <div class="ms-1">
@@ -121,16 +121,31 @@
                 <span class="h5">Preview</span>
                 <div></div>
                 <small class="card-text text-muted">your post'll look like this</small>
-                <div class="box-container mt-2" id="PostExample_Box">
+                <div class="bordered-container p-2 mt-2" id="PostExample_Box">
                     <div class="box-container">
-                        <button type="button" class="btn btn-standard btn-sm float-end ms-1"> <i class="fa-solid fa-ellipsis"></i> </button>
-                        <small class="card-text text-muted">added recently</small>
+                        <small class="card-text text-muted" id="PostExample_IsPinned_Icon" style="display: none;"> <i class="fa-solid fa-thumbtack fa-rotate-by text-primary pe-1" style="--fa-rotate-angle: 45deg;"></i> Pinned</small>
+                        <div></div>
+                        <span class="card-text white-space-on" id="PostExampleText_Lbl">Your post main text (up to 2000 chars)</span>
+                        <div></div>
+                        <small class="card-text text-muted" id="PostExample_Expiration_Span" style="display: none;">expires in...</small>
                     </div>
-                    <div class="msg-img-container bg-light w-100 text-center">
-                        <h1 class="h1 text-warning mt-1"> <i class="fa-solid fa-burger"></i> </h1>
-                        <small class="card-text text-muted">your linked image will appear here</small>
+                    <div class="msg-img-container bg-light w-100 text-center mt-1 pt-5">
+                        <h5 class="h5 pt-3">Your Linked Image</h5>
+                        <small class="card-text text-muted">It'll appear here in your post</small>
                     </div>
-                    <p class="card-text mt-1" id="PostExampleText_Lbl">Your post main text (up to 2000 chars)</p>
+                    <div class="box-container mt-2">
+                        <button type="button" class="btn btn-standard-asset btn-light btn-sm me-1 d-inline"> <i class="fa-regular fa-heart"></i> 120</button>
+                        <button type="button" class="btn btn-standard-asset btn-light btn-sm me-1 d-inline"> <i class="fa-regular fa-comment-dots"></i> Comments</button>
+                        <div class="dropend d-inline">
+                            <button class="btn btn-standard-asset btn-light btn-sm me-1" type="button" data-bs-toggle="dropdown" aria-expanded="false"> <i class="fa-solid fa-ellipsis"></i> More</button>
+                            <ul class="dropdown-menu p-1 shadow-sm">
+                                <li><small class="dropdown-header text-muted">posted yesterday, at 23:48</small></li>
+                                <li><button type="button" class="dropdown-item mt-1" id="PostExample_ShareInChat_Btn"> <i class="fa-regular fa-share-from-square"></i> Forward in chat</button></li>
+                                <li><button type="button" class="dropdown-item mt-1 mb-1"><i class="fa-regular fa-copy"></i> Copy</button></li>
+                                <li><button type="button" class="dropdown-item text-danger"> <i class="fa-regular fa-flag"></i> Report</button></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
