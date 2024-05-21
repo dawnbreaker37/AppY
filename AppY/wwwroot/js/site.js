@@ -94,6 +94,13 @@ $(window).on("blur", function () {
     $("#SetLastSeen_Form").submit();
 });
 
+window.ononline = function () {
+    console.log("connection restored");
+}
+window.onoffline = function () {
+    console.log("connection lost");
+}
+
 $("#SetLastSeen_Form").on("submit", function (event) {
     event.preventDefault();
     let url = $(this).attr("action");
@@ -7410,6 +7417,46 @@ function getBatteryLevel(indicateTheLevel) {
                 console.error(e);
             });
     }
+}
+
+function openWarningAlert(text, bgColor, textColor, goWithoutAnimation) {
+    let connectionAlertDiv = $("<div class='box-container fixed-top text-center p-3 rounded-bottom' style='top: -200px;' id='DangerAlert_Container'></div>");
+    let connectionAlertTxt = $("<p class='card-text fw-500' id='DangerAlertTxt_Lbl'></p>");
+    connectionAlertDiv.append(connectionAlertTxt);
+    $("body").append(connectionAlertDiv);
+
+    bgColor = bgColor == null ? "f8f9fa" : bgColor;
+    textColor = textColor == null ? "040404" : textColor;
+    connectionAlertDiv.css("background-color", "#" + bgColor);
+    connectionAlertTxt.css("color", "#" + textColor);
+    connectionAlertTxt.html(text);
+
+    if (!goWithoutAnimation) {
+        $("#DangerAlert_Container").fadeIn(0);
+        $("#DangerAlert_Container").css("top", 0);
+    }
+    else {
+        $("#DangerAlert_Container").css("top", 0);
+        setTimeout(function () {
+            $("#DangerAlert_Container").fadeIn(0);
+        }, 150);
+    }
+}
+
+function updateWarningAlert(text, bgColor, textColor) {
+    bgColor = bgColor == null ? "f8f9fa" : bgColor;
+    textColor = textColor == null ? "040404" : textColor;
+    $("#DangerAlert_Container").css("background-color", "#" + bgColor);
+    $("#DangerAlertTxt_Lbl").css("color", "#" + textColor);
+    $("#DangerAlertTxt_Lbl").html(text);
+}
+
+function closeWarningAlert() {
+    $("#DangerAlert_Container").css("top", "-250px");
+    setTimeout(function () {
+        $("#DangerAlert_Container").fadeOut(300);
+        $("body").remove("#DangerAlert_Container");
+    }, 400);
 }
 
 $("#EcoModeOnAt").on("change", function () {
