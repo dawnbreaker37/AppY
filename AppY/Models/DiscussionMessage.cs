@@ -15,6 +15,7 @@ namespace AppY.Models
         public DateTime? PinnedAt { get; set; }
         public string? RepliesMsgShortText { get; set; }
         public int? RepliedMessageId { get; set; }
+        public int MessageType { get; set; }
         [ForeignKey("User")]
         public int UserId { get; set; }
         [ForeignKey("Discussion")]

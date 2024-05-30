@@ -14,6 +14,7 @@ namespace AppY.Models
         public bool IsPinned { get; set; }
         public bool IsEdited { get; set; }
         public bool IsChecked { get; set; }
+        public int MessageType { get; set; }
         public int RepliedMessageId { get; set; }
         [MaxLength(50)]
         public string? RepliesMessageText { get; set; }

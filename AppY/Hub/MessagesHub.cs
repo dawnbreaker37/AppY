@@ -78,16 +78,17 @@ namespace AppY.ChatHub
             await this.Clients.User(ReceiverId).SendAsync("OpenedTheChat");
         }
 
-        public async Task SendFromAlert(string? Text, int SenderId, int ReceiverId, int ChatId, int IsAutodeletable, string? Chatname, int CurrentChatUserId)
+        public async Task SendFromAlert(string? Text, int MessageType, int SenderId, int ReceiverId, int ChatId, int IsAutodeletable, string? Chatname, int CurrentChatUserId)
         {
-            await Send(Text, null, SenderId, ReceiverId, ChatId, 0, Chatname, CurrentChatUserId);
+            await Send(Text, MessageType, SenderId, ReceiverId, ChatId, 0, Chatname, CurrentChatUserId);
         }
 
-        public async Task Send(string? Text, IFormFileCollection Files, int SenderId, int ReceiverId, int ChatId, int IsAutodeletable, string? Chatname, int CurrentChatUserId)
+        public async Task Send(string? Text, int MessageType, int SenderId, int ReceiverId, int ChatId, int IsAutodeletable, string? Chatname, int CurrentChatUserId)
         {
             SendMessage Model = new SendMessage()
             {
                 Text = Text,
+                MessageType = MessageType,
                 SentAt = DateTime.Now,
                 ChatId = ChatId,
                 IsAutoDeletable = IsAutodeletable,
@@ -102,8 +103,8 @@ namespace AppY.ChatHub
             {
                 bool IsChatMuted = await _chat.IsChatMutedAsync(ChatId, ReceiverId);
 
-                if (!IsChatMuted) await this.Clients.User(ReceiverId.ToString()).SendAsync("Receive", Text, StandardResult, ChatId, Chatname, SenderId, IsChatMuted);
-                await this.Clients.Caller.SendAsync("CallerReceive", Text, StandardResult, ChatId);
+                if (!IsChatMuted) await this.Clients.User(ReceiverId.ToString()).SendAsync("Receive", Text, StandardResult, MessageType, ChatId, Chatname, SenderId, IsChatMuted);
+                await this.Clients.Caller.SendAsync("CallerReceive", Text, StandardResult, MessageType, ChatId);
             }
             else await this.Clients.All.SendAsync("Error", "Can't send this message now");
         }

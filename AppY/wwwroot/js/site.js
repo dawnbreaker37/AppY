@@ -92,13 +92,16 @@ window.onresize = function () {
 }
 $(window).on("blur", function () {
     $("#SetLastSeen_Form").submit();
-});
+});//Cancel
 
 window.ononline = function () {
-    console.log("connection restored");
+    updateWarningAlert("Connection restored. You're now online", "0d6efd", "f8f9fa");
+    setTimeout(function () {
+        closeWarningAlert();
+    }, 4000);
 }
 window.onoffline = function () {
-    console.log("connection lost");
+    openWarningAlert("Connection lost", "dc3545", "f8f9fa", false);
 }
 
 $("#SetLastSeen_Form").on("submit", function (event) {
@@ -3176,18 +3179,26 @@ $("#PreviewTheMessage_Btn").on("click", function () {
     let text = textDecoder($("#SendMessage_Text_Val").val(), null);
     let isAutodeletable = $("#SendMessage_IsAutoDeletable").val();
     let isReplied = $("#RM_ReplyId_Val").val();
+    let messageType = $("#SM_MessageType_Val").val();
     let files = $("#SendMessage_Images_Val").get(0).files;
 
     let messageMainBox = $("<div class='message-box'></div>");
     let messageNotMainBox = $("<div class='cur-user-msg-box'></div>");
     let styleBox = $("<div class='cur-user-styled-msg-box p-2'></div>");
     let isAutodeletableSmall = $("<small class='card-text'></small>");
-    let mainText = $("<p class='card-text white-space-on message-label discussion-options'></p>");
+    let mainText;
     let statsBox = $("<div class='discussion-options float-end me-1'></div>");
     let isChecked = $("<small class='card-text text-primary'> <i class='fa-solid fa-check text-muted'></i> </small>");
     let dateAndTime = $("<small class='card-text text-muted'></small>");
 
-    mainText.html(text);
+    if (messageType == 0) {
+        mainText = $("<p class='card-text white-space-on message-label discussion-options'></p>");
+        mainText.html(text);
+    }
+    else {
+        mainText = textDesigner($("#SendMessage_Text_Val").val());
+    }
+
     dateAndTime.text("waiting to be sent...");
     if (parseInt(isAutodeletable) > 0) {
         isAutodeletableSmall.html(' <i class="fa-solid fa-clock-rotate-left"></i> ' + dateAndTimeTranslatorFromMins(isAutodeletable));
@@ -5127,6 +5138,8 @@ $("#CancelChatMessageSettings_Btn").on("click", function () {
     $("#RM_Id_Val").val(0);
     $("#DDM_Id_Val").val(0);
     $("#STM_Id_Val").val(0);
+    $("#STM_Id_Val").val(0);
+    $("#SM_MessageType_Val").val(0);
     $("#Forward_MsgId_Val").val(0);
     $("#CurrentGotChatMsg_Id_Val").val(0);
     $("#SendMessage_Text_Val").val("");
@@ -5144,6 +5157,7 @@ $("#EditChatMessage_Btn").on("click", function () {
         $("#RM_ReplyId_Val").val(0);
         $("#DDM_Id_Val").val(0);
         $("#STM_Id_Val").val(0);
+        $("#SM_MessageType_Val").val(0);
         $("#Forward_MsgId_Val").val(0);
         $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-regular fa-pen-to-square"></i> ');
         $("#EditingOrReplyingMsgStatus_Lbl").text("Edit Message");
@@ -5158,6 +5172,7 @@ $("#EditChatMessage_Btn").on("click", function () {
     }
     else {
         $("#EM_Id_Val").val(0);
+        $("#SM_MessageType_Val").val(0);
         $("#DDM_Id_Val").val(0);
         $("#STM_Id_Val").val(0);
         $("#Forward_MsgId_Val").val(0);
@@ -5176,6 +5191,7 @@ $("#ReplyChatMessage_Btn").on("click", function () {
             messageTextWithoutSigns = messageTextWithoutSigns.length > 65 ? messageTextWithoutSigns.substring(0, 65) + "..." : messageTextWithoutSigns;
 
             $("#RM_ReplyId_Val").val(trueId);
+            $("#SM_MessageType_Val").val(0);
             $("#DDM_Id_Val").val(0);
             $("#EM_Id_Val").val(0);
             $("#STM_Id_Val").val(0);
@@ -5197,6 +5213,7 @@ $("#ReplyChatMessage_Btn").on("click", function () {
     }
     else {
         $("#RM_ReplyId_Val").val(0);
+        $("#SM_MessageType_Val").val(0);
         $("#DDM_Id_Val").val(0);
         $("#STM_Id_Val").val(0);
         $("#Forward_MsgId_Val").val(0);
@@ -5204,6 +5221,18 @@ $("#ReplyChatMessage_Btn").on("click", function () {
         $("#ForwardAMessageSbmt_Btn").attr("disabled", false);
         $("#EditingOrReplying_Box").slideUp(250);
     }
+});
+$("#SendContactAsChatMessage_Btn").on("click", function () {
+    $("#RM_ReplyId_Val").val(0);
+    $("#SM_MessageType_Val").val(1);
+    $("#DDM_Id_Val").val(0);
+    $("#STM_Id_Val").val(0);
+    $("#Forward_MsgId_Val").val(0);
+    $("#RM_ReplyText_Val").val("");
+    $("#EditingOrReplyingMsgIcon_Lbl").html(' <i class="fa-regular fa-address-card"></i> ');
+    $("#EditingOrReplyingMsgStatus_Lbl").text("Send a Contact");
+    $("#EditingOrReplyingMsgText_Lbl").html("Enter contact details as in example <br/><span class='fw-500'>Contact Name : Contact Info</span> (separate contact name and contact info with a single <kbd>:</kbd>)");
+    $("#EditingOrReplying_Box").slideDown(250);
 });
 //Chat Messages//
 
@@ -5890,6 +5919,11 @@ $(document).on("click", ".set-disable-duration", function (event) {
     }
 });
 
+$("#SendMessage_Text_Val").on("keyup", function () {
+    let value = textDesigner($(this).val());
+    $("#EditingOrReplyingMsgText_Lbl").html(value);
+});
+
 $("#SetDefaultColors_Btn").on("click", function () {
     $("#AvatarBgColor_Val").val("f8f9fa");
     $("#AvatarFgColor_Val").val("000000");
@@ -6005,7 +6039,7 @@ $("#SelectaFile_Val").on("change", function () {
 $("#SendAFileInMessage_Btn").on("click", function () {
     let id = $(this).attr("data-bs-html");
     if (id != null) $("#" + id).click();
-});//set-autodelete-duration
+});
 $("#CancelSelectedFilesInMessage_Btn").on("click", function () {
     $("#SelectaFile_Val").val(null);
     $(this).html("Cancel");
@@ -6611,6 +6645,18 @@ function textEditor(elementId, preparedText1, preparedText2, pasteTo) {
     $("#" + pasteTo).prop("selectionStart", cursorStartPos);
     $("#" + pasteTo).prop("selectionEnd", cursorStartPos);
     $("#" + pasteTo).focus();
+}
+
+function textDesigner(value) {
+    let length = value.length;
+    if (value.includes(":")) {
+        let separatorIndex = value.indexOf(":");
+        let contactName = value.substring(0, separatorIndex);
+        let contactDetails = value.substring(separatorIndex + 1);
+
+        return '<div class="box-container bg-white p-2"><div class="image-picture-none-container-sm text-center p-1 d-inline-block"> <i class="fa-regular fa-address-card text-primary"> </i> </div><span class="h5 ms-2 text-dark">' + contactName + '</span><div class="mt-1"></div><small class="card-text fw-500 text-dark">' + contactDetails + '</small></div>';
+    }
+    else return "Enter contact details as in example <br/><span class='fw-500'>Contact Name : Contact Info</span> (separate contact name and contact info with a single <kbd>:</kbd>)";
 }
 
 function textEditorIndicators(value, setTo) {
@@ -7420,7 +7466,7 @@ function getBatteryLevel(indicateTheLevel) {
 }
 
 function openWarningAlert(text, bgColor, textColor, goWithoutAnimation) {
-    let connectionAlertDiv = $("<div class='box-container fixed-top text-center p-3 rounded-bottom' style='top: -200px;' id='DangerAlert_Container'></div>");
+    let connectionAlertDiv = $("<div class='box-container fixed-top text-center p-3' style='top: -200px; border-radius: 1px 1px 8px 8px;' id='DangerAlert_Container'></div>");
     let connectionAlertTxt = $("<p class='card-text fw-500' id='DangerAlertTxt_Lbl'></p>");
     connectionAlertDiv.append(connectionAlertTxt);
     $("body").append(connectionAlertDiv);

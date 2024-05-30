@@ -67,11 +67,19 @@ namespace AppY.Repositories
             {               
                 if (!String.IsNullOrWhiteSpace(Model.Text) && Model.Text.Length <= 3400 && Model.UserId > 0 && Model.ChatId > 0)
                 {
+                    if(Model.MessageType > 0)
+                    {
+                        Model.ReplyText = Model.Text.Substring(Model.Text.IndexOf(":") + 1);
+                        Model.Text = Model.Text.Substring(0, Model.Text.IndexOf(":"));
+                    }
+
                     ChatMessage chatMessage = new ChatMessage()
                     {
                         Text = Model.Text,
+                        MessageType = Model.MessageType,
                         UserId = Model.UserId,
                         ChatId = Model.ChatId,
+                        RepliesMessageText =Model.ReplyText != null ? Model.ReplyText : null,
                         IsAutodeletable = Model.IsAutoDeletable,
                         IsDeleted = false,
                         ChatUserId = Model.CurrentChatUserId,
@@ -194,7 +202,7 @@ namespace AppY.Repositories
 
         public override IQueryable<IGrouping<DateTime, DiscussionMessage>>? GetMessages(int Id, int UserId, int SkipCount, int LoadCount)
         {
-            if (Id > 0 && UserId > 0) return _context.ChatMessages.AsNoTracking().Where(c => c.ChatId == Id && !c.IsDeleted).Select(c => new DiscussionMessage { Id = c.Id, UserId = c.UserId, IsAutoDeletable = c.IsAutodeletable, IsEdited = c.IsEdited, IsChecked = c.IsChecked, RepliedMessageId = c.RepliedMessageId, RepliesMsgShortText = c.RepliesMessageText, IsPinned = c.IsPinned, SentAt = c.SentAt, Text = c.Text }).OrderBy(c => c.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(c => c.SentAt.Date);
+            if (Id > 0 && UserId > 0) return _context.ChatMessages.AsNoTracking().Where(c => c.ChatId == Id && !c.IsDeleted).Select(c => new DiscussionMessage { Id = c.Id, UserId = c.UserId, MessageType = c.MessageType, IsAutoDeletable = c.IsAutodeletable, IsEdited = c.IsEdited, IsChecked = c.IsChecked, RepliedMessageId = c.RepliedMessageId, RepliesMsgShortText = c.RepliesMessageText, IsPinned = c.IsPinned, SentAt = c.SentAt, Text = c.Text }).OrderBy(c => c.SentAt).Skip(SkipCount).Take(LoadCount).GroupBy(c => c.SentAt.Date);
             else return null;
         }
 
@@ -202,6 +210,7 @@ namespace AppY.Repositories
         {
             throw new NotImplementedException();
         }
+
         public override async Task<int> SentMessagesCountAsync(int Id)
         {
             return await _context.ChatMessages.AsNoTracking().CountAsync(c => c.ChatId == Id && !c.IsDeleted);
