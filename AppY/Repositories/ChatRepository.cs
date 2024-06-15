@@ -354,5 +354,10 @@ namespace AppY.Repositories
             }
             return 0;
         }
+
+        public async Task<int> GetUserChatsCount(int Id)
+        {
+            return await _context.ChatUsers.AsNoTracking().CountAsync(c => c.UserId == Id && !c.IsDeleted && !c.IsBlocked);
+        }
     }
 }

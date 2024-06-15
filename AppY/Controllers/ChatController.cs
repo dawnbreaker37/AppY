@@ -14,12 +14,14 @@ namespace AppY.Controllers
         private readonly IUser _user;
         private readonly IMailMessages _mailMessages;
         private readonly IChat _chat;
+        private readonly IDiscussion _discussion;
         private readonly ChatMessageAbstraction _messages;
         
-        public ChatController(Context context, ChatMessageAbstraction messages, IUser user, IChat chat, IMailMessages mailMessages)
+        public ChatController(Context context, ChatMessageAbstraction messages, IDiscussion discussion, IUser user, IChat chat, IMailMessages mailMessages)
         {
             _context = context;
             _user = user;
+            _discussion = discussion;
             _messages = messages;
             _mailMessages = mailMessages;
             _chat = chat;
@@ -49,6 +51,7 @@ namespace AppY.Controllers
                                         string? DisabledTimeLeft = null;
                                         DiscussionMessage? FirstPinnedMessageInfo = null;
                                         List<IGrouping<DateTime, DiscussionMessage>>? Messages = null;
+
                                         int SentMessagesCount = await _messages.SentMessagesCountAsync(Id);
                                         int SecondUserId = await _chat.ChatSecondUserIdAsync(Id, CurrentUserId);
                                         bool IsMuted = await _chat.IsChatMutedAsync(Id, CurrentUserId);
@@ -56,6 +59,8 @@ namespace AppY.Controllers
                                         ChatPasswordSettings? ChatPasswordInfo = await _chat.GetChatPasswordInfoAsync(Id, CurrentUserId);
                                         User? SecondUserInfo = await _user.GetUserSuperShortInfoEvenIfPrivateAsync(SecondUserId);
                                         int CurrentChatUserId = await _context.ChatUsers.AsNoTracking().Where(c => c.UserId == CurrentUserId && c.ChatId == Id).Select(c => c.Id).FirstOrDefaultAsync();
+                                        int CurrentUserChatsCount = await _chat.GetUserChatsCount(CurrentUserId);
+                                        int CurrentUserDiscussionsCount = await _discussion.GetDiscussionsCountAsync(CurrentUserId);
                                         ChatInfo.Name = ChatInfo.Name == null ? "New Chat" : ChatInfo.Name;
 
                                         if(SecondUserInfo != null) SecondUserInfo.LastSeenText = _user.SetLastSeenText(SecondUserInfo.LastSeen);
@@ -71,6 +76,8 @@ namespace AppY.Controllers
                                         }
 
                                         ViewBag.UserInfo = UserInfo;
+                                        ViewBag.UserChatsCount = CurrentUserChatsCount;
+                                        ViewBag.UserDiscussionsCount = CurrentUserDiscussionsCount;
                                         ViewBag.AutodeleteDelayValue = _user.AutodeleteDelay(UserInfo.AreMessagesAutoDeletable);
                                         ViewBag.SecondUserInfo = SecondUserInfo;
                                         ViewBag.ChatInfo = ChatInfo;

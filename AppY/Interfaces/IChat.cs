@@ -5,6 +5,7 @@ namespace AppY.Interfaces
 {
     public interface IChat
     {
+        public Task<int> GetUserChatsCount(int Id);
         public Task<int> CreateChatAsync(Chat_ViewModel Model);
         public Task<int> EditChatInfoAsync(Chat_ViewModel Model);
         public Task<int> ClearChatHistoryAsync(int Id, int UserId);

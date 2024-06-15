@@ -21,6 +21,17 @@ body {
   margin-bottom: 60px;
 }
 
+.h-100p {
+    height: 100%;
+}
+
+.loading-box {
+    text-align: center;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    transition: all ease 0.3s;
+}
+
 .btn-slide-to-bottom-style {
     z-index: -1000;
     position: fixed;

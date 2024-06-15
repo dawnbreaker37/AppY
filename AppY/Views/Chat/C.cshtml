@@ -11,6 +11,25 @@
 }
 
 <div class="main-sidebar" id="Main_SideBar">
+    <div class="box-container p-2" id="ChatsAndDiscussionsWall_Box">
+        <div class="box-container bg-white shadow-sm p-2 text-center">
+            <button type="button" class="btn btn-light btn-standard-asset text-primary">Chats ∙ @ViewBag.UserChatsCount</button>
+            <button type="button" class="btn btn-light btn-standard-asset">Discussions ∙ @ViewBag.UserDiscussionsCount</button>
+        </div>
+        <div class="box-container mt-2">
+            <div class="box-container bg-white shadow-sm p-2" id="LoadedChatsOrDiscussions_Box">
+                <button type="button" class="btn btn-standard float-end ms-1 btn-sm" id="ChatEditorActivator_Btn" disabled> <i class="fa-regular fa-pen-to-square"></i> Edit</button>
+                <span class="h5">Chats ∙ @ViewBag.UserChatsCount</span>
+                <div class="loading-box p-2 mt-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="card-text fw-500 mt-2">Loading Chats...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="d-none">
         <input type="hidden" id="SentMessagesCount_Val" value="@ViewBag.MessagesCount" />
         <input type="hidden" id="CurrentChatId_Val" value="@ChatInfo.Id" />
@@ -146,26 +165,6 @@
                         <div class="col">
                             <button type="button" class="btn btn-standard-asset w-100 btn-light" onclick="closeSidebar();">Cancel</button>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="smallside-bot-navbar shadow-standard" style="display: none; bottom: -300px;" id="SmallsideBotNavbar">
-        <div class="box-container p-2">
-            <div class="row">
-                <div class="col">
-                    <div>
-                        <form method="get" asp-controller="Chat" asp-action="GetChats" id="GetChats_Form">
-                            <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-regular fa-comments"></i> <br />Chats</button>
-                        </form>
-                    </div>
-                </div>
-                <div class="col">
-                    <div>
-                        <form method="get" asp-controller="Discussion" asp-action="GetDiscussions" id="GetDiscussions_Form">
-                            <button type="submit" class="btn btn-standard btn-sm w-100"> <i class="fa-solid fa-quote-right"></i> <br />Discussions</button>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -478,7 +477,11 @@
                                                     </div>
                                                     <span class="h5 ms-1 text-dark chat-options" id="@message.Id-ChatOptionMsgText_Lbl">@message.Text</span>
                                                     <div class="mt-1"></div>
-                                                    <small class="card-text text-dark fw-500">@message.RepliesMsgShortText</small>
+                                                    <small class="card-text text-dark contact-number-text fw-500" id="@message.Id-RepliedMsgText">@message.RepliesMsgShortText</small>
+                                                    <div class="border-top pt-1 mt-1">
+                                                        <button type="button" class="btn btn-standard-asset btn-light btn-sm text-primary me-1"> <i class="fa-regular fa-copy"></i> Copy</button>
+                                                        <button type="button" class="btn btn-standard-asset btn-light btn-sm text-primary"> <i class="fa-solid fa-phone"></i> Call</button>
+                                                        </div>
                                                 </div>
                                             }
                                             else 
